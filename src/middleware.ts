@@ -12,6 +12,11 @@ export async function middleware(request: NextRequest) {
 
 	// Verify the session + role at the edge by asking cinaauth. Cookie is
 	// forwarded as-is (shared .cinagroup.com session domain).
+	// NOTE: this intentionally inlines the role check rather than reusing
+	// `resolveAdminSession` — the edge middleware only needs `user.role`, and
+	// keeping the edge bundle minimal avoids pulling the full session DTO path.
+	// If cinaauth's /api/get-session response shape changes, update both here
+	// and in src/lib/cinaauth/session.ts.
 	const cookie = request.headers.get("cookie") ?? "";
 	let role: string | undefined;
 	try {

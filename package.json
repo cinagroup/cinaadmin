@@ -10,8 +10,7 @@
 		"preview": "wrangler pages dev",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"typecheck": "tsc --noEmit",
-		"lint": "biome check ."
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"next": "^16.0.0",
