@@ -1,0 +1,22 @@
+{
+	"app.name": "CinaGroup Admin",
+	"nav.overview": "Overview",
+	"nav.accounts": "Accounts",
+	"nav.compliance": "Compliance & Security",
+	"nav.users": "Users",
+	"nav.sessions": "Sessions",
+	"nav.organizations": "Organizations",
+	"nav.apiKeys": "API Keys",
+	"nav.auditLog": "Audit Log",
+	"nav.securityPolicy": "Security Policy",
+	"common.signOut": "Sign out",
+	"common.loading": "Loading…",
+	"common.search": "Search…",
+	"common.export": "Export CSV",
+	"error.403.title": "Access denied",
+	"error.403.message": "You do not have permission to access the admin console.",
+	"impersonate.banner": "Acting as {{user}}",
+	"impersonate.stop": "Stop impersonating",
+	"instance.production": "Production",
+	"placeholder.phase2": "(Phase 2)"
+}

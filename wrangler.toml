@@ -1,0 +1,12 @@
+name = "cinaadmin"
+compatibility_date = "2026-06-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".next"
+
+# Non-secret vars. Secrets (CINAUTH_ADMIN_SERVICE_KEY, etc.) are set via
+# `wrangler pages secret put` / the Cloudflare dashboard.
+[vars]
+NEXT_PUBLIC_APP_NAME = "CinaGroup Admin"
+NEXT_PUBLIC_CINAUTH_BASE_URL = "https://auth.cinagroup.com"
+CINAUTH_BASE_URL = "https://auth.cinagroup.com"
+CINAADMIN_ALLOWED_ROLES = "super_admin,security_admin"

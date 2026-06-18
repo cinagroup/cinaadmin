@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/*
+ * CinaGroup black-gold theme (Tailwind v4 @theme tokens).
+ * Dark surface palette + gold accent. v1 ships dark-only.
+ */
+@theme {
+	--color-ink-950: #0a0a0b;
+	--color-ink-900: #121214;
+	--color-ink-800: #1a1a1e;
+	--color-ink-700: #242428;
+	--color-gold-400: #e6c068;
+	--color-gold-500: #d4af37;
+	--color-gold-600: #b8941f;
+	--color-muted: #6b6b73;
+	--color-danger: #e05260;
+	--color-success: #4caf7d;
+
+	--font-sans: "Inter", system-ui, sans-serif;
+	--font-serif: "Playfair Display", Georgia, serif;
+}
+
+:root {
+	--bg: #0a0a0b;
+	--surface: #121214;
+	--border: #242428;
+	--gold: #d4af37;
+	--text: #e8e8ea;
+	--text-muted: #6b6b73;
+}
+
+html,
+body {
+	background: var(--bg);
+	color: var(--text);
+	font-family: var(--font-sans);
+	min-height: 100vh;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+	outline: 2px solid var(--gold);
+	outline-offset: 2px;
+}
+
+/* Scrollbar (dark) */
+* {
+	scrollbar-color: #242428 transparent;
+}
