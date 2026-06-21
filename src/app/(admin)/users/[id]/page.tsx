@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { getUser } from "@/lib/cinaauth/admin-api";
 import { UserTabs } from "./user-tabs";
+import { UserActions } from "./user-actions";
 
 export default async function UserDetailPage({
 	params,
@@ -21,7 +22,10 @@ export default async function UserDetailPage({
 			<Link href="/users" className="text-sm text-muted">
 				← 返回列表
 			</Link>
-			<h1 className="mt-2 font-serif text-xl text-gold-500">{user.email}</h1>
+			<div className="mt-2 flex items-center justify-between">
+				<h1 className="font-serif text-xl text-gold-500">{user.email}</h1>
+				<UserActions userId={id} banned={user.banned} />
+			</div>
 			<UserTabs userId={id} />
 		</div>
 	);

@@ -6,8 +6,7 @@ import type { AdminSession } from "@/lib/cinaauth/types";
 
 /**
  * Persistent, non-dismissible banner shown while an admin is impersonating a
- * user. Phase 1: detection only (Stop button wired in Phase 3 with the
- * stop-impersonate proxy).
+ * user. Stop button calls /api/admin/users/impersonate/stop then reloads.
  */
 export function ImpersonateBanner() {
 	const { t } = useTranslation();
@@ -30,7 +29,16 @@ export function ImpersonateBanner() {
 	return (
 		<div className="flex items-center justify-between border-b border-gold-500/40 bg-gold-500/15 px-6 py-2 text-sm text-gold-400">
 			<span>{t("impersonate.banner", { user: acting })}</span>
-			<button type="button" className="underline">
+			<button
+				type="button"
+				className="underline"
+				onClick={async () => {
+					await fetch("/api/admin/users/impersonate/stop", {
+						method: "POST",
+					});
+					window.location.reload();
+				}}
+			>
 				{t("impersonate.stop")}
 			</button>
 		</div>

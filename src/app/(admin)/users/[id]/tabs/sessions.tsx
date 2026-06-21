@@ -7,10 +7,12 @@ import {
 	type ColumnDef,
 } from "@tanstack/react-table";
 import { DataTable } from "@/components/data-table/data-table";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { RoleGuard } from "@/components/role-guard";
 import type { SessionDTO } from "@/lib/cinaauth/dto";
 
 export function SessionsTab({ userId }: { userId: string }) {
-	const { data, isFetching } = useQuery({
+	const { data, isFetching, refetch } = useQuery({
 		queryKey: ["user", userId, "sessions"],
 		queryFn: async () => {
 			const r = await fetch(`/api/admin/users/${userId}/sessions`);
@@ -23,6 +25,15 @@ export function SessionsTab({ userId }: { userId: string }) {
 	});
 
 	const sessions = data ?? [];
+
+	const revokeAll = async () => {
+		await fetch("/api/admin/sessions/revoke", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ userId }),
+		});
+		await refetch();
+	};
 
 	const columns: ColumnDef<SessionDTO>[] = [
 		{
@@ -46,6 +57,27 @@ export function SessionsTab({ userId }: { userId: string }) {
 	});
 
 	return (
-		<DataTable table={table} emptyLabel={isFetching ? "加载中…" : "无活跃会话"} />
+		<div>
+			<div className="mb-4 flex justify-end">
+				<RoleGuard allow={["super_admin", "security_admin"]}>
+					<ConfirmDialog
+						trigger={
+							<span className="cursor-pointer text-sm text-danger">
+								吊销全部会话
+							</span>
+						}
+						title="吊销全部会话"
+						description="该用户的所有活跃会话将被立即吊销，需重新登录。"
+						danger
+						confirmText="吊销全部"
+						onConfirm={revokeAll}
+					/>
+				</RoleGuard>
+			</div>
+			<DataTable
+				table={table}
+				emptyLabel={isFetching ? "加载中…" : "无活跃会话"}
+			/>
+		</div>
 	);
 }

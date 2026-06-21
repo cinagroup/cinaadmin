@@ -8,10 +8,12 @@ import {
 } from "@tanstack/react-table";
 import { DataTable } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { RoleGuard } from "@/components/role-guard";
 import type { WalletDTO } from "@/lib/cinaauth/dto";
 
 export function WalletsTab({ userId }: { userId: string }) {
-	const { data, isFetching } = useQuery({
+	const { data, isFetching, refetch } = useQuery({
 		queryKey: ["user", userId, "wallets"],
 		queryFn: async () => {
 			const r = await fetch(`/api/admin/users/${userId}/wallets`);
@@ -24,6 +26,15 @@ export function WalletsTab({ userId }: { userId: string }) {
 	});
 
 	const wallets = data ?? [];
+
+	const unbind = async (w: WalletDTO) => {
+		await fetch(`/api/admin/users/${userId}/wallets/${w.address}`, {
+			method: "DELETE",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ chainId: w.chainId }),
+		});
+		await refetch();
+	};
 
 	const columns: ColumnDef<WalletDTO>[] = [
 		{
@@ -42,11 +53,28 @@ export function WalletsTab({ userId }: { userId: string }) {
 		{
 			accessorKey: "boundAt",
 			header: "绑定时间",
-			cell: ({ row }) =>
-				new Date(row.original.boundAt).toLocaleString(),
+			cell: ({ row }) => new Date(row.original.boundAt).toLocaleString(),
 		},
 		{ accessorKey: "boundIp", header: "绑定 IP" },
 		{ accessorKey: "boundSite", header: "来源站点" },
+		{
+			id: "actions",
+			header: "操作",
+			cell: ({ row }) => (
+				<RoleGuard allow={["super_admin", "security_admin"]}>
+					<ConfirmDialog
+						trigger={
+							<span className="cursor-pointer text-xs text-danger">解绑</span>
+						}
+						title="解绑钱包"
+						description={`将解绑 ${row.original.address}，该钱包相关会话将吊销。`}
+						danger
+						confirmText="解绑"
+						onConfirm={() => unbind(row.original)}
+					/>
+				</RoleGuard>
+			),
+		},
 	];
 
 	const table = useReactTable({
