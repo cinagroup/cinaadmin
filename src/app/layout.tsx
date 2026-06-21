@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "@/lib/i18n";
+import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-sans", subsets: ["latin"] });
@@ -21,7 +22,9 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en" className={`${inter.variable} ${playfair.variable}`}>
-			<body>{children}</body>
+			<body>
+				<QueryProvider>{children}</QueryProvider>
+			</body>
 		</html>
 	);
 }
