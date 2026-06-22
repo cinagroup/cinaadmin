@@ -3,10 +3,18 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AdminSession } from "@/lib/cinaauth/types";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 export function Topbar() {
 	const { t, i18n } = useTranslation();
 	const [session, setSession] = useState<AdminSession | null>(null);
+	const lang = i18n.language?.startsWith("zh") ? "zh" : "en";
 
 	useEffect(() => {
 		fetch("/api/admin/session")
@@ -20,23 +28,29 @@ export function Topbar() {
 	}, []);
 
 	return (
-		<header className="flex h-14 items-center justify-between border-b border-ink-700 bg-ink-900 px-6">
-			<div className="text-sm text-muted">{session?.email ?? ""}</div>
+		<header className="flex h-16 items-center justify-between border-b border-hairline bg-canvas px-6">
+			<div className="text-[14px] leading-5 text-body">
+				{session?.email ?? ""}
+			</div>
 			<div className="flex items-center gap-3">
-				<select
-					value={i18n.language?.startsWith("zh") ? "zh" : "en"}
-					onChange={(e) => i18n.changeLanguage(e.target.value)}
-					className="rounded border border-ink-700 bg-ink-800 px-2 py-1 text-sm"
+				<Select
+					value={lang}
+					onValueChange={(v) => i18n.changeLanguage(v)}
 				>
-					<option value="en">EN</option>
-					<option value="zh">中文</option>
-				</select>
+					<SelectTrigger className="h-8 w-[88px] text-[14px]">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="en">EN</SelectItem>
+						<SelectItem value="zh">中文</SelectItem>
+					</SelectContent>
+				</Select>
 				<button
 					type="button"
-				onClick={() => {
-					window.location.href = `${process.env.NEXT_PUBLIC_CINAUTH_BASE_URL ?? ""}/sign-out`;
-				}}
-					className="text-sm text-muted hover:text-text"
+					onClick={() => {
+						window.location.href = `${process.env.NEXT_PUBLIC_CINAUTH_AUTH_URL ?? ""}/sign-out`;
+					}}
+					className="text-[14px] leading-5 text-body transition-colors hover:text-ink"
 				>
 					{t("common.signOut")}
 				</button>

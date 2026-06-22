@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export default function NewUserPage() {
 	const router = useRouter();
@@ -33,45 +38,47 @@ export default function NewUserPage() {
 
 	return (
 		<div className="max-w-md">
-			<h1 className="mb-4 font-serif text-xl text-gold-500">手动建号</h1>
-			<form onSubmit={submit} className="space-y-4">
-				<div>
-					<label className="mb-1 block text-sm text-muted">邮箱</label>
-					<input
-						type="email"
-						required
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-						className="w-full rounded border border-ink-700 bg-ink-800 px-3 py-2"
-					/>
-				</div>
-				<div>
-					<label className="mb-1 block text-sm text-muted">用户名</label>
-					<input
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						className="w-full rounded border border-ink-700 bg-ink-800 px-3 py-2"
-					/>
-				</div>
-				<div>
-					<label className="mb-1 block text-sm text-muted">密码</label>
-					<input
-						type="password"
-						required
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-						className="w-full rounded border border-ink-700 bg-ink-800 px-3 py-2"
-					/>
-				</div>
-				{error && <div className="text-sm text-danger">{error}</div>}
-				<button
-					type="submit"
-					disabled={submitting}
-					className="rounded bg-gold-500 px-4 py-2 text-sm text-ink-950 disabled:opacity-50"
-				>
-					{submitting ? "创建中…" : "创建用户"}
-				</button>
-			</form>
+			<PageHeader title="手动建号" />
+			<Card>
+				<CardContent>
+					<form onSubmit={submit} className="space-y-4">
+						<div className="space-y-1.5">
+							<Label htmlFor="email">邮箱</Label>
+							<Input
+								id="email"
+								type="email"
+								required
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+							/>
+						</div>
+						<div className="space-y-1.5">
+							<Label htmlFor="name">用户名</Label>
+							<Input
+								id="name"
+								value={name}
+								onChange={(e) => setName(e.target.value)}
+							/>
+						</div>
+						<div className="space-y-1.5">
+							<Label htmlFor="password">密码</Label>
+							<Input
+								id="password"
+								type="password"
+								required
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+							/>
+						</div>
+						{error && (
+							<div className="text-[14px] leading-5 text-error">{error}</div>
+						)}
+						<Button type="submit" disabled={submitting}>
+							{submitting ? "创建中…" : "创建用户"}
+						</Button>
+					</form>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

@@ -54,3 +54,6 @@ export async function GET(request: NextRequest) {
 		},
 	});
 }
+
+// Required by Cloudflare Pages (@cloudflare/next-on-pages).
+export const runtime = "edge";

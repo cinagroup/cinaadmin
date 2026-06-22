@@ -1,51 +1,157 @@
 @import "tailwindcss";
 
 /*
- * CinaGroup black-gold theme (Tailwind v4 @theme tokens).
- * Dark surface palette + gold accent. v1 ships dark-only.
+ * CinaGroup Admin — Vercel-inspired light theme (Tailwind v4 @theme tokens).
+ * Near-white canvas, ink-near-black text, stacked-shadow elevation.
+ * Tokens mirror the DESIGN.md design-analysis spec.
  */
 @theme {
-	--color-ink-950: #0a0a0b;
-	--color-ink-900: #121214;
-	--color-ink-800: #1a1a1e;
-	--color-ink-700: #242428;
-	--color-gold-400: #e6c068;
-	--color-gold-500: #d4af37;
-	--color-gold-600: #b8941f;
-	--color-muted: #6b6b73;
-	--color-danger: #e05260;
-	--color-success: #4caf7d;
+	/* ── Surfaces ── */
+	--color-canvas: #ffffff; /* cards / dialogs / nav */
+	--color-canvas-soft: #fafafa; /* page background (98% white) */
+	--color-canvas-soft-2: #f5f5f5; /* inset regions / hover / dropdowns */
 
-	--font-sans: "Inter", system-ui, sans-serif;
-	--font-serif: "Playfair Display", Georgia, serif;
+	/* ── Text ── */
+	--color-ink: #171717; /* primary text / headings */
+	--color-body: #4d4d4d; /* secondary text */
+	--color-mute: #888888; /* placeholder / low-priority labels */
+
+	/* ── Lines ── */
+	--color-hairline: #ebebeb; /* 1px dividers / borders */
+	--color-hairline-strong: #a1a1a1; /* stronger dividers */
+
+	/* ── Brand / Link ── */
+	--color-link: #0070f3;
+	--color-link-deep: #0761d1;
+
+	/* ── Semantic ── */
+	--color-error: #ee0000;
+	--color-error-soft: #f7d4d6;
+	--color-warning: #f5a623;
+	--color-warning-soft: #ffefcf;
+	--color-success: #0070f3;
+	--color-success-soft: #d3e5ff;
+
+	/* ── Accent (selective use only) ── */
+	--color-violet: #7928ca;
+	--color-cyan: #50e3c2;
+
+	/* ── Fonts ── */
+	--font-sans: var(--font-geist-sans), Inter, system-ui, -apple-system,
+		sans-serif;
+	--font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
+		Monaco, monospace;
+
+	/* ── Radius ── */
+	--radius-sm: 6px; /* in-app buttons / inputs (geist-radius) */
+	--radius-md: 8px; /* marketing cards */
+	--radius-lg: 12px; /* large cards */
+	--radius-pill: 100px; /* marketing CTAs */
 }
 
 :root {
-	--bg: #0a0a0b;
-	--surface: #121214;
-	--border: #242428;
-	--gold: #d4af37;
-	--text: #e8e8ea;
-	--text-muted: #6b6b73;
+	--bg: var(--color-canvas-soft);
+	--text: var(--color-ink);
+	--border: var(--color-hairline);
 }
 
 html,
 body {
-	background: var(--bg);
-	color: var(--text);
+	background: var(--color-canvas-soft);
+	color: var(--color-ink);
 	font-family: var(--font-sans);
 	min-height: 100vh;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
 }
 
+/*
+ * Focus ring — ink outline. Per spec, focus visibility is part of the
+ * engineered feel; the ink ring ties to the single primary CTA colour.
+ */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
-select:focus-visible {
-	outline: 2px solid var(--gold);
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[data-state]:focus-visible {
+	outline: 2px solid var(--color-ink);
 	outline-offset: 2px;
+	border-radius: var(--radius-sm);
 }
 
-/* Scrollbar (dark) */
+/* Selection — ink-on-light, matching the brand's selection token. */
+::selection {
+	background: var(--color-ink);
+	color: #f2f2f2;
+}
+
+/* Scrollbar (light) */
 * {
-	scrollbar-color: #242428 transparent;
+	scrollbar-color: var(--color-hairline-strong) transparent;
+}
+
+/*
+ * Minimal enter/exit animation utilities for Radix overlays (Dialog, Select,
+ * Tooltip). Mirrors the class names tailwindcss-animate would generate, but
+ * kept deliberately small — opacity fade + a touch of scale on modals.
+ */
+@layer utilities {
+	@keyframes cg-fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+	@keyframes cg-fade-out {
+		from {
+			opacity: 1;
+		}
+		to {
+			opacity: 0;
+		}
+	}
+	@keyframes cg-zoom-in {
+		from {
+			opacity: 0;
+			transform: translate(-50%, -50%) scale(0.96);
+		}
+		to {
+			opacity: 1;
+			transform: translate(-50%, -50%) scale(1);
+		}
+	}
+	@keyframes cg-zoom-out {
+		from {
+			opacity: 1;
+			transform: translate(-50%, -50%) scale(1);
+		}
+		to {
+			opacity: 0;
+			transform: translate(-50%, -50%) scale(0.96);
+		}
+	}
+	.animate-in {
+		animation-duration: 150ms;
+		animation-fill-mode: both;
+	}
+	.animate-out {
+		animation-duration: 150ms;
+		animation-fill-mode: both;
+	}
+	.fade-in-0 {
+		animation-name: cg-fade-in;
+	}
+	.fade-out-0 {
+		animation-name: cg-fade-out;
+	}
+	.zoom-in-95 {
+		animation-name: cg-zoom-in;
+	}
+	.zoom-out-95 {
+		animation-name: cg-zoom-out;
+	}
 }

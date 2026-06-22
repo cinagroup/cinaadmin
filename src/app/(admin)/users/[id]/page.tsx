@@ -14,19 +14,37 @@ export default async function UserDetailPage({
 	const user = await getUser(cookie, id).catch(() => null);
 
 	if (!user) {
-		return <div className="text-muted">用户不存在或加载失败</div>;
+		return (
+			<div>
+				<Link
+					href="/users"
+					className="text-[14px] leading-5 text-body hover:text-ink"
+				>
+					← 返回列表
+				</Link>
+				<p className="mt-4 text-[16px] leading-6 text-body">用户不存在或加载失败</p>
+			</div>
+		);
 	}
 
 	return (
 		<div>
-			<Link href="/users" className="text-sm text-muted">
+			<Link
+				href="/users"
+				className="text-[14px] leading-5 text-body hover:text-ink"
+			>
 				← 返回列表
 			</Link>
 			<div className="mt-2 flex items-center justify-between">
-				<h1 className="font-serif text-xl text-gold-500">{user.email}</h1>
+				<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
+					{user.email}
+				</h1>
 				<UserActions userId={id} banned={user.banned} />
 			</div>
 			<UserTabs userId={id} />
 		</div>
 	);
 }
+
+// Required by Cloudflare Pages (@cloudflare/next-on-pages).
+export const runtime = "edge";

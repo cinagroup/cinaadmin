@@ -11,6 +11,16 @@ import { DataTable } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/layout/page-header";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 interface ApiKeyDTO {
 	id: string;
@@ -62,14 +72,16 @@ export default function ApiKeysPage() {
 				accessorKey: "prefix",
 				header: "前缀",
 				cell: ({ row }) => (
-					<span className="font-mono text-xs">{row.original.prefix}…</span>
+					<span className="font-mono text-[12px] leading-4">
+						{row.original.prefix}…
+					</span>
 				),
 			},
 			{
 				header: "状态",
 				cell: ({ row }) =>
 					row.original.enabled ? (
-						<Badge>启用</Badge>
+						<Badge variant="success">启用</Badge>
 					) : (
 						<Badge variant="muted">禁用</Badge>
 					),
@@ -94,34 +106,35 @@ export default function ApiKeysPage() {
 
 	return (
 		<div>
-			<div className="mb-4 flex items-center justify-between">
-				<h1 className="font-serif text-xl text-gold-500">API 密钥管理</h1>
+			<PageHeader title="API 密钥管理">
 				<RoleGuard allow={["super_admin"]}>
 					<ConfirmDialog
 						trigger={
-							<span className="cursor-pointer text-sm text-gold-400">创建密钥</span>
+							<Button variant="primary" size="sm">
+								创建密钥
+							</Button>
 						}
 						title="创建 API 密钥"
 						confirmText={creating ? "创建中…" : "创建"}
 						onConfirm={create}
 					>
-						<input
+						<Input
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 							placeholder="密钥名称"
-							className="w-full rounded border border-ink-700 bg-ink-800 px-3 py-2"
 						/>
-						<select
-							value={scope}
-							onChange={(e) => setScope(e.target.value)}
-							className="w-full rounded border border-ink-700 bg-ink-800 px-3 py-2"
-						>
-							<option value="read-users">仅查用户</option>
-							<option value="verify-siwe">仅验签 SIWE</option>
-						</select>
+						<Select value={scope} onValueChange={setScope}>
+							<SelectTrigger className="h-10">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="read-users">仅查用户</SelectItem>
+								<SelectItem value="verify-siwe">仅验签 SIWE</SelectItem>
+							</SelectContent>
+						</Select>
 					</ConfirmDialog>
 				</RoleGuard>
-			</div>
+			</PageHeader>
 			<DataTable table={table} emptyLabel={isFetching ? "加载中…" : "暂无密钥"} />
 		</div>
 	);

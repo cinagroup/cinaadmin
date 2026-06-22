@@ -64,6 +64,6 @@ describe("Badge", () => {
 		const { container } = render(<Badge variant="danger">失败</Badge>);
 		const span = container.querySelector("span");
 		expect(span?.textContent).toBe("失败");
-		expect(span?.className).toContain("danger");
+		expect(span?.className).toContain("text-error");
 	});
 });

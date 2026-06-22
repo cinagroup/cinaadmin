@@ -3,8 +3,8 @@ import type { AdminSession } from "./types";
 
 /**
  * Resolve the cinaauth admin session from a Next.js Request by forwarding the
- * session cookie to cinaauth's /api/get-session. Returns null if there is no
- * valid session or the call fails.
+ * session cookie to cinaauth's /api/auth/get-session. Returns null if there is
+ * no valid session or the call fails.
  *
  * Used by middleware and Route Handlers (second-layer access enforcement).
  */
@@ -14,7 +14,7 @@ export async function resolveAdminSession(
 	const cookie = request.headers.get("cookie") ?? "";
 	if (!cookie) return null;
 	try {
-		const res = await fetch(`${cinaauthConfig.baseUrl}/api/get-session`, {
+		const res = await fetch(`${cinaauthConfig.baseUrl}/api/auth/get-session`, {
 			headers: { cookie },
 			cache: "no-store",
 			next: { revalidate: 0 },

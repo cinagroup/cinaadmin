@@ -15,12 +15,12 @@ export async function middleware(request: NextRequest) {
 	// NOTE: this intentionally inlines the role check rather than reusing
 	// `resolveAdminSession` — the edge middleware only needs `user.role`, and
 	// keeping the edge bundle minimal avoids pulling the full session DTO path.
-	// If cinaauth's /api/get-session response shape changes, update both here
-	// and in src/lib/cinaauth/session.ts.
+	// If cinaauth's /api/auth/get-session response shape changes, update both
+	// here and in src/lib/cinaauth/session.ts.
 	const cookie = request.headers.get("cookie") ?? "";
 	let role: string | undefined;
 	try {
-		const res = await fetch(`${cinaauthConfig.baseUrl}/api/get-session`, {
+		const res = await fetch(`${cinaauthConfig.baseUrl}/api/auth/get-session`, {
 			headers: { cookie },
 			cache: "no-store",
 		});
@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
 				{ status: 401 },
 			);
 		}
-		const signInUrl = new URL(`${cinaauthConfig.baseUrl}/sign-in`);
+		const signInUrl = new URL(`${cinaauthConfig.authUrl}/sign-in`);
 		signInUrl.searchParams.set("callbackURL", request.url);
 		return NextResponse.redirect(signInUrl);
 	}

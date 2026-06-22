@@ -1,6 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 export interface FilterState {
 	searchField?: string;
@@ -31,22 +39,23 @@ export function FilterBar({
 
 	return (
 		<div className="mb-4 flex gap-2">
-			<select
-				value={field}
-				onChange={(e) => setField(e.target.value)}
-				className="rounded border border-ink-700 bg-ink-800 px-3 py-2 text-sm"
-			>
-				{fields.map((f) => (
-					<option key={f.value} value={f.value}>
-						{f.label}
-					</option>
-				))}
-			</select>
-			<input
+			<Select value={field} onValueChange={setField}>
+				<SelectTrigger className="h-10 w-[140px]">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					{fields.map((f) => (
+						<SelectItem key={f.value} value={f.value}>
+							{f.label}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+			<Input
 				value={value}
 				onChange={(e) => setValue(e.target.value)}
 				placeholder={searchLabel}
-				className="flex-1 rounded border border-ink-700 bg-ink-800 px-3 py-2 text-sm"
+				className="flex-1"
 			/>
 		</div>
 	);

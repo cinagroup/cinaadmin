@@ -4,6 +4,7 @@ import { hasAdminRole, resolveAdminSession } from "@/lib/cinaauth/session";
 beforeEach(() => {
 	vi.stubEnv("CINAADMIN_ALLOWED_ROLES", "super_admin,security_admin");
 	vi.stubEnv("CINAUTH_BASE_URL", "https://auth.test");
+	vi.stubEnv("CINAUTH_AUTH_URL", "https://auth-frontend.test");
 });
 
 describe("hasAdminRole", () => {

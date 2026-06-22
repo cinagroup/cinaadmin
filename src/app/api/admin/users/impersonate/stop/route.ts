@@ -18,3 +18,6 @@ export async function POST(request: NextRequest) {
 	});
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
+
+// Required by Cloudflare Pages (@cloudflare/next-on-pages).
+export const runtime = "edge";

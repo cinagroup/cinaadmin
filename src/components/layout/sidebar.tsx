@@ -37,10 +37,12 @@ export function Sidebar() {
 	const { t } = useTranslation();
 	const pathname = usePathname();
 	return (
-		<aside className="w-60 shrink-0 flex flex-col border-r border-ink-700 bg-ink-900">
-			<div className="flex items-center gap-2 border-b border-ink-700 px-4 py-5">
-				<span className="font-serif text-lg text-gold-500">CinaGroup</span>
-				<span className="rounded border border-gold-500/30 bg-gold-500/10 px-2 py-0.5 text-xs text-gold-400">
+		<aside className="flex w-60 shrink-0 flex-col border-r border-hairline bg-canvas">
+			<div className="flex items-center gap-2 border-b border-hairline px-4 py-5">
+				<span className="text-[16px] font-semibold leading-6 tracking-[-0.32px] text-ink">
+					CinaGroup
+				</span>
+				<span className="rounded-full bg-canvas-soft px-2 text-[12px] leading-4 text-body">
 					{t("instance.production")}
 				</span>
 			</div>
@@ -48,7 +50,7 @@ export function Sidebar() {
 				{NAV.map((section) => (
 					<div key={section.groupKey ?? "top"}>
 						{section.groupKey && (
-							<div className="mb-1 px-2 text-xs uppercase tracking-wide text-muted">
+							<div className="mb-1 px-2 font-mono text-[12px] uppercase tracking-wide text-mute">
 								{t(section.groupKey)}
 							</div>
 						)}
@@ -60,10 +62,10 @@ export function Sidebar() {
 								<Link
 									key={item.href}
 									href={item.href}
-									className={`block rounded px-3 py-2 text-sm transition ${
+									className={`block rounded-[var(--radius-sm)] px-3 py-2 text-[14px] leading-5 transition-colors ${
 										active
-											? "bg-gold-500/10 text-gold-400"
-											: "text-text hover:bg-ink-800"
+											? "bg-canvas-soft-2 font-medium text-ink"
+											: "text-body hover:bg-canvas-soft hover:text-ink"
 									}`}
 								>
 									{t(item.key)}

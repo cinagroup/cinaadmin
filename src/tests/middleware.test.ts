@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 beforeEach(() => {
 	vi.stubEnv("CINAADMIN_ALLOWED_ROLES", "super_admin,security_admin");
 	vi.stubEnv("CINAUTH_BASE_URL", "https://auth.test");
+	vi.stubEnv("CINAUTH_AUTH_URL", "https://auth-frontend.test");
 });
 
 /**
@@ -34,7 +35,10 @@ describe("middleware access control", () => {
 	it("redirects non-allowed roles to cinaauth sign-in", async () => {
 		const res = await runMiddleware({ pathname: "/users", role: "user" });
 		expect(res.status).toBeGreaterThanOrEqual(300);
-		expect(res.headers.get("location") ?? "").toContain("/sign-in");
+		const loc = res.headers.get("location") ?? "";
+		// Must hit the FRONTEND host (CINAUTH_AUTH_URL), not the API host.
+		expect(loc).toContain("https://auth-frontend.test/sign-in");
+		expect(loc).toContain("/sign-in");
 	});
 
 	it("redirects when unauthenticated (no role)", async () => {

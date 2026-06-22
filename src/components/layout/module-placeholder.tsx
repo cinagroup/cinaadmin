@@ -8,8 +8,12 @@ export function ModulePlaceholder({ label }: { label: string }) {
 	const { t } = useTranslation();
 	return (
 		<div>
-			<h1 className="font-serif text-xl text-gold-500">{label}</h1>
-			<p className="mt-2 text-sm text-muted">{t("placeholder.phase2")}</p>
+			<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
+				{label}
+			</h1>
+			<p className="mt-2 text-[14px] leading-5 text-body">
+				{t("placeholder.phase2")}
+			</p>
 		</div>
 	);
 }

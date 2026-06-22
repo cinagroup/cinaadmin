@@ -48,7 +48,7 @@ export function WalletsTab({ userId }: { userId: string }) {
 		{
 			header: "主钱包",
 			cell: ({ row }) =>
-				row.original.isPrimary ? <Badge variant="gold">主</Badge> : null,
+				row.original.isPrimary ? <Badge variant="success">主</Badge> : null,
 		},
 		{
 			accessorKey: "boundAt",
