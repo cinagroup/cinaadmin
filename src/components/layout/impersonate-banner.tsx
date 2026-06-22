@@ -27,11 +27,11 @@ export function ImpersonateBanner() {
 
 	if (!acting) return null;
 	return (
-		<div className="flex items-center justify-between border-b border-gold-500/40 bg-gold-500/15 px-6 py-2 text-sm text-gold-400">
+		<div className="flex items-center justify-between border-b border-[#ab570a]/40 bg-[var(--color-warning-soft)] px-6 py-2 text-[14px] leading-5 text-[#ab570a]">
 			<span>{t("impersonate.banner", { user: acting })}</span>
 			<button
 				type="button"
-				className="underline"
+				className="underline underline-offset-4"
 				onClick={async () => {
 					await fetch("/api/admin/users/impersonate/stop", {
 						method: "POST",

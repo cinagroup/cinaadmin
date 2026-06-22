@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "@/lib/i18n";
 import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
-
-const inter = Inter({ variable: "--font-sans", subsets: ["latin"] });
-const playfair = Playfair_Display({
-	variable: "--font-serif",
-	subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
 	title: "CinaGroup Admin",
@@ -21,7 +16,11 @@ export default function RootLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+		<html
+			lang="en"
+			className={`${GeistSans.variable} ${GeistMono.variable}`}
+			suppressHydrationWarning
+		>
 			<body>
 				<QueryProvider>{children}</QueryProvider>
 			</body>

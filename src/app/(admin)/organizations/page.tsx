@@ -11,6 +11,9 @@ import Link from "next/link";
 import { DataTable } from "@/components/data-table/data-table";
 import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/layout/page-header";
 
 interface OrgDTO {
 	id: string;
@@ -61,7 +64,7 @@ export default function OrganizationsPage() {
 				cell: ({ row }) => (
 					<Link
 						href={`/organizations/${row.original.id}`}
-						className="text-gold-400 hover:underline"
+						className="text-link underline-offset-4 hover:underline"
 					>
 						{row.original.name}
 					</Link>
@@ -85,32 +88,31 @@ export default function OrganizationsPage() {
 
 	return (
 		<div>
-			<div className="mb-4 flex items-center justify-between">
-				<h1 className="font-serif text-xl text-gold-500">组织 / 商户管理</h1>
+			<PageHeader title="组织 / 商户管理">
 				<RoleGuard allow={["super_admin"]}>
 					<ConfirmDialog
 						trigger={
-							<span className="cursor-pointer text-sm text-gold-400">新建组织</span>
+							<Button variant="primary" size="sm">
+								新建组织
+							</Button>
 						}
 						title="新建组织"
 						confirmText={creating ? "创建中…" : "创建"}
 						onConfirm={create}
 					>
-						<input
+						<Input
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 							placeholder="组织名称"
-							className="w-full rounded border border-ink-700 bg-ink-800 px-3 py-2"
 						/>
-						<input
+						<Input
 							value={slug}
 							onChange={(e) => setSlug(e.target.value)}
 							placeholder="slug（唯一标识）"
-							className="w-full rounded border border-ink-700 bg-ink-800 px-3 py-2"
 						/>
 					</ConfirmDialog>
 				</RoleGuard>
-			</div>
+			</PageHeader>
 			<DataTable table={table} emptyLabel={isFetching ? "加载中…" : "暂无组织"} />
 		</div>
 	);

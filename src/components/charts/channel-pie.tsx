@@ -2,7 +2,8 @@
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-const COLORS = ["#d4af37", "#6b6b73", "#242428"];
+// Brand accent palette (link / violet / cyan) — no gold in the light theme.
+const COLORS = ["#0070f3", "#7928ca", "#50e3c2"];
 
 /** Login-channel distribution pie (email/password, github, siwe). */
 export function ChannelPie({
@@ -17,7 +18,7 @@ export function ChannelPie({
 	].filter((d) => d.value > 0);
 
 	if (data.length === 0) {
-		return <div className="text-sm text-muted">暂无数据</div>;
+		return <div className="text-[14px] leading-5 text-mute">暂无数据</div>;
 	}
 
 	return (
@@ -37,9 +38,14 @@ export function ChannelPie({
 					))}
 				</Pie>
 				<Tooltip
-					contentStyle={{ background: "#121214", border: "1px solid #242428" }}
+					contentStyle={{
+						background: "#ffffff",
+						border: "1px solid #ebebeb",
+						borderRadius: "6px",
+						color: "#171717",
+					}}
 				/>
-				<Legend wrapperStyle={{ color: "#6b6b73" }} />
+				<Legend wrapperStyle={{ color: "#4d4d4d" }} />
 			</PieChart>
 		</ResponsiveContainer>
 	);

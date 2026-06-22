@@ -11,7 +11,10 @@ function required(name: string, fallback?: string): string {
 }
 
 export const cinaauthConfig = {
+	/** API host (auth.cinagroup.com) — session check + admin API calls. */
 	baseUrl: required("CINAUTH_BASE_URL", "http://localhost:2025"),
+	/** Frontend host (demo-auth.cinagroup.com) — login/sign-out page redirects. */
+	authUrl: required("CINAUTH_AUTH_URL", "http://localhost:3000"),
 	serviceKey: required("CINAUTH_ADMIN_SERVICE_KEY", "dev-service-key"),
 	allowedRoles: (process.env.CINAADMIN_ALLOWED_ROLES ?? "super_admin,security_admin")
 		.split(",")

@@ -9,6 +9,15 @@ import {
 } from "@tanstack/react-table";
 import { DataTable } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/page-header";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import type { AuditLogDTO } from "@/lib/cinaauth/dto";
 
 const CATEGORIES = [
@@ -23,16 +32,16 @@ const CATEGORIES = [
 ];
 
 export default function AuditPage() {
-	const [category, setCategory] = useState("");
-	const [result, setResult] = useState("");
+	const [category, setCategory] = useState("all");
+	const [result, setResult] = useState("all");
 
 	const { data, isFetching } = useQuery({
 		queryKey: ["audit", category, result],
 		queryFn: async () => {
 			const qs = new URLSearchParams({
 				limit: "100",
-				...(category && { category }),
-				...(result && { result }),
+				...(category !== "all" && { category }),
+				...(result !== "all" && { result }),
 			});
 			const r = await fetch(`/api/admin/audit?${qs}`);
 			const d = (await r.json()) as {
@@ -62,7 +71,7 @@ export default function AuditPage() {
 					row.original.result === "failure" ? (
 						<Badge variant="danger">失败</Badge>
 					) : (
-						<Badge>成功</Badge>
+						<Badge variant="success">成功</Badge>
 					),
 			},
 		],
@@ -76,45 +85,46 @@ export default function AuditPage() {
 	});
 
 	const exportHref = `/api/admin/export?kind=audit&${new URLSearchParams({
-		...(category && { category }),
-		...(result && { result }),
+		...(category !== "all" && { category }),
+		...(result !== "all" && { result }),
 	})}`;
 
 	return (
 		<div>
-			<div className="mb-4 flex items-center justify-between">
-				<h1 className="font-serif text-xl text-gold-500">审计日志</h1>
-				<a href={exportHref} className="text-sm text-gold-400">
-					导出 CSV
-				</a>
-			</div>
+			<PageHeader title="审计日志">
+				<Button asChild variant="secondary" size="sm">
+					<a href={exportHref}>导出 CSV</a>
+				</Button>
+			</PageHeader>
 			<div className="mb-4 flex gap-2">
-				<select
-					value={category}
-					onChange={(e) => setCategory(e.target.value)}
-					className="rounded border border-ink-700 bg-ink-800 px-3 py-2 text-sm"
-				>
-					<option value="">全部类别</option>
-					{CATEGORIES.map((c) => (
-						<option key={c} value={c}>
-							{c}
-						</option>
-					))}
-				</select>
-				<select
-					value={result}
-					onChange={(e) => setResult(e.target.value)}
-					className="rounded border border-ink-700 bg-ink-800 px-3 py-2 text-sm"
-				>
-					<option value="">全部结果</option>
-					<option value="success">成功</option>
-					<option value="failure">失败</option>
-				</select>
+				<Select value={category} onValueChange={setCategory}>
+					<SelectTrigger className="h-10 w-[160px]">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">全部类别</SelectItem>
+						{CATEGORIES.map((c) => (
+							<SelectItem key={c} value={c}>
+								{c}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+				<Select value={result} onValueChange={setResult}>
+					<SelectTrigger className="h-10 w-[160px]">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">全部结果</SelectItem>
+						<SelectItem value="success">成功</SelectItem>
+						<SelectItem value="failure">失败</SelectItem>
+					</SelectContent>
+				</Select>
 			</div>
 			<DataTable
 				table={table}
 				rowClassName={(r) =>
-					r.result === "failure" ? "bg-danger/5" : undefined
+					r.result === "failure" ? "bg-[var(--color-error-soft)]/40" : undefined
 				}
 				emptyLabel={isFetching ? "加载中…" : "暂无审计记录"}
 			/>

@@ -1,62 +1,48 @@
 "use client";
 
-import { useState } from "react";
 import { OverviewTab } from "./tabs/overview";
 import { WalletsTab } from "./tabs/wallets";
 import { SessionsTab } from "./tabs/sessions";
 import { LoginTrailTab } from "./tabs/login-trail";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TABS = [
-	"overview",
-	"wallets",
-	"third-party",
-	"sessions",
-	"login-trail",
-	"security",
+	{ value: "overview", label: "概览" },
+	{ value: "wallets", label: "钱包 (SIWE)" },
+	{ value: "third-party", label: "第三方绑定" },
+	{ value: "sessions", label: "会话" },
+	{ value: "login-trail", label: "登录轨迹" },
+	{ value: "security", label: "安全" },
 ] as const;
-type Tab = (typeof TABS)[number];
-
-const TAB_LABELS: Record<Tab, string> = {
-	overview: "概览",
-	wallets: "钱包 (SIWE)",
-	"third-party": "第三方绑定",
-	sessions: "会话",
-	"login-trail": "登录轨迹",
-	security: "安全",
-};
 
 export function UserTabs({ userId }: { userId: string }) {
-	const [tab, setTab] = useState<Tab>("overview");
 	return (
-		<div className="mt-4">
-			<div className="flex gap-1 border-b border-ink-700">
+		<Tabs defaultValue="overview" className="mt-6">
+			<TabsList>
 				{TABS.map((t) => (
-					<button
-						type="button"
-						key={t}
-						onClick={() => setTab(t)}
-						className={`px-4 py-2 text-sm ${
-							tab === t
-								? "border-b-2 border-gold-500 text-gold-400"
-								: "text-muted"
-						}`}
-					>
-						{TAB_LABELS[t]}
-					</button>
+					<TabsTrigger key={t.value} value={t.value}>
+						{t.label}
+					</TabsTrigger>
 				))}
-			</div>
-			<div className="mt-4">
-				{tab === "overview" && <OverviewTab userId={userId} />}
-				{tab === "wallets" && <WalletsTab userId={userId} />}
-				{tab === "third-party" && (
-					<div className="text-muted">第三方绑定（OAuth 记录）</div>
-				)}
-				{tab === "sessions" && <SessionsTab userId={userId} />}
-				{tab === "login-trail" && <LoginTrailTab userId={userId} />}
-				{tab === "security" && (
-					<div className="text-muted">安全详情（Phase 3 扩展）</div>
-				)}
-			</div>
-		</div>
+			</TabsList>
+			<TabsContent value="overview">
+				<OverviewTab userId={userId} />
+			</TabsContent>
+			<TabsContent value="wallets">
+				<WalletsTab userId={userId} />
+			</TabsContent>
+			<TabsContent value="third-party">
+				<p className="text-[14px] leading-5 text-body">第三方绑定（OAuth 记录）</p>
+			</TabsContent>
+			<TabsContent value="sessions">
+				<SessionsTab userId={userId} />
+			</TabsContent>
+			<TabsContent value="login-trail">
+				<LoginTrailTab userId={userId} />
+			</TabsContent>
+			<TabsContent value="security">
+				<p className="text-[14px] leading-5 text-body">安全详情（Phase 3 扩展）</p>
+			</TabsContent>
+		</Tabs>
 	);
 }

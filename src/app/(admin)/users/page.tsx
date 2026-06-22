@@ -12,6 +12,8 @@ import { DataTable } from "@/components/data-table/data-table";
 import { FilterBar, type FilterState } from "@/components/data-table/filter-bar";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/page-header";
 import type { UserDTO } from "@/lib/cinaauth/dto";
 
 const PAGE_SIZE = 20;
@@ -53,7 +55,7 @@ export default function UsersPage() {
 				cell: ({ row }) => (
 					<Link
 						href={`/users/${row.original.id}`}
-						className="text-gold-400 hover:underline"
+						className="text-link underline-offset-4 hover:underline"
 					>
 						{row.original.email}
 					</Link>
@@ -67,7 +69,7 @@ export default function UsersPage() {
 					row.original.banned ? (
 						<Badge variant="danger">封禁</Badge>
 					) : (
-						<Badge>正常</Badge>
+						<Badge variant="success">正常</Badge>
 					),
 			},
 			{
@@ -92,12 +94,11 @@ export default function UsersPage() {
 
 	return (
 		<div>
-			<div className="mb-4 flex items-center justify-between">
-				<h1 className="font-serif text-xl text-gold-500">用户管理</h1>
-				<a href={exportHref} className="text-sm text-gold-400">
-					导出 CSV
-				</a>
-			</div>
+			<PageHeader title="用户管理">
+				<Button asChild variant="secondary" size="sm">
+					<a href={exportHref}>导出 CSV</a>
+				</Button>
+			</PageHeader>
 			<FilterBar
 				fields={[
 					{ label: "邮箱", value: "email" },

@@ -2,6 +2,15 @@
 
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Button } from "@/components/ui/button";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 /** Ban dialog with duration (7d/30d/permanent) + reason. On confirm, POSTs
  *  /api/admin/users/[id]/ban then reloads. */
@@ -29,26 +38,30 @@ export function BanDialog({ userId }: { userId: string }) {
 
 	return (
 		<ConfirmDialog
-			trigger={<span className="cursor-pointer text-sm text-danger">封禁</span>}
+			trigger={
+				<Button variant="danger" size="sm">
+					封禁
+				</Button>
+			}
 			title="封禁用户"
 			danger
 			confirmText="封禁"
 			onConfirm={ban}
 		>
-			<select
-				value={duration}
-				onChange={(e) => setDuration(e.target.value)}
-				className="w-full rounded border border-ink-700 bg-ink-800 px-3 py-2"
-			>
-				<option value="7d">7 天</option>
-				<option value="30d">30 天</option>
-				<option value="permanent">永久</option>
-			</select>
-			<textarea
+			<Select value={duration} onValueChange={setDuration}>
+				<SelectTrigger className="h-10">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value="7d">7 天</SelectItem>
+					<SelectItem value="30d">30 天</SelectItem>
+					<SelectItem value="permanent">永久</SelectItem>
+				</SelectContent>
+			</Select>
+			<Input
 				value={reason}
 				onChange={(e) => setReason(e.target.value)}
 				placeholder="封禁原因（审计留痕）"
-				className="w-full rounded border border-ink-700 bg-ink-800 px-3 py-2"
 			/>
 		</ConfirmDialog>
 	);

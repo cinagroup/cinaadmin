@@ -18,3 +18,6 @@ export async function GET(request: NextRequest) {
 	}
 	return NextResponse.json({ ok: true, data: session });
 }
+
+// Required by Cloudflare Pages (@cloudflare/next-on-pages).
+export const runtime = "edge";

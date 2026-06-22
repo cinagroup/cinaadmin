@@ -1,10 +1,25 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 /**
- * Destructive-action confirmation dialog. `trigger` opens it; on confirm,
- * `onConfirm` runs. Supports an optional `children` body (e.g. form fields).
+ * Destructive-action confirmation dialog (Radix-backed). `trigger` opens it;
+ * on confirm, `onConfirm` runs. The trigger is wrapped via `asChild` so the
+ * caller's own element receives the click — preserving the original API.
+ *
+ * Radix Dialog manages open state internally and closes on ESC, overlay click,
+ * or any `DialogClose`-wrapped control. Both buttons here close the dialog.
  */
 export function ConfirmDialog({
 	trigger,
@@ -12,6 +27,7 @@ export function ConfirmDialog({
 	description,
 	children,
 	confirmText = "确认",
+	cancelText = "取消",
 	danger,
 	onConfirm,
 }: {
@@ -20,59 +36,41 @@ export function ConfirmDialog({
 	description?: string;
 	children?: ReactNode;
 	confirmText?: string;
+	cancelText?: string;
 	danger?: boolean;
 	onConfirm: () => void;
 }) {
-	const [open, setOpen] = useState(false);
 	return (
-		<>
-			<span
-				onClick={(e) => {
-					e.stopPropagation();
-					setOpen(true);
-				}}
-				className="inline-flex cursor-pointer"
-			>
-				{trigger}
-			</span>
-			{open && (
-				<div
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-					onClick={() => setOpen(false)}
-				>
-					<div
-						className="w-full max-w-sm rounded-lg border border-ink-700 bg-ink-900 p-6"
-						onClick={(e) => e.stopPropagation()}
-					>
-						<h3 className="font-serif text-lg text-gold-500">{title}</h3>
-						{description && <p className="mt-2 text-sm text-muted">{description}</p>}
-						{children && <div className="mt-3 space-y-3">{children}</div>}
-						<div className="mt-4 flex justify-end gap-2">
-							<button
-								type="button"
-								onClick={() => setOpen(false)}
-								className="rounded border border-ink-700 px-3 py-1.5 text-sm"
-							>
-								取消
-							</button>
-							<button
-								type="button"
-								onClick={() => {
-									onConfirm();
-									setOpen(false);
-								}}
-								className={`rounded px-3 py-1.5 text-sm ${
-									danger
-										? "bg-danger text-white"
-										: "bg-gold-500 text-ink-950"
-								}`}
-							>
-								{confirmText}
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
-		</>
+		<Dialog>
+			<DialogTrigger asChild>
+				<button type="button" className="inline-flex cursor-pointer items-center">
+					{trigger}
+				</button>
+			</DialogTrigger>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>{title}</DialogTitle>
+					{description && <DialogDescription>{description}</DialogDescription>}
+				</DialogHeader>
+				{children && <div className="space-y-3">{children}</div>}
+				<DialogFooter>
+					<DialogClose asChild>
+						<Button type="button" variant="secondary" size="sm">
+							{cancelText}
+						</Button>
+					</DialogClose>
+					<DialogClose asChild>
+						<Button
+							type="button"
+							variant={danger ? "danger" : "primary"}
+							size="sm"
+							onClick={onConfirm}
+						>
+							{confirmText}
+						</Button>
+					</DialogClose>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }
