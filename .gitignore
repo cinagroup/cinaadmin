@@ -38,3 +38,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 nul
+
+# Next.js build output (Cloudflare via next-on-pages)
+.vercel/
+.next/
+
+# Agent working files
+.zcode/
