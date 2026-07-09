@@ -30,7 +30,7 @@ export function StatCard({
 	const up = (delta ?? 0) >= 0;
 
 	return (
-		<div className="flex items-start justify-between gap-3 rounded-[var(--radius-md)] bg-canvas p-5 shadow-[0_0_0_1px_#00000014_inset,0px_1px_1px_#00000005,0px_2px_2px_#0000000a]">
+		<div className="flex items-start justify-between gap-3 rounded-[var(--radius-lg)] border border-hairline bg-canvas p-5 shadow-card">
 			<div className="min-w-0">
 				<div className="font-mono text-[12px] uppercase tracking-wide text-mute">
 					{label}

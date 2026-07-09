@@ -2,9 +2,9 @@ import * as React from "react";
 import { cn } from "@/lib/cn";
 
 /**
- * Card surface — canvas background with Level 2 stacked shadow + inset hairline
- * (per DESIGN.md elevation: "0px 1px 1px #00000005, 0px 2px 2px #0000000a"
- * plus an inset ring so the card edge stays crisp).
+ * Card surface — canvas background with a hairline border + subtle shadow.
+ * Matches better-auth-console's card chrome (border + faint elevation) and
+ * tints correctly across light/dark via the hairline token.
  */
 const Card = React.forwardRef<
 	HTMLDivElement,
@@ -13,7 +13,7 @@ const Card = React.forwardRef<
 	<div
 		ref={ref}
 		className={cn(
-			"rounded-[var(--radius-md)] bg-canvas text-ink shadow-[0_0_0_1px_#00000014_inset,0px_1px_1px_#00000005,0px_2px_2px_#0000000a]",
+			"rounded-[var(--radius-lg)] border border-hairline bg-canvas text-ink shadow-card",
 			className,
 		)}
 		{...props}
