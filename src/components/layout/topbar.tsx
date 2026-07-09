@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { LogOut, Monitor, Moon, Sun, User } from "lucide-react";
 import type { AdminSession } from "@/lib/cinaauth/types";
 import {
 	Select,
@@ -16,6 +16,8 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -37,10 +39,15 @@ export function Topbar() {
 			});
 	}, []);
 
+	const initials = (session?.email ?? "?")
+		.split("@")[0]
+		.slice(0, 2)
+		.toUpperCase();
+
 	return (
 		<header className="flex h-16 items-center justify-between border-b border-hairline bg-canvas px-6">
 			<div className="text-[14px] leading-5 text-body">
-				{session?.email ?? ""}
+				{/* Breadcrumb-style context: subtle, fills the left space. */}
 			</div>
 			<div className="flex items-center gap-2">
 				{/* Theme switcher */}
@@ -81,15 +88,39 @@ export function Topbar() {
 						<SelectItem value="zh">中文</SelectItem>
 					</SelectContent>
 				</Select>
-				<button
-					type="button"
-					onClick={() => {
-						window.location.href = `${process.env.NEXT_PUBLIC_CINAUTH_AUTH_URL ?? ""}/sign-out`;
-					}}
-					className="text-[14px] leading-5 text-body transition-colors hover:text-ink"
-				>
-					{t("common.signOut")}
-				</button>
+
+				{/* Account menu — avatar + email + sign out (BAC pattern). */}
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<button
+							type="button"
+							className="flex items-center gap-2 rounded-[var(--radius-pill)] py-1 pl-1 pr-2 transition-colors hover:bg-canvas-soft"
+						>
+							<span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[12px] font-semibold text-canvas">
+								{initials}
+							</span>
+							<span className="hidden text-[13px] leading-4 text-body sm:inline">
+								{session?.email ?? ""}
+							</span>
+						</button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end" className="min-w-[200px]">
+						<DropdownMenuLabel className="flex items-center gap-2 text-[13px] text-mute">
+							<User size={14} />
+							{session?.email ?? ""}
+						</DropdownMenuLabel>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem
+							onClick={() => {
+								window.location.href = `${process.env.NEXT_PUBLIC_CINAUTH_AUTH_URL ?? ""}/sign-out`;
+							}}
+							className="text-error"
+						>
+							<LogOut size={14} />
+							{t("common.signOut")}
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
 		</header>
 	);
