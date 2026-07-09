@@ -127,11 +127,11 @@ export default async function DashboardPage() {
 							</div>
 							<div className="flex items-center gap-4 text-[12px] leading-4 text-mute">
 								<span className="inline-flex items-center gap-1.5">
-									<span className="inline-block h-2 w-2 rounded-[2px] bg-accent" />
+									<span className="inline-block h-2 w-2 rounded-[2px] bg-chart-1" />
 									新增
 								</span>
 								<span className="inline-flex items-center gap-1.5">
-									<span className="inline-block h-2 w-2 rounded-[2px] bg-accent-soft" />
+									<span className="inline-block h-2 w-2 rounded-[2px] bg-chart-2" />
 									回流
 								</span>
 							</div>

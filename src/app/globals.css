@@ -2,81 +2,97 @@
 
 /*
  * CinaGroup Admin — dual theme (dark default, light toggleable).
- * Design language mirrors better-auth-console: zinc dark surfaces +
- * violet accent, shadcn-style primitives.
+ * Palette extracted from better-auth-console's compiled CSS:
+ *   - Pure neutrals for surfaces/ink/borders (neutral scale, no warm tint).
+ *   - Indigo/blue for charts + interactive accents.
+ *   - Red/amber/emerald semantics.
  *
- * Tokens are defined as plain CSS custom properties under :root (light)
- * and .dark (dark), then referenced by @theme so Tailwind generates
- * the matching utilities (bg-canvas, text-body, …) that flip with the
- * .dark class set by next-themes.
+ * Tokens are plain CSS custom properties under :root (light) and .dark,
+ * then referenced by @theme so Tailwind generates the matching utilities
+ * (bg-canvas, text-body, …) that flip with the .dark class set by
+ * next-themes.
  */
 
 /* ── Light theme (default variables) ── */
 :root {
-	--canvas: #ffffff;
-	--canvas-soft: #fafafa;
-	--canvas-soft-2: #f5f5f5;
+	--canvas: #ffffff; /* card / sidebar bg (BAC --card/--sidebar) */
+	--canvas-soft: #fafafa; /* page background (BAC --background) */
+	--canvas-soft-2: #f5f5f5; /* hover / dropdown (neutral-100) */
+	--sidebar: #fafafa; /* sidebar surface */
 
-	--ink: #171717;
-	--body: #4d4d4d;
-	--mute: #888888;
+	--ink: #0a0a0a; /* neutral-950 — headings */
+	--body: #404040; /* neutral-700 — body copy */
+	--mute: #737373; /* neutral-500 — captions */
 
-	--hairline: #ebebeb;
-	--hairline-strong: #a1a1a1;
+	--hairline: #e5e5e5; /* neutral-200 — borders */
+	--hairline-strong: #d4d4d4; /* neutral-300 */
 
-	--link: #0070f3;
-	--link-deep: #0761d1;
-	--accent: #7928ca;
-	--accent-soft: #d8ccf1;
+	--link: #4f39f6; /* indigo-600 — primary interactive */
+	--link-deep: #4338ca;
+	--accent: #171717; /* neutral-900 — primary button / focus */
+	--accent-soft: #f5f5f5; /* neutral-100 */
 
-	--error: #ee0000;
-	--error-soft: #f7d4d6;
-	--warning: #f5a623;
-	--warning-soft: #ffefcf;
-	--success: #0070f3;
-	--success-soft: #d3e5ff;
+	/* Chart palette (BAC --chart-*: indigo→blue→violet family) */
+	--chart-1: #4f39f6; /* indigo-600 */
+	--chart-2: #625fff; /* indigo-500 */
+	--chart-3: #7d87ff; /* indigo-400 */
+	--chart-4: #97a9ff; /* blue-300 */
 
-	--violet: #7928ca;
-	--cyan: #50e3c2;
+	--error: #dc2626; /* red-600 */
+	--error-soft: #fef2f2; /* red-50 */
+	--warning: #d97706; /* amber-600 */
+	--warning-soft: #fffbeb; /* amber-50 */
+	--success: #059669; /* emerald-600 */
+	--success-soft: #ecfdf5; /* emerald-50 */
+
+	--violet: #4f39f6;
+	--cyan: #0891b2;
 
 	/* selection / focus adapt to theme */
-	--selection-bg: #171717;
-	--selection-fg: #f2f2f2;
-	--focus-ring: #171717;
+	--selection-bg: #0a0a0a;
+	--selection-fg: #fafafa;
+	--focus-ring: #4f39f6;
 	--shadow-rgb: 0, 0, 0; /* shadow tint */
 }
 
 /* ── Dark theme (default active theme) ── */
 .dark {
-	--canvas: #09090b; /* zinc-950 */
-	--canvas-soft: #18181b; /* zinc-900 — page background */
-	--canvas-soft-2: #27272a; /* zinc-800 — hover / dropdowns */
+	--canvas: #0a0a0a; /* neutral-950 — card / topbar */
+	--canvas-soft: #0a0a0a; /* page background */
+	--canvas-soft-2: #1f1f1f; /* hover / dropdown */
+	--sidebar: #171717; /* neutral-900 — sidebar surface (BAC dark sidebar) */
 
-	--ink: #fafafa; /* zinc-50 */
-	--body: #a1a1aa; /* zinc-400 */
-	--mute: #71717a; /* zinc-500 */
+	--ink: #fafafa; /* neutral-50 */
+	--body: #a3a3a3; /* neutral-400 */
+	--mute: #737373; /* neutral-500 */
 
-	--hairline: #27272a; /* zinc-800 */
-	--hairline-strong: #3f3f46; /* zinc-700 */
+	--hairline: #262626; /* neutral-800 */
+	--hairline-strong: #404040; /* neutral-700 */
 
-	--link: #8b5cf6; /* violet-500 */
-	--link-deep: #a78bfa; /* violet-400 */
-	--accent: #8b5cf6; /* violet-500 — BAC primary accent */
-	--accent-soft: #4c2889; /* violet-deep */
+	--link: #7d87ff; /* indigo-400 (lighter for dark) */
+	--link-deep: #625fff;
+	--accent: #fafafa; /* neutral-50 — primary button (inverts on dark) */
+	--accent-soft: #1f1f1f;
+
+	/* Chart palette — brighter indigos on dark */
+	--chart-1: #625fff;
+	--chart-2: #7d87ff;
+	--chart-3: #97a9ff;
+	--chart-4: #b4bdff;
 
 	--error: #f87171; /* red-400 */
 	--error-soft: #450a0a; /* red-950 */
 	--warning: #fbbf24; /* amber-400 */
-	--warning-soft: #422006; /* amber-950 */
-	--success: #8b5cf6; /* violet-500 (success ≈ brand accent in dark) */
-	--success-soft: #2e1065; /* violet-950 */
+	--warning-soft: #451a03; /* amber-950 */
+	--success: #34d399; /* emerald-400 */
+	--success-soft: #022c22; /* emerald-950 */
 
-	--violet: #8b5cf6;
-	--cyan: #50e3c2;
+	--violet: #625fff;
+	--cyan: #22d3ee;
 
 	--selection-bg: #fafafa;
-	--selection-fg: #09090b;
-	--focus-ring: #8b5cf6;
+	--selection-fg: #0a0a0a;
+	--focus-ring: #7d87ff;
 	--shadow-rgb: 0, 0, 0;
 }
 
@@ -85,6 +101,7 @@
 	--color-canvas: var(--canvas);
 	--color-canvas-soft: var(--canvas-soft);
 	--color-canvas-soft-2: var(--canvas-soft-2);
+	--color-sidebar: var(--sidebar);
 
 	--color-ink: var(--ink);
 	--color-body: var(--body);
@@ -105,6 +122,11 @@
 	--color-success: var(--success);
 	--color-success-soft: var(--success-soft);
 
+	--color-chart-1: var(--chart-1);
+	--color-chart-2: var(--chart-2);
+	--color-chart-3: var(--chart-3);
+	--color-chart-4: var(--chart-4);
+
 	--color-violet: var(--violet);
 	--color-cyan: var(--cyan);
 
@@ -116,6 +138,7 @@
 	--radius-sm: 6px;
 	--radius-md: 8px;
 	--radius-lg: 12px;
+	--radius-xl: 16px;
 	--radius-pill: 100px;
 }
 

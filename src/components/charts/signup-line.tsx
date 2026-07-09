@@ -57,7 +57,7 @@ export function SignupLine({
 				<Line
 					type="monotone"
 					dataKey="count"
-					stroke={v("--accent", "#8b5cf6")}
+					stroke={v("--chart-1", "#4f39f6")}
 					strokeWidth={2}
 					dot={false}
 				/>

@@ -61,16 +61,16 @@ export function Topbar() {
 					<DropdownMenuContent align="end">
 						<DropdownMenuItem onClick={() => setTheme("light")}>
 							<Sun size={14} /> 浅色
-							{theme === "light" && <span className="ml-auto text-accent">✓</span>}
+							{theme === "light" && <span className="ml-auto text-link">✓</span>}
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={() => setTheme("dark")}>
 							<Moon size={14} /> 暗色
-							{theme === "dark" && <span className="ml-auto text-accent">✓</span>}
+							{theme === "dark" && <span className="ml-auto text-link">✓</span>}
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={() => setTheme("system")}>
 							<Monitor size={14} /> 跟随系统
 							{theme === "system" && (
-								<span className="ml-auto text-accent">✓</span>
+								<span className="ml-auto text-link">✓</span>
 							)}
 						</DropdownMenuItem>
 					</DropdownMenuContent>
@@ -96,7 +96,7 @@ export function Topbar() {
 							type="button"
 							className="flex items-center gap-2 rounded-[var(--radius-pill)] py-1 pl-1 pr-2 transition-colors hover:bg-canvas-soft"
 						>
-							<span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[12px] font-semibold text-canvas">
+							<span className="flex h-7 w-7 items-center justify-center rounded-full bg-canvas-soft-2 text-[12px] font-semibold text-ink">
 								{initials}
 							</span>
 							<span className="hidden text-[13px] leading-4 text-body sm:inline">

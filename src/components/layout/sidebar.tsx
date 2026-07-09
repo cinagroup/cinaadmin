@@ -52,9 +52,9 @@ export function Sidebar() {
 	const { t } = useTranslation();
 	const pathname = usePathname();
 	return (
-		<aside className="flex w-60 shrink-0 flex-col border-r border-hairline bg-canvas">
+		<aside className="flex w-60 shrink-0 flex-col border-r border-hairline bg-sidebar">
 			<div className="flex items-center gap-2 border-b border-hairline px-4 py-5">
-				<div className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] bg-accent text-canvas">
+				<div className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] bg-ink text-canvas-soft">
 					<Shield size={16} strokeWidth={2.25} />
 				</div>
 				<div className="flex flex-col leading-tight">
@@ -83,16 +83,16 @@ export function Sidebar() {
 								<Link
 									key={item.href}
 									href={item.href}
-									className={`flex items-center gap-2.5 rounded-[var(--radius-sm)] border-l-2 px-3 py-2 text-[14px] leading-5 transition-colors ${
+									className={`flex items-center gap-2.5 rounded-[var(--radius-sm)] px-3 py-2 text-[14px] leading-5 transition-colors ${
 										active
-											? "border-accent bg-canvas-soft-2 font-medium text-ink"
-											: "border-transparent text-body hover:bg-canvas-soft hover:text-ink"
+											? "bg-canvas-soft-2 font-medium text-ink"
+											: "text-body hover:bg-canvas-soft hover:text-ink"
 									}`}
 								>
 									<Icon
 										size={16}
 										strokeWidth={active ? 2.25 : 2}
-										className={active ? "text-accent" : "text-mute"}
+										className={active ? "text-ink" : "text-mute"}
 									/>
 									{t(item.key)}
 								</Link>
