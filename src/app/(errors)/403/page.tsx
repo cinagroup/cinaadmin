@@ -1,9 +1,9 @@
 "use client";
 
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@/lib/i18n/i18n-context";
 
 export default function ForbiddenPage() {
-	const { t } = useTranslation();
+	const { t } = useI18n();
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-center gap-2 bg-canvas-soft">
 			<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">

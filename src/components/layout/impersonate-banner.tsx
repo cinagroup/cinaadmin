@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import type { AdminSession } from "@/lib/cinaauth/types";
 
 /**
@@ -9,7 +9,7 @@ import type { AdminSession } from "@/lib/cinaauth/types";
  * user. Stop button calls /api/admin/users/impersonate/stop then reloads.
  */
 export function ImpersonateBanner() {
-	const { t } = useTranslation();
+	const { t } = useI18n();
 	const [acting, setActing] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -27,7 +27,7 @@ export function ImpersonateBanner() {
 
 	if (!acting) return null;
 	return (
-		<div className="flex items-center justify-between border-b border-warning/40 bg-[var(--warning-soft)] px-6 py-2 text-[14px] leading-5 text-warning">
+		<div className="flex items-center justify-between border-b border-warning/40 bg-warning-soft px-6 py-2 text-[14px] leading-5 text-warning">
 			<span>{t("impersonate.banner", { user: acting })}</span>
 			<button
 				type="button"

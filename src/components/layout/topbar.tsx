@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import { LogOut, Monitor, Moon, Sun, User } from "lucide-react";
 import type { AdminSession } from "@/lib/cinaauth/types";
 import {
@@ -23,10 +23,9 @@ import {
 import { Button } from "@/components/ui/button";
 
 export function Topbar() {
-	const { t, i18n } = useTranslation();
+	const { t, lang, setLang } = useI18n();
 	const { theme, setTheme } = useTheme();
 	const [session, setSession] = useState<AdminSession | null>(null);
-	const lang = i18n.language?.startsWith("zh") ? "zh" : "en";
 
 	useEffect(() => {
 		fetch("/api/admin/session")
@@ -78,7 +77,7 @@ export function Topbar() {
 
 				<Select
 					value={lang}
-					onValueChange={(v) => i18n.changeLanguage(v)}
+					onValueChange={(v) => setLang(v as "zh" | "en")}
 				>
 					<SelectTrigger className="h-8 w-[88px] text-[14px]">
 						<SelectValue />

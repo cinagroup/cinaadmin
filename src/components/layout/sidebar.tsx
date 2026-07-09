@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import {
 	LayoutDashboard,
 	Users,
@@ -49,7 +49,7 @@ const NAV: NavSection[] = [
 ];
 
 export function Sidebar() {
-	const { t } = useTranslation();
+	const { t } = useI18n();
 	const pathname = usePathname();
 	return (
 		<aside className="flex w-60 shrink-0 flex-col border-r border-hairline bg-sidebar">
