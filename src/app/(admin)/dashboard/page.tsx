@@ -2,7 +2,9 @@ import { cookies } from "next/headers";
 import { StatCard } from "@/components/charts/stat-card";
 import { ChannelPie } from "@/components/charts/channel-pie";
 import { SignupLine } from "@/components/charts/signup-line";
+import { ActiveUsersChart } from "@/components/charts/active-users-chart";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import {
 	statsOverview,
@@ -45,7 +47,34 @@ export default async function DashboardPage() {
 				<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 					<Card>
 						<CardHeader>
-							<div className="text-[14px] leading-5 text-body">登录渠道分布</div>
+							<div className="text-[14px] leading-5 text-body">
+								活跃用户趋势（近 14 天）
+							</div>
+							<div className="text-[12px] leading-4 text-mute">
+								基于登录事件派生
+							</div>
+						</CardHeader>
+						<CardContent>
+							<ActiveUsersChart days={14} />
+						</CardContent>
+					</Card>
+					<Card>
+						<CardHeader>
+							<div className="text-[14px] leading-5 text-body">
+								30 天注册趋势
+							</div>
+						</CardHeader>
+						<CardContent>
+							<SignupLine data={signups} />
+						</CardContent>
+					</Card>
+				</div>
+				<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+					<Card>
+						<CardHeader>
+							<div className="text-[14px] leading-5 text-body">
+								登录渠道分布
+							</div>
 						</CardHeader>
 						<CardContent>
 							<ChannelPie channels={overview.loginChannels} />
@@ -53,36 +82,37 @@ export default async function DashboardPage() {
 					</Card>
 					<Card>
 						<CardHeader>
-							<div className="text-[14px] leading-5 text-body">30 天注册趋势</div>
+							<div className="text-[14px] leading-5 text-body">安全看板</div>
 						</CardHeader>
 						<CardContent>
-							<SignupLine data={signups} />
+							<div className="grid grid-cols-2 gap-4">
+								<StatCard
+									label="今日失败登录"
+									value={security?.failedLoginsToday ?? 0}
+								/>
+								<StatCard
+									label="今日 OTP 请求"
+									value={security?.otpRequestsToday ?? 0}
+								/>
+								<StatCard label="封禁账号" value={overview.bannedCount} />
+								<StatCard
+									label="未开 2FA"
+									value={overview.usersWithout2FA}
+									hint="高危资金账号"
+								/>
+							</div>
 						</CardContent>
 					</Card>
 				</div>
-				<Card>
-					<CardHeader>
-						<div className="text-[14px] leading-5 text-body">安全看板</div>
-					</CardHeader>
-					<CardContent>
-						<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-							<StatCard
-								label="今日失败登录"
-								value={security?.failedLoginsToday ?? 0}
-							/>
-							<StatCard
-								label="今日 OTP 请求"
-								value={security?.otpRequestsToday ?? 0}
-							/>
-							<StatCard label="封禁账号" value={overview.bannedCount} />
-							<StatCard
-								label="未开 2FA"
-								value={overview.usersWithout2FA}
-								hint="高危资金账号"
-							/>
-						</div>
-					</CardContent>
-				</Card>
+				{/* Retention placeholder — requires a backend cohort endpoint. */}
+				<EmptyState>
+					<div className="font-mono text-[12px] uppercase tracking-wide text-mute">
+						留存分析
+					</div>
+					<div className="text-[14px] leading-5 text-body">
+						次日 / 7 日留存趋势需后端数据端点（规划中）
+					</div>
+				</EmptyState>
 			</div>
 		</div>
 	);

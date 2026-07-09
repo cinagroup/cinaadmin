@@ -2,9 +2,7 @@
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-// Brand accent palette (link / violet / cyan) — no gold in the light theme.
-const COLORS = ["#0070f3", "#7928ca", "#50e3c2"];
-
+// Accent palette — reads theme tokens so slices + tooltip re-tint in dark.
 /** Login-channel distribution pie (email/password, github, siwe). */
 export function ChannelPie({
 	channels,
@@ -16,6 +14,18 @@ export function ChannelPie({
 		{ name: "GitHub", value: channels.github ?? 0 },
 		{ name: "SIWE", value: channels.siwe ?? 0 },
 	].filter((d) => d.value > 0);
+
+	const css =
+		typeof window !== "undefined"
+			? getComputedStyle(document.documentElement)
+			: null;
+	const v = (name: string, fallback: string) =>
+		css?.getPropertyValue(name).trim() || fallback;
+	const COLORS = [
+		v("--accent", "#8b5cf6"),
+		v("--violet", "#7928ca"),
+		v("--cyan", "#50e3c2"),
+	];
 
 	if (data.length === 0) {
 		return <div className="text-[14px] leading-5 text-mute">暂无数据</div>;
@@ -39,13 +49,13 @@ export function ChannelPie({
 				</Pie>
 				<Tooltip
 					contentStyle={{
-						background: "#ffffff",
-						border: "1px solid #ebebeb",
+						background: v("--canvas", "#fff"),
+						border: `1px solid ${v("--hairline", "#ebebeb")}`,
 						borderRadius: "6px",
-						color: "#171717",
+						color: v("--ink", "#171717"),
 					}}
 				/>
-				<Legend wrapperStyle={{ color: "#4d4d4d" }} />
+				<Legend wrapperStyle={{ color: v("--body", "#4d4d4d") }} />
 			</PieChart>
 		</ResponsiveContainer>
 	);

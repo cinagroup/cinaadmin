@@ -62,10 +62,10 @@ export function Sidebar() {
 								<Link
 									key={item.href}
 									href={item.href}
-									className={`block rounded-[var(--radius-sm)] px-3 py-2 text-[14px] leading-5 transition-colors ${
+									className={`block rounded-[var(--radius-sm)] border-l-2 px-3 py-2 text-[14px] leading-5 transition-colors ${
 										active
-											? "bg-canvas-soft-2 font-medium text-ink"
-											: "text-body hover:bg-canvas-soft hover:text-ink"
+											? "border-accent bg-canvas-soft-2 font-medium text-ink"
+											: "border-transparent text-body hover:bg-canvas-soft hover:text-ink"
 									}`}
 								>
 									{t(item.key)}

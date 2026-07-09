@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "@/lib/i18n";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,7 +23,9 @@ export default function RootLayout({
 			suppressHydrationWarning
 		>
 			<body>
-				<QueryProvider>{children}</QueryProvider>
+				<ThemeProvider>
+					<QueryProvider>{children}</QueryProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);

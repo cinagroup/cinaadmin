@@ -41,7 +41,7 @@ export default async function UserDetailPage({
 				</h1>
 				<UserActions userId={id} banned={user.banned} />
 			</div>
-			<UserTabs userId={id} />
+			<UserTabs user={user} />
 		</div>
 	);
 }
