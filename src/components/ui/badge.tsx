@@ -5,17 +5,17 @@ const badgeVariants = cva(
 	// caption typography + pill shape, per badge-secondary spec.
 	"inline-flex items-center rounded-full px-2 text-[12px] leading-4 font-normal whitespace-nowrap",
 	{
-		variants: {
-			variant: {
-				// canvas-soft + body text — the default metadata pill.
-				default: "bg-canvas-soft text-body",
-				outline: "border border-hairline text-body",
-				success: "bg-[var(--color-success-soft)] text-link-deep",
-				warning: "bg-[var(--color-warning-soft)] text-[#ab570a]",
-				danger: "bg-[var(--color-error-soft)] text-error",
-				muted: "bg-canvas-soft-2 text-mute",
+			variants: {
+				variant: {
+					// canvas-soft + body text — the default metadata pill.
+					default: "bg-canvas-soft text-body",
+					outline: "border border-hairline text-body",
+					success: "bg-success-soft text-link-deep",
+					warning: "bg-warning-soft text-warning",
+					danger: "bg-error-soft text-error",
+					muted: "bg-canvas-soft-2 text-mute",
+				},
 			},
-		},
 		defaultVariants: {
 			variant: "default",
 		},

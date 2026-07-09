@@ -124,7 +124,7 @@ export default function AuditPage() {
 			<DataTable
 				table={table}
 				rowClassName={(r) =>
-					r.result === "failure" ? "bg-[var(--error-soft)]" : undefined
+					r.result === "failure" ? "bg-error-soft" : undefined
 				}
 				emptyLabel={isFetching ? "加载中…" : "暂无审计记录"}
 			/>

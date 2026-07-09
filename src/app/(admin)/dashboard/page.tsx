@@ -6,7 +6,6 @@ import { SignupLine } from "@/components/charts/signup-line";
 import { ActiveUsersChart } from "@/components/charts/active-users-chart";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageHeader } from "@/components/layout/page-header";
 import {
 	statsOverview,
 	statsSecurityToday,
@@ -60,8 +59,10 @@ export default async function DashboardPage() {
 
 	if (!overview) {
 		return (
-			<div>
-				<PageHeader title="仪表盘" />
+			<div className="space-y-2">
+				<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
+					概览
+				</h1>
 				<p className="text-[16px] leading-6 text-body">数据加载失败</p>
 			</div>
 		);
