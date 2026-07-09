@@ -5,6 +5,7 @@ import { WalletsTab } from "./tabs/wallets";
 import { SessionsTab } from "./tabs/sessions";
 import { LoginTrailTab } from "./tabs/login-trail";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { UserDTO } from "@/lib/cinaauth/dto";
 
 const TABS = [
 	{ value: "overview", label: "概览" },
@@ -15,7 +16,8 @@ const TABS = [
 	{ value: "security", label: "安全" },
 ] as const;
 
-export function UserTabs({ userId }: { userId: string }) {
+export function UserTabs({ user }: { user: UserDTO }) {
+	const userId = user.id;
 	return (
 		<Tabs defaultValue="overview" className="mt-6">
 			<TabsList>
@@ -26,7 +28,7 @@ export function UserTabs({ userId }: { userId: string }) {
 				))}
 			</TabsList>
 			<TabsContent value="overview">
-				<OverviewTab userId={userId} />
+				<OverviewTab user={user} />
 			</TabsContent>
 			<TabsContent value="wallets">
 				<WalletsTab userId={userId} />
