@@ -48,13 +48,13 @@ export function LoginTrailTab({ userId }: { userId: string }) {
 				return (
 					<li key={`${row.timestamp}-${i}`} className="relative">
 						{/* Timeline node */}
-						<span
-							className={`absolute -left-[31px] flex h-5 w-5 items-center justify-center rounded-full ${
-								failed
-									? "bg-[var(--error-soft)] text-error"
-									: "bg-[var(--success-soft)] text-accent"
-							}`}
-						>
+							<span
+								className={`absolute -left-[31px] flex h-5 w-5 items-center justify-center rounded-full ${
+									failed
+										? "bg-[var(--error-soft)] text-error"
+										: "bg-[var(--success-soft)] text-success"
+								}`}
+							>
 							{failed ? (
 								<XCircle size={12} />
 							) : (

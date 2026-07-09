@@ -94,10 +94,9 @@ export function CohortBars({ days = 14 }: { days?: number }) {
 	}));
 
 	const { v, themeKey } = useThemeTokens();
-	// Three tints of the accent for the stacked segments.
-	const accent = v("--accent", "#8b5cf6");
-	const accentSoft = v("--accent-soft", "#4c2889");
-	const cyan = v("--cyan", "#50e3c2");
+	// Indigo tints for the stacked segments (BAC chart palette).
+	const c1 = v("--chart-1", "#4f39f6");
+	const c2 = v("--chart-2", "#625fff");
 
 	return (
 		<ResponsiveContainer width="100%" height={200}>
@@ -122,13 +121,13 @@ export function CohortBars({ days = 14 }: { days?: number }) {
 				<Bar
 					dataKey="新增"
 					stackId="cohort"
-					fill={accent}
+					fill={c1}
 					radius={[0, 0, 0, 0]}
 				/>
 				<Bar
 					dataKey="回流"
 					stackId="cohort"
-					fill={accentSoft}
+					fill={c2}
 					radius={[4, 4, 0, 0]}
 				/>
 			</BarChart>

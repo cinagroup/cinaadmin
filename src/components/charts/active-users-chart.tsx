@@ -104,7 +104,7 @@ export function ActiveUsersChart({ days = 14 }: { days?: number }) {
 				/>
 				<Bar
 					dataKey="active"
-					fill={v("--accent", "#8b5cf6")}
+					fill={v("--chart-1", "#4f39f6")}
 					radius={[4, 4, 0, 0]}
 				/>
 			</BarChart>

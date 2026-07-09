@@ -70,7 +70,7 @@ function Sparkline({ data }: { data: number[] }) {
 	const span = max - min || 1;
 	const step = w / (data.length - 1);
 	const pts = data.map((d, i) => `${(i * step).toFixed(1)},${(h - ((d - min) / span) * h).toFixed(1)}`).join(" ");
-	const stroke = "var(--accent)";
+	const stroke = "var(--chart-1)";
 	return (
 		<svg width={w} height={h} className="shrink-0 opacity-80" aria-hidden>
 			<polyline

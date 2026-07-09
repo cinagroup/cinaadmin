@@ -21,9 +21,9 @@ export function ChannelPie({
 	].filter((d) => d.value > 0);
 
 	const COLORS = [
-		v("--accent", "#8b5cf6"),
-		v("--violet", "#7928ca"),
-		v("--cyan", "#50e3c2"),
+		v("--chart-1", "#4f39f6"),
+		v("--chart-2", "#625fff"),
+		v("--chart-4", "#97a9ff"),
 	];
 
 	if (data.length === 0) {
