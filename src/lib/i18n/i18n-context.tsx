@@ -1,7 +1,17 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import { DEFAULT_LANG, translate, type Lang } from "./dictionary";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+	type ReactNode,
+} from "react";
+import { DEFAULT_LANG, DICTIONARIES, translate, type Lang } from "./dictionary";
+
+const STORAGE_KEY = "cinaadmin.lang";
 
 interface I18nCtx {
 	lang: Lang;
@@ -18,13 +28,36 @@ const Ctx = createContext<I18nCtx>({
 /**
  * Provides the active language + a synchronous `t()` to the whole shell.
  *
- * NOTE on SSR: React Context does not reliably cross the RSC serialization
- * boundary for `"use client"` providers on the edge runtime, so as a
- * belt-and-braces fallback we also keep a module-level default language and
- * the `t()` below reads from it when no provider value is present.
+ * SSR-safe: initial state is DEFAULT_LANG (so server and first client render
+ * agree → no hydration mismatch); the persisted choice from localStorage is
+ * applied in an effect after mount. `t()` always resolves against the active
+ * dictionary, with a module-level fallback so even components rendered before
+ * the provider mounts still translate rather than returning raw keys.
  */
 export function I18nProvider({ children }: { children: ReactNode }) {
-	const [lang, setLang] = useState<Lang>(DEFAULT_LANG);
+	const [lang, setLangState] = useState<Lang>(DEFAULT_LANG);
+
+	// Apply any persisted language choice after mount (client-only).
+	useEffect(() => {
+		try {
+			const saved = localStorage.getItem(STORAGE_KEY) as Lang | null;
+			if (saved && saved in DICTIONARIES && saved !== lang) {
+				setLangState(saved);
+			}
+		} catch {
+			/* localStorage may be unavailable */
+		}
+	}, [lang]);
+
+	const setLang = useCallback((l: Lang) => {
+		setLangState(l);
+		try {
+			localStorage.setItem(STORAGE_KEY, l);
+		} catch {
+			/* ignore */
+		}
+	}, []);
+
 	const value = useMemo<I18nCtx>(
 		() => ({
 			lang,
@@ -32,7 +65,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 			t: (key: string, vars?: Record<string, string | number>) =>
 				translate(lang, key, vars),
 		}),
-		[lang],
+		[lang, setLang],
 	);
 	return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -40,9 +73,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 /** Hook: `const { t, lang, setLang } = useI18n()`. Synchronous — SSR-safe. */
 export function useI18n(): I18nCtx {
 	const ctx = useContext(Ctx);
-	// Fallback: resolve against the default dictionary directly so SSR
-	// (where the provider value may not propagate) still translates keys
-	// instead of returning them raw.
 	return {
 		...ctx,
 		t: (key: string, vars?: Record<string, string | number>) =>
