@@ -10,6 +10,7 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { useThemeTokens } from "@/hooks/use-theme-tokens";
 
 interface AuditRow {
 	timestamp: string;
@@ -40,6 +41,7 @@ export function ActiveUsersChart({ days = 14 }: { days?: number }) {
 			return d.ok ? d.data?.rows ?? [] : [];
 		},
 	});
+	const { v, themeKey } = useThemeTokens();
 
 	const rows = data ?? [];
 
@@ -61,13 +63,6 @@ export function ActiveUsersChart({ days = 14 }: { days?: number }) {
 		active: actors.size,
 	}));
 
-	const css =
-		typeof window !== "undefined"
-			? getComputedStyle(document.documentElement)
-			: null;
-	const v = (name: string, fallback: string) =>
-		css?.getPropertyValue(name).trim() || fallback;
-
 	if (!isFetching && chartData.every((d) => d.active === 0)) {
 		return (
 			<div className="flex h-[240px] items-center justify-center text-[14px] leading-5 text-mute">
@@ -78,7 +73,7 @@ export function ActiveUsersChart({ days = 14 }: { days?: number }) {
 
 	return (
 		<ResponsiveContainer width="100%" height={240}>
-			<BarChart data={chartData}>
+			<BarChart key={themeKey} data={chartData}>
 				<CartesianGrid
 					stroke={v("--hairline", "#ebebeb")}
 					strokeDasharray="3 3"

@@ -9,27 +9,24 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { useThemeTokens } from "@/hooks/use-theme-tokens";
 
 /**
  * Daily signup trend line chart. Colors read from CSS custom properties so
  * the chart re-tints with the active theme (uses --canvas / --hairline /
- * --body / --accent defined in globals.css).
+ * --body / --accent defined in globals.css). `themeKey` forces a remount on
+ * theme switch so recharts picks up the new token values.
  */
 export function SignupLine({
 	data,
 }: {
 	data: { date: string; count: number }[];
 }) {
-	// Recharts runs in the browser; read the resolved theme tokens at render.
-	const css = (typeof window !== "undefined"
-		? getComputedStyle(document.documentElement)
-		: null) ?? undefined;
-	const v = (name: string, fallback: string) =>
-		css?.getPropertyValue(name).trim() || fallback;
+	const { v, themeKey } = useThemeTokens();
 
 	return (
 		<ResponsiveContainer width="100%" height={240}>
-			<LineChart data={data}>
+			<LineChart key={themeKey} data={data}>
 				<CartesianGrid
 					stroke={v("--hairline", "#ebebeb")}
 					strokeDasharray="3 3"

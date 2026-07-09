@@ -11,11 +11,34 @@ import {
 	statsSecurityToday,
 	statsSignups,
 } from "@/lib/cinaauth/admin-api";
+import type { SignupPointDTO } from "@/lib/cinaauth/dto";
 
 // Force dynamic rendering (uses cookies()); edge runtime required by
 // Cloudflare Pages (@cloudflare/next-on-pages).
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
+
+/** Sum counts in `series` whose date falls within the last `days` days. */
+function sumLastDays(series: SignupPointDTO[], days: number): number {
+	const cutoff = new Date();
+	cutoff.setHours(0, 0, 0, 0);
+	cutoff.setDate(cutoff.getDate() - days);
+	return series
+		.filter((p) => new Date(p.date) >= cutoff)
+		.reduce((a, p) => a + p.count, 0);
+}
+
+/** Percent change of `cur` vs `prev`. Returns null when prev is 0 (undefined). */
+function pctChange(cur: number, prev: number): number | null {
+	if (prev === 0) return cur === 0 ? 0 : null;
+	return ((cur - prev) / prev) * 100;
+}
+
+function todayLabel() {
+	const d = new Date();
+	const m = d.toLocaleString("en-US", { month: "short" });
+	return `${m} ${d.getDate()}`;
+}
 
 export default async function DashboardPage() {
 	const cookie = (await cookies()).toString();
@@ -34,13 +57,37 @@ export default async function DashboardPage() {
 		);
 	}
 
+	// Derive deltas from the 30d signup series: compare last 7d vs prior 7d.
+	const signups7d = sumLastDays(signups, 7);
+	const signupsPrev7d =
+		sumLastDays(signups, 14) - signups7d;
+	const signupsDelta = pctChange(signups7d, signupsPrev7d);
+	const sparkSignups = signups.slice(-14).map((p) => p.count);
+
 	return (
 		<div>
 			<PageHeader title="仪表盘" />
 			<div className="space-y-6">
+				{/* BAC-style context bar */}
+				<div className="flex flex-wrap items-center gap-2 text-[12px] leading-4 text-mute">
+					<span className="font-mono uppercase tracking-wide">
+						数据快照 · {todayLabel()}
+					</span>
+				</div>
+
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-					<StatCard label="总用户" value={overview.totalUsers} />
-					<StatCard label="30 天新增" value={overview.newUsers30d} />
+					<StatCard
+						label="总用户"
+						value={overview.totalUsers}
+						spark={sparkSignups}
+					/>
+					<StatCard
+						label="30 天新增"
+						value={overview.newUsers30d}
+						delta={signupsDelta ?? undefined}
+						deltaLabel="vs 上周"
+						spark={sparkSignups}
+					/>
 					<StatCard label="活跃会话" value={overview.activeSessions} />
 					<StatCard label="组织数" value={overview.organizationCount} />
 				</div>

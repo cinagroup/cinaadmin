@@ -6,6 +6,10 @@ import type { StandardResponse } from "./types";
  * key (identifies the console caller; does not bypass cinaauth's role checks)
  * and forwards the admin's session cookie so the acting user is recorded.
  *
+ * Paths are relative to the cinaauth base (e.g. "/admin/list-users") and are
+ * prefixed with "/api/auth" because Better Auth mounts its routes there — so
+ * the resolved URL becomes `${baseUrl}/api/auth/admin/list-users`.
+ *
  * Use from Server Components (reads) and Route Handlers (mutations).
  */
 export async function cinaauthFetch<T>(
@@ -22,8 +26,11 @@ export async function cinaauthFetch<T>(
 	if (opts.cookie) headers.cookie = opts.cookie;
 	if (opts.body !== undefined) headers["content-type"] = "application/json";
 
+	// Ensure the path is mounted under the Better Auth handler ("/api/auth").
+	const mountPath = path.startsWith("/api/auth") ? path : `/api/auth${path}`;
+
 	try {
-		const res = await fetch(`${cinaauthConfig.baseUrl}${path}`, {
+		const res = await fetch(`${cinaauthConfig.baseUrl}${mountPath}`, {
 			method: opts.method ?? "GET",
 			headers,
 			body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,

@@ -1,26 +1,25 @@
 "use client";
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { useThemeTokens } from "@/hooks/use-theme-tokens";
 
-// Accent palette — reads theme tokens so slices + tooltip re-tint in dark.
-/** Login-channel distribution pie (email/password, github, siwe). */
+/**
+ * Login-channel distribution pie (email/password, github, siwe). Colors read
+ * theme tokens; `themeKey` forces a remount on theme switch so recharts
+ * re-tints slices + tooltip.
+ */
 export function ChannelPie({
 	channels,
 }: {
 	channels: Record<string, number>;
 }) {
+	const { v, themeKey } = useThemeTokens();
 	const data = [
 		{ name: "邮箱密码", value: channels.emailPassword ?? 0 },
 		{ name: "GitHub", value: channels.github ?? 0 },
 		{ name: "SIWE", value: channels.siwe ?? 0 },
 	].filter((d) => d.value > 0);
 
-	const css =
-		typeof window !== "undefined"
-			? getComputedStyle(document.documentElement)
-			: null;
-	const v = (name: string, fallback: string) =>
-		css?.getPropertyValue(name).trim() || fallback;
 	const COLORS = [
 		v("--accent", "#8b5cf6"),
 		v("--violet", "#7928ca"),
@@ -33,7 +32,7 @@ export function ChannelPie({
 
 	return (
 		<ResponsiveContainer width="100%" height={240}>
-			<PieChart>
+			<PieChart key={themeKey}>
 				<Pie
 					data={data}
 					dataKey="value"
