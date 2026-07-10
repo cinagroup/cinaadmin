@@ -11,6 +11,7 @@ import { DataTable } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import {
 	Select,
 	SelectContent,
@@ -32,6 +33,7 @@ const CATEGORIES = [
 ];
 
 export default function AuditPage() {
+	const { t } = useI18n();
 	const [category, setCategory] = useState("all");
 	const [result, setResult] = useState("all");
 
@@ -58,24 +60,24 @@ export default function AuditPage() {
 		() => [
 			{
 				accessorKey: "timestamp",
-				header: "时间",
+				header: t("audit.col.time"),
 				cell: ({ row }) => new Date(row.original.timestamp).toLocaleString(),
 			},
-			{ accessorKey: "category", header: "类别" },
-			{ accessorKey: "action", header: "操作" },
-			{ accessorKey: "actorId", header: "操作者" },
-			{ accessorKey: "actorIp", header: "IP" },
+			{ accessorKey: "category", header: t("audit.col.category") },
+			{ accessorKey: "action", header: t("audit.col.action") },
+			{ accessorKey: "actorId", header: t("audit.col.actor") },
+			{ accessorKey: "actorIp", header: t("audit.col.ip") },
 			{
-				header: "结果",
+				header: t("audit.col.result"),
 				cell: ({ row }) =>
 					row.original.result === "failure" ? (
-						<Badge variant="danger">失败</Badge>
+						<Badge variant="danger">{t("common.result.failure")}</Badge>
 					) : (
-						<Badge variant="success">成功</Badge>
+						<Badge variant="success">{t("common.result.success")}</Badge>
 					),
 			},
 		],
-		[],
+		[t],
 	);
 
 	const table = useReactTable({
@@ -91,9 +93,9 @@ export default function AuditPage() {
 
 	return (
 		<div>
-			<PageHeader title="审计日志">
+			<PageHeader title={t("audit.title")}>
 				<Button asChild variant="secondary" size="sm">
-					<a href={exportHref}>导出 CSV</a>
+					<a href={exportHref}>{t("audit.export")}</a>
 				</Button>
 			</PageHeader>
 			<div className="mb-4 flex gap-2">
@@ -102,7 +104,7 @@ export default function AuditPage() {
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="all">全部类别</SelectItem>
+						<SelectItem value="all">{t("audit.allCategories")}</SelectItem>
 						{CATEGORIES.map((c) => (
 							<SelectItem key={c} value={c}>
 								{c}
@@ -115,9 +117,9 @@ export default function AuditPage() {
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="all">全部结果</SelectItem>
-						<SelectItem value="success">成功</SelectItem>
-						<SelectItem value="failure">失败</SelectItem>
+						<SelectItem value="all">{t("audit.allResults")}</SelectItem>
+						<SelectItem value="success">{t("common.result.success")}</SelectItem>
+						<SelectItem value="failure">{t("common.result.failure")}</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>
@@ -126,7 +128,7 @@ export default function AuditPage() {
 				rowClassName={(r) =>
 					r.result === "failure" ? "bg-error-soft" : undefined
 				}
-				emptyLabel={isFetching ? "加载中…" : "暂无审计记录"}
+				emptyLabel={isFetching ? t("common.loading") : t("audit.empty")}
 			/>
 		</div>
 	);

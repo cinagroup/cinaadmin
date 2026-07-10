@@ -8,6 +8,7 @@ import { SignupLine } from "@/components/charts/signup-line";
 import { ActiveUsersChart } from "@/components/charts/active-users-chart";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import type {
 	SignupPointDTO,
 	StatsOverviewDTO,
@@ -61,6 +62,7 @@ const EMPTY_SECURITY: SecurityTodayDTO = {
 };
 
 export default function DashboardPage() {
+	const { t } = useI18n();
 	// Client-side data fetching — the shell renders instantly (no SSR await on
 	// cinaauth), so navigation to /dashboard is as fast as the other pages.
 	// Each query is independent and caches in React Query.
@@ -117,56 +119,56 @@ export default function DashboardPage() {
 			<div className="flex items-end justify-between gap-4">
 				<div>
 					<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
-						概览
+						{t("dashboard.title")}
 					</h1>
 					<div className="mt-1 text-[14px] leading-5 text-body">
-						数据快照 · {todayLabel()}
+						{t("dashboard.snapshot")} · {todayLabel()}
 					</div>
 				</div>
 			</div>
 
 			{/* Users section */}
 			<section className="space-y-3">
-				<SectionLabel>用户</SectionLabel>
+				<SectionLabel>{t("dashboard.section.users")}</SectionLabel>
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 					<StatCard
-						label="总用户"
+						label={t("dashboard.totalUsers")}
 						value={ov.totalUsers}
 						spark={sparkSignups}
 					/>
 					<StatCard
-						label="活跃用户"
+						label={t("dashboard.activeUsers")}
 						value={ov.activeSessions}
 						deltaLabel={`on ${todayLabel()}`}
 					/>
 					<StatCard
-						label="30 天新增"
+						label={t("dashboard.newUsers30d")}
 						value={ov.newUsers30d}
 						delta={signupsDelta ?? undefined}
-						deltaLabel="vs 上周"
+						deltaLabel={t("dashboard.vsLastWeek")}
 						spark={sparkSignups}
 					/>
-					<StatCard label="封禁账号" value={ov.bannedCount} />
+					<StatCard label={t("dashboard.bannedCount")} value={ov.bannedCount} />
 				</div>
 			</section>
 
 			{/* User activity section — signature cohort chart */}
 			<section className="space-y-3">
-				<SectionLabel>用户活动</SectionLabel>
+				<SectionLabel>{t("dashboard.section.activity")}</SectionLabel>
 				<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 					<Card>
 						<CardHeader>
 							<div className="text-[14px] leading-5 text-body">
-								新增 / 回流（近 14 天）
+								{t("dashboard.cohort.title")}
 							</div>
 							<div className="flex items-center gap-4 text-[12px] leading-4 text-mute">
 								<span className="inline-flex items-center gap-1.5">
 									<span className="inline-block h-2 w-2 rounded-[2px] bg-chart-1" />
-									新增
+									{t("dashboard.cohort.new")}
 								</span>
 								<span className="inline-flex items-center gap-1.5">
 									<span className="inline-block h-2 w-2 rounded-[2px] bg-chart-2" />
-									回流
+									{t("dashboard.cohort.returning")}
 								</span>
 							</div>
 						</CardHeader>
@@ -177,10 +179,10 @@ export default function DashboardPage() {
 					<Card>
 						<CardHeader>
 							<div className="text-[14px] leading-5 text-body">
-								活跃用户趋势（近 14 天）
+								{t("dashboard.activeTrend.title")}
 							</div>
 							<div className="text-[12px] leading-4 text-mute">
-								基于登录事件派生
+								{t("dashboard.activeTrend.hint")}
 							</div>
 						</CardHeader>
 						<CardContent>
@@ -192,20 +194,20 @@ export default function DashboardPage() {
 
 			{/* Organizations + security section */}
 			<section className="space-y-3">
-				<SectionLabel>组织与安全</SectionLabel>
+				<SectionLabel>{t("dashboard.section.orgSecurity")}</SectionLabel>
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-					<StatCard label="组织数" value={ov.organizationCount} />
+					<StatCard label={t("dashboard.orgCount")} value={ov.organizationCount} />
 					<StatCard
-						label="未开 2FA"
+						label={t("dashboard.no2fa")}
 						value={ov.usersWithout2FA}
-						hint="高危资金账号"
+						hint={t("dashboard.no2fa.hint")}
 					/>
 					<StatCard
-						label="今日失败登录"
+						label={t("dashboard.failedLogins")}
 						value={sec.failedLoginsToday}
 					/>
 					<StatCard
-						label="今日 OTP 请求"
+						label={t("dashboard.otpRequests")}
 						value={sec.otpRequestsToday}
 					/>
 				</div>
@@ -215,7 +217,7 @@ export default function DashboardPage() {
 				<Card>
 					<CardHeader>
 						<div className="text-[14px] leading-5 text-body">
-							30 天注册趋势
+							{t("dashboard.signupTrend")}
 						</div>
 					</CardHeader>
 					<CardContent>
@@ -225,7 +227,7 @@ export default function DashboardPage() {
 				<Card>
 					<CardHeader>
 						<div className="text-[14px] leading-5 text-body">
-							登录渠道分布
+							{t("dashboard.channelDist")}
 						</div>
 					</CardHeader>
 					<CardContent>
@@ -237,10 +239,10 @@ export default function DashboardPage() {
 			{/* Retention placeholder — requires a backend cohort endpoint. */}
 			<EmptyState>
 				<div className="font-mono text-[12px] uppercase tracking-wide text-mute">
-					留存分析
+					{t("dashboard.retention.title")}
 				</div>
 				<div className="text-[14px] leading-5 text-body">
-					次日 / 7 日留存趋势需后端数据端点（规划中）
+					{t("dashboard.retention.hint")}
 				</div>
 			</EmptyState>
 		</div>

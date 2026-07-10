@@ -59,15 +59,15 @@ export function Topbar() {
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						<DropdownMenuItem onClick={() => setTheme("light")}>
-							<Sun size={14} /> 浅色
+							<Sun size={14} /> {t("theme.light")}
 							{theme === "light" && <span className="ml-auto text-link">✓</span>}
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={() => setTheme("dark")}>
-							<Moon size={14} /> 暗色
+							<Moon size={14} /> {t("theme.dark")}
 							{theme === "dark" && <span className="ml-auto text-link">✓</span>}
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={() => setTheme("system")}>
-							<Monitor size={14} /> 跟随系统
+							<Monitor size={14} /> {t("theme.system")}
 							{theme === "system" && (
 								<span className="ml-auto text-link">✓</span>
 							)}

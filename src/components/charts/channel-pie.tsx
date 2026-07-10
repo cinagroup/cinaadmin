@@ -15,7 +15,7 @@ export function ChannelPie({
 }) {
 	const { v, themeKey } = useThemeTokens();
 	const data = [
-		{ name: "邮箱密码", value: channels.emailPassword ?? 0 },
+		{ name: "Email", value: channels.emailPassword ?? 0 },
 		{ name: "GitHub", value: channels.github ?? 0 },
 		{ name: "SIWE", value: channels.siwe ?? 0 },
 	].filter((d) => d.value > 0);

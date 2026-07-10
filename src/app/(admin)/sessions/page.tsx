@@ -9,9 +9,11 @@ import {
 } from "@tanstack/react-table";
 import { DataTable } from "@/components/data-table/data-table";
 import { PageHeader } from "@/components/layout/page-header";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import type { SessionDTO } from "@/lib/cinaauth/dto";
 
 export default function SessionsPage() {
+	const { t } = useI18n();
 	const { data, isFetching } = useQuery({
 		queryKey: ["sessions", "all"],
 		queryFn: async () => {
@@ -28,21 +30,21 @@ export default function SessionsPage() {
 
 	const columns = useMemo<ColumnDef<SessionDTO>[]>(
 		() => [
-			{ accessorKey: "userId", header: "用户 ID" },
+			{ accessorKey: "userId", header: t("sessions.col.userId") },
 			{
 				accessorKey: "createdAt",
-				header: "创建时间",
+				header: t("sessions.col.createdAt"),
 				cell: ({ row }) => new Date(row.original.createdAt).toLocaleString(),
 			},
 			{
 				accessorKey: "expiresAt",
-				header: "过期时间",
+				header: t("sessions.col.expiresAt"),
 				cell: ({ row }) => new Date(row.original.expiresAt).toLocaleString(),
 			},
-			{ accessorKey: "ipAddress", header: "IP" },
-			{ accessorKey: "userAgent", header: "设备" },
+			{ accessorKey: "ipAddress", header: t("sessions.col.ip") },
+			{ accessorKey: "userAgent", header: t("sessions.col.device") },
 		],
-		[],
+		[t],
 	);
 
 	const table = useReactTable({
@@ -53,8 +55,11 @@ export default function SessionsPage() {
 
 	return (
 		<div>
-			<PageHeader title="会话管理" />
-			<DataTable table={table} emptyLabel={isFetching ? "加载中…" : "无会话"} />
+			<PageHeader title={t("sessions.title")} />
+			<DataTable
+				table={table}
+				emptyLabel={isFetching ? t("common.loading") : t("sessions.empty")}
+			/>
 		</div>
 	);
 }

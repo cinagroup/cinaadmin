@@ -14,6 +14,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/layout/page-header";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import {
 	Select,
 	SelectContent,
@@ -34,6 +35,7 @@ interface ApiKeyDTO {
 }
 
 export default function ApiKeysPage() {
+	const { t } = useI18n();
 	const qc = useQueryClient();
 	const { data, isFetching } = useQuery({
 		queryKey: ["api-keys"],
@@ -67,10 +69,10 @@ export default function ApiKeysPage() {
 
 	const columns = useMemo<ColumnDef<ApiKeyDTO>[]>(
 		() => [
-			{ accessorKey: "name", header: "名称" },
+			{ accessorKey: "name", header: t("organizations.col.name") },
 			{
 				accessorKey: "prefix",
-				header: "前缀",
+				header: t("apiKeys.prefix"),
 				cell: ({ row }) => (
 					<span className="font-mono text-[12px] leading-4">
 						{row.original.prefix}…
@@ -78,24 +80,24 @@ export default function ApiKeysPage() {
 				),
 			},
 			{
-				header: "状态",
+				header: t("users.col.status"),
 				cell: ({ row }) =>
 					row.original.enabled ? (
-						<Badge variant="success">启用</Badge>
+						<Badge variant="success">{t("common.enabled")}</Badge>
 					) : (
-						<Badge variant="muted">禁用</Badge>
+						<Badge variant="muted">{t("common.disabled")}</Badge>
 					),
 			},
 			{
 				accessorKey: "expiresAt",
-				header: "过期",
+				header: t("common.expired"),
 				cell: ({ row }) =>
 					row.original.expiresAt
 						? new Date(row.original.expiresAt).toLocaleDateString()
-						: "永久",
+						: t("common.permanent"),
 			},
 		],
-		[],
+		[t],
 	);
 
 	const table = useReactTable({
@@ -106,36 +108,39 @@ export default function ApiKeysPage() {
 
 	return (
 		<div>
-			<PageHeader title="API 密钥管理">
+			<PageHeader title={t("apiKeys.title")}>
 				<RoleGuard allow={["super_admin"]}>
 					<ConfirmDialog
 						trigger={
 							<Button variant="primary" size="sm">
-								创建密钥
+								{t("apiKeys.create")}
 							</Button>
 						}
-						title="创建 API 密钥"
-						confirmText={creating ? "创建中…" : "创建"}
+						title={t("apiKeys.create.title")}
+						confirmText={creating ? t("common.creating") : t("common.create")}
 						onConfirm={create}
 					>
 						<Input
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							placeholder="密钥名称"
+							placeholder={t("apiKeys.name")}
 						/>
 						<Select value={scope} onValueChange={setScope}>
 							<SelectTrigger className="h-10">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="read-users">仅查用户</SelectItem>
-								<SelectItem value="verify-siwe">仅验签 SIWE</SelectItem>
+								<SelectItem value="read-users">{t("apiKeys.scope.readUsers")}</SelectItem>
+								<SelectItem value="verify-siwe">{t("apiKeys.scope.verifySiwe")}</SelectItem>
 							</SelectContent>
 						</Select>
 					</ConfirmDialog>
 				</RoleGuard>
 			</PageHeader>
-			<DataTable table={table} emptyLabel={isFetching ? "加载中…" : "暂无密钥"} />
+			<DataTable
+				table={table}
+				emptyLabel={isFetching ? t("common.loading") : t("apiKeys.empty")}
+			/>
 		</div>
 	);
 }

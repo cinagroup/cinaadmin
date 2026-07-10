@@ -14,6 +14,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/layout/page-header";
+import { useI18n } from "@/lib/i18n/i18n-context";
 
 interface OrgDTO {
 	id: string;
@@ -24,6 +25,7 @@ interface OrgDTO {
 }
 
 export default function OrganizationsPage() {
+	const { t } = useI18n();
 	const qc = useQueryClient();
 	const { data, isFetching } = useQuery({
 		queryKey: ["organizations"],
@@ -60,7 +62,7 @@ export default function OrganizationsPage() {
 		() => [
 			{
 				accessorKey: "name",
-				header: "名称",
+				header: t("organizations.col.name"),
 				cell: ({ row }) => (
 					<Link
 						href={`/organizations/${row.original.id}`}
@@ -70,14 +72,14 @@ export default function OrganizationsPage() {
 					</Link>
 				),
 			},
-			{ accessorKey: "slug", header: "Slug" },
+			{ accessorKey: "slug", header: t("organizations.col.slug") },
 			{
 				accessorKey: "createdAt",
-				header: "创建时间",
+				header: t("organizations.col.createdAt"),
 				cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
 			},
 		],
-		[],
+		[t],
 	);
 
 	const table = useReactTable({
@@ -88,32 +90,35 @@ export default function OrganizationsPage() {
 
 	return (
 		<div>
-			<PageHeader title="组织 / 商户管理">
+			<PageHeader title={t("organizations.title")}>
 				<RoleGuard allow={["super_admin"]}>
 					<ConfirmDialog
 						trigger={
 							<Button variant="primary" size="sm">
-								新建组织
+								{t("organizations.create")}
 							</Button>
 						}
-						title="新建组织"
-						confirmText={creating ? "创建中…" : "创建"}
+						title={t("organizations.create")}
+						confirmText={creating ? t("common.creating") : t("common.create")}
 						onConfirm={create}
 					>
 						<Input
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							placeholder="组织名称"
+							placeholder={t("organizations.name")}
 						/>
 						<Input
 							value={slug}
 							onChange={(e) => setSlug(e.target.value)}
-							placeholder="slug（唯一标识）"
+							placeholder={t("organizations.slug")}
 						/>
 					</ConfirmDialog>
 				</RoleGuard>
 			</PageHeader>
-			<DataTable table={table} emptyLabel={isFetching ? "加载中…" : "暂无组织"} />
+			<DataTable
+				table={table}
+				emptyLabel={isFetching ? t("common.loading") : t("organizations.empty")}
+			/>
 		</div>
 	);
 }

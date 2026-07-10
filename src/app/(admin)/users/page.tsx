@@ -14,11 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import type { UserDTO } from "@/lib/cinaauth/dto";
 
 const PAGE_SIZE = 20;
 
 export default function UsersPage() {
+	const { t } = useI18n();
 	const [filter, setFilter] = useState<FilterState>({});
 	const [offset, setOffset] = useState(0);
 
@@ -51,7 +53,7 @@ export default function UsersPage() {
 		() => [
 			{
 				accessorKey: "email",
-				header: "邮箱",
+				header: t("users.col.email"),
 				cell: ({ row }) => (
 					<Link
 						href={`/users/${row.original.id}`}
@@ -61,25 +63,25 @@ export default function UsersPage() {
 					</Link>
 				),
 			},
-			{ accessorKey: "name", header: "用户名" },
-			{ accessorKey: "role", header: "角色" },
+			{ accessorKey: "name", header: t("users.col.name") },
+			{ accessorKey: "role", header: t("users.col.role") },
 			{
-				header: "状态",
+				header: t("users.col.status"),
 				cell: ({ row }) =>
 					row.original.banned ? (
-						<Badge variant="danger">封禁</Badge>
+						<Badge variant="danger">{t("users.status.banned")}</Badge>
 					) : (
-						<Badge variant="success">正常</Badge>
+						<Badge variant="success">{t("users.status.active")}</Badge>
 					),
 			},
 			{
 				accessorKey: "createdAt",
-				header: "注册时间",
+				header: t("users.col.createdAt"),
 				cell: ({ row }) =>
 					new Date(row.original.createdAt).toLocaleDateString(),
 			},
 		],
-		[],
+		[t],
 	);
 
 	const table = useReactTable({
@@ -94,23 +96,26 @@ export default function UsersPage() {
 
 	return (
 		<div>
-			<PageHeader title="用户管理">
+			<PageHeader title={t("users.title")}>
 				<Button asChild variant="secondary" size="sm">
-					<a href={exportHref}>导出 CSV</a>
+					<a href={exportHref}>{t("common.export")}</a>
 				</Button>
 			</PageHeader>
 			<FilterBar
 				fields={[
-					{ label: "邮箱", value: "email" },
-					{ label: "用户名", value: "name" },
-					{ label: "钱包", value: "wallet" },
+					{ label: t("users.col.email"), value: "email" },
+					{ label: t("users.col.name"), value: "name" },
+					{ label: t("users.col.wallet"), value: "wallet" },
 				]}
 				onChange={(f) => {
 					setFilter(f);
 					setOffset(0);
 				}}
 			/>
-			<DataTable table={table} emptyLabel={isFetching ? "加载中…" : "暂无用户"} />
+			<DataTable
+				table={table}
+				emptyLabel={isFetching ? t("common.loading") : t("users.empty")}
+			/>
 			<Pagination
 				offset={offset}
 				pageSize={PAGE_SIZE}
