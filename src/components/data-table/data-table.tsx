@@ -2,6 +2,7 @@
 
 import { flexRender, type Table } from "@tanstack/react-table";
 import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n/i18n-context";
 
 /**
  * Generic table renderer built on @tanstack/react-table. The caller constructs
@@ -14,16 +15,17 @@ import { cn } from "@/lib/cn";
 export function DataTable<T>({
 	table,
 	rowClassName,
-	emptyLabel = "暂无数据",
+	emptyLabel,
 }: {
 	table: Table<T>;
 	rowClassName?: (row: T) => string | undefined;
 	emptyLabel?: string;
 }) {
+	const { t } = useI18n();
 	if (table.getRowModel().rows.length === 0) {
 		return (
 			<div className="rounded-[var(--radius-md)] bg-canvas-soft p-8 text-center text-[14px] leading-5 text-mute">
-				{emptyLabel}
+				{emptyLabel ?? t("common.noData")}
 			</div>
 		);
 	}

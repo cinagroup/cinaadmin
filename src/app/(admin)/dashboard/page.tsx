@@ -8,6 +8,7 @@ import { SignupLine } from "@/components/charts/signup-line";
 import { ActiveUsersChart } from "@/components/charts/active-users-chart";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/layout/page-header";
 import { Section } from "@/components/layout/section";
 import { useI18n } from "@/lib/i18n/i18n-context";
@@ -59,7 +60,7 @@ export default function DashboardPage() {
 	// Client-side data fetching — the shell renders instantly (no SSR await on
 	// cinaauth), so navigation to /dashboard is as fast as the other pages.
 	// Each query is independent and caches in React Query.
-	const { data: overview } = useQuery({
+	const { data: overview, isLoading: ovLoading } = useQuery({
 		queryKey: ["stats-overview"],
 		queryFn: async () => {
 			const r = await fetch("/api/admin/stats/overview");
@@ -106,6 +107,16 @@ export default function DashboardPage() {
 	const signupsDelta = pctChange(signups7d, signupsPrev7d);
 	const sparkSignups = signupSeries.slice(-14).map((p) => p.count);
 
+	/** Skeleton placeholder matching the StatCard shape. */
+	const StatSkeleton = () => (
+		<div className="flex items-start justify-between gap-3 rounded-[var(--radius-lg)] border border-hairline bg-canvas p-5 shadow-card">
+			<div className="w-full space-y-2">
+				<Skeleton className="h-3 w-20" />
+				<Skeleton className="h-7 w-16" />
+			</div>
+		</div>
+	);
+
 	return (
 		<div className="space-y-8">
 			<PageHeader
@@ -116,24 +127,40 @@ export default function DashboardPage() {
 			{/* Users section */}
 			<Section label={t("dashboard.section.users")}>
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-					<StatCard
-						label={t("dashboard.totalUsers")}
-						value={ov.totalUsers}
-						spark={sparkSignups}
-					/>
-					<StatCard
-						label={t("dashboard.activeUsers")}
-						value={ov.activeSessions}
-						deltaLabel={`on ${todayLabel()}`}
-					/>
-					<StatCard
-						label={t("dashboard.newUsers30d")}
-						value={ov.newUsers30d}
-						delta={signupsDelta ?? undefined}
-						deltaLabel={t("dashboard.vsLastWeek")}
-						spark={sparkSignups}
-					/>
-					<StatCard label={t("dashboard.bannedCount")} value={ov.bannedCount} />
+					{ovLoading ? (
+						<StatSkeleton />
+					) : (
+						<StatCard
+							label={t("dashboard.totalUsers")}
+							value={ov.totalUsers}
+							spark={sparkSignups}
+						/>
+					)}
+					{ovLoading ? (
+						<StatSkeleton />
+					) : (
+						<StatCard
+							label={t("dashboard.activeUsers")}
+							value={ov.activeSessions}
+							deltaLabel={`on ${todayLabel()}`}
+						/>
+					)}
+					{ovLoading ? (
+						<StatSkeleton />
+					) : (
+						<StatCard
+							label={t("dashboard.newUsers30d")}
+							value={ov.newUsers30d}
+							delta={signupsDelta ?? undefined}
+							deltaLabel={t("dashboard.vsLastWeek")}
+							spark={sparkSignups}
+						/>
+					)}
+					{ovLoading ? (
+						<StatSkeleton />
+					) : (
+						<StatCard label={t("dashboard.bannedCount")} value={ov.bannedCount} />
+					)}
 				</div>
 			</Section>
 

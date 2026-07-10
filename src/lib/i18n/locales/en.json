@@ -37,11 +37,9 @@
 	"impersonate.stop": "Stop impersonating",
 	"instance.production": "Production",
 	"placeholder.phase2": "(Phase 2)",
-
 	"theme.light": "Light",
 	"theme.dark": "Dark",
 	"theme.system": "System",
-
 	"dashboard.title": "Overview",
 	"dashboard.snapshot": "Snapshot",
 	"dashboard.section.users": "Users",
@@ -68,7 +66,6 @@
 	"dashboard.retention.title": "Retention",
 	"dashboard.retention.hint": "Next-day / 7-day retention needs a backend cohort endpoint (planned)",
 	"dashboard.noLoginData": "No login data in the last {{days}} days",
-
 	"users.title": "Users",
 	"users.empty": "No users",
 	"users.col.email": "Email",
@@ -85,7 +82,6 @@
 	"users.create.failed": "Create failed",
 	"users.back": "Back to list",
 	"users.notFound": "User not found or load failed",
-
 	"userDetail.profile.title": "Profile",
 	"userDetail.profile.edit": "Edit Profile",
 	"userDetail.profile.editHint": "Changing email and role requires super_admin.",
@@ -115,12 +111,10 @@
 	"userDetail.tab.wallets": "Linked Accounts",
 	"userDetail.tab.loginTrail": "Login History",
 	"userDetail.tab.security": "Security",
-
 	"loginTrail.empty": "No login records",
 	"loginTrail.failed": "Login failed",
 	"loginTrail.success": "Login successful",
 	"loginTrail.device": "Device",
-
 	"wallets.col.address": "Address",
 	"wallets.col.chainId": "Chain ID",
 	"wallets.col.primary": "Primary",
@@ -132,7 +126,6 @@
 	"wallets.unbind.title": "Unbind Wallet",
 	"wallets.unbind.hint": "This will unbind the wallet and revoke related sessions.",
 	"wallets.empty": "No linked wallets",
-
 	"userSessions.revokeAll": "Revoke All Sessions",
 	"userSessions.revokeAllBtn": "Revoke All",
 	"userSessions.empty": "No active sessions",
@@ -140,7 +133,6 @@
 	"userSessions.col.expiresAt": "Expires",
 	"userSessions.col.ip": "IP",
 	"userSessions.col.device": "Device",
-
 	"sessions.title": "Sessions",
 	"sessions.empty": "No sessions",
 	"sessions.col.userId": "User ID",
@@ -148,7 +140,6 @@
 	"sessions.col.expiresAt": "Expires",
 	"sessions.col.ip": "IP",
 	"sessions.col.device": "Device",
-
 	"audit.title": "Audit Log",
 	"audit.export": "Export CSV",
 	"audit.allCategories": "All categories",
@@ -160,7 +151,6 @@
 	"audit.col.actor": "Actor",
 	"audit.col.ip": "IP",
 	"audit.col.result": "Result",
-
 	"organizations.title": "Organizations",
 	"organizations.create": "New Organization",
 	"organizations.col.name": "Name",
@@ -169,7 +159,6 @@
 	"organizations.name": "Organization name",
 	"organizations.slug": "slug (unique identifier)",
 	"organizations.empty": "No organizations",
-
 	"apiKeys.title": "API Keys",
 	"apiKeys.create": "New Key",
 	"apiKeys.create.title": "Create API Key",
@@ -178,15 +167,15 @@
 	"apiKeys.scope.readUsers": "Read users",
 	"apiKeys.scope.verifySiwe": "Verify SIWE",
 	"apiKeys.empty": "No API keys",
-
 	"security.title": "Security Policy",
 	"security.otpExpiry": "OTP Expiry",
 	"security.otpDailyLimit": "Daily OTP Limit",
 	"security.passwordLockout": "Password Lockout Threshold",
 	"security.force2fa": "Force 2FA",
 	"security.trustedDomains": "Trusted Domains",
-
 	"userDetail.delete.confirm": "This action is irreversible. The user and all sessions will be permanently deleted.",
 	"userDetail.sessions.revokeConfirm": "All active sessions for this user will be immediately revoked. They will need to sign in again.",
-	"loginTrail.deviceLabel": "Device:"
+	"loginTrail.deviceLabel": "Device:",
+	"error.generic.title": "Something went wrong",
+	"error.retry": "Retry"
 }

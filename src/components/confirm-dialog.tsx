@@ -12,6 +12,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n/i18n-context";
 
 /**
  * Destructive-action confirmation dialog (Radix-backed). `trigger` opens it;
@@ -26,8 +27,8 @@ export function ConfirmDialog({
 	title,
 	description,
 	children,
-	confirmText = "确认",
-	cancelText = "取消",
+	confirmText,
+	cancelText,
 	danger,
 	onConfirm,
 }: {
@@ -40,6 +41,9 @@ export function ConfirmDialog({
 	danger?: boolean;
 	onConfirm: () => void;
 }) {
+	const { t } = useI18n();
+	const _confirmText = confirmText ?? t("common.confirm");
+	const _cancelText = cancelText ?? t("common.cancel");
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
@@ -56,7 +60,7 @@ export function ConfirmDialog({
 				<DialogFooter>
 					<DialogClose asChild>
 						<Button type="button" variant="secondary" size="sm">
-							{cancelText}
+							{_cancelText}
 						</Button>
 					</DialogClose>
 					<DialogClose asChild>
@@ -66,7 +70,7 @@ export function ConfirmDialog({
 							size="sm"
 							onClick={onConfirm}
 						>
-							{confirmText}
+							{_confirmText}
 						</Button>
 					</DialogClose>
 				</DialogFooter>
