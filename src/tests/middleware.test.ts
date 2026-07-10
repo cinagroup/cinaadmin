@@ -2,38 +2,33 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 beforeEach(() => {
-	vi.stubEnv("CINAADMIN_ALLOWED_ROLES", "super_admin,security_admin");
 	vi.stubEnv("CINAUTH_BASE_URL", "https://auth.test");
 	vi.stubEnv("CINAUTH_AUTH_URL", "https://auth-frontend.test");
 });
 
+const SESSION_COOKIE = "__Secure-cinaauth.session_token";
+
 /**
- * Run the middleware default export against a fake request whose cookie
- * resolves to the given cinaauth response.
+ * Build a NextRequest with an optional session cookie. The middleware now does
+ * a cookie-presence check (no network call to cinaauth) so role enforcement is
+ * tested via the Route Handlers / Server Components, not here.
  */
-async function runMiddleware(opts: {
-	pathname: string;
-	role: string | undefined;
-	cinaauthStatus?: number;
-}): Promise<Response> {
+function buildRequest(pathname: string, withSession: boolean): NextRequest {
+	const headers: Record<string, string> = {};
+	if (withSession) headers.cookie = `${SESSION_COOKIE}=test-token`;
+	return new NextRequest(new URL(`https://admin.test${pathname}`), { headers });
+}
+
+async function runMiddleware(pathname: string, withSession: boolean): Promise<Response> {
 	vi.resetModules();
-	vi.spyOn(globalThis, "fetch").mockResolvedValue(
-		new Response(
-			opts.role ? JSON.stringify({ user: { role: opts.role } }) : "{}",
-			{ status: opts.cinaauthStatus ?? (opts.role ? 200 : 401) },
-		),
-	);
 	const mod = await import("@/middleware");
 	const middleware = (mod as { middleware: (req: NextRequest) => Promise<Response> }).middleware;
-	const req = new NextRequest(new URL(`https://admin.test${opts.pathname}`), {
-		headers: { cookie: "s=1" },
-	});
-	return middleware(req);
+	return middleware(buildRequest(pathname, withSession));
 }
 
 describe("middleware access control", () => {
-	it("redirects non-allowed roles to cinaauth sign-in", async () => {
-		const res = await runMiddleware({ pathname: "/users", role: "user" });
+	it("redirects to cinaauth sign-in when no session cookie", async () => {
+		const res = await runMiddleware("/users", false);
 		expect(res.status).toBeGreaterThanOrEqual(300);
 		const loc = res.headers.get("location") ?? "";
 		// Must hit the FRONTEND host (CINAUTH_AUTH_URL), not the API host.
@@ -41,46 +36,38 @@ describe("middleware access control", () => {
 		expect(loc).toContain("/sign-in");
 	});
 
-	it("redirects when unauthenticated (no role)", async () => {
-		const res = await runMiddleware({
-			pathname: "/users",
-			role: undefined,
-			cinaauthStatus: 401,
-		});
-		expect(res.status).toBeGreaterThanOrEqual(300);
-	});
-
-	it("allows super_admin through", async () => {
-		const res = await runMiddleware({ pathname: "/users", role: "super_admin" });
+	it("allows through when session cookie present", async () => {
+		const res = await runMiddleware("/users", true);
 		expect(res.status).toBe(200);
 	});
 
-	it("allows security_admin through", async () => {
-		const res = await runMiddleware({
-			pathname: "/audit",
-			role: "security_admin",
-		});
+	it("allows through on audit page with session", async () => {
+		const res = await runMiddleware("/audit", true);
 		expect(res.status).toBe(200);
 	});
 
-	it("returns 401 JSON for api paths when unauthenticated", async () => {
-		const res = await runMiddleware({
-			pathname: "/api/admin/session",
-			role: undefined,
-			cinaauthStatus: 401,
-		});
+	it("returns 401 JSON for api paths when no session", async () => {
+		const res = await runMiddleware("/api/admin/session", false);
 		expect(res.status).toBe(401);
 		const body = (await res.json()) as { ok: boolean };
 		expect(body.ok).toBe(false);
 	});
 
-	it("passes through public paths without a cinaauth call", async () => {
-		const fetchMock = vi.spyOn(globalThis, "fetch");
-		const mod = await import("@/middleware");
-		const middleware = (mod as { middleware: (req: NextRequest) => Promise<Response> }).middleware;
-		const req = new NextRequest(new URL("https://admin.test/sign-in"));
-		const res = await middleware(req);
+	it("passes through api paths with session", async () => {
+		const res = await runMiddleware("/api/admin/session", true);
 		expect(res.status).toBe(200);
+	});
+
+	it("passes through public paths without a session cookie", async () => {
+		const fetchMock = vi.spyOn(globalThis, "fetch");
+		const res = await runMiddleware("/sign-in", false);
+		expect(res.status).toBe(200);
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it("does not call cinaauth on navigation (cookie-only check)", async () => {
+		const fetchMock = vi.spyOn(globalThis, "fetch");
+		await runMiddleware("/dashboard", true);
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 });

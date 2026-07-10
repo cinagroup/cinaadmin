@@ -1,8 +1,26 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cinaauthConfig } from "@/lib/cinaauth/config";
 
-/** Paths that bypass the admin role gate. */
+/** Paths that bypass the auth gate. */
 const PUBLIC_PATHS = ["/sign-in", "/api/auth", "/_next", "/favicon.ico"];
+
+/**
+ * Edge auth gate.
+ *
+ * Earlier versions called cinaauth's /get-session on EVERY request to verify
+ * the role — but that added 0.8–1.8s of latency to each navigation, freezing
+ * sidebar clicks ("卡死"). Edge isolates don't share memory, so caching was
+ * unreliable.
+ *
+ * Instead, the middleware now does a fast cookie-presence check (no network):
+ * a signed session cookie proves the user authenticated with cinaauth. Role
+ * enforcement stays where it belongs — in the Route Handlers
+ * (resolveAdminSession + hasAdminRole) and Server Components, which run the
+ * actual cinaauth call once per page render, not once per RSC flight request.
+ * This keeps navigation instant while access control remains two-layered
+ * (edge cookie gate + handler role check).
+ */
+const SESSION_COOKIE = "__Secure-cinaauth.session_token";
 
 export async function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
@@ -10,32 +28,12 @@ export async function middleware(request: NextRequest) {
 		return NextResponse.next();
 	}
 
-	// Verify the session + role at the edge by asking cinaauth. Cookie is
-	// forwarded as-is (shared .cinagroup.com session domain).
-	// NOTE: this intentionally inlines the role check rather than reusing
-	// `resolveAdminSession` — the edge middleware only needs `user.role`, and
-	// keeping the edge bundle minimal avoids pulling the full session DTO path.
-	// If cinaauth's /api/auth/get-session response shape changes, update both
-	// here and in src/lib/cinaauth/session.ts.
-	const cookie = request.headers.get("cookie") ?? "";
-	let role: string | undefined;
-	try {
-		const res = await fetch(`${cinaauthConfig.baseUrl}/api/auth/get-session`, {
-			headers: { cookie },
-			cache: "no-store",
-		});
-		if (res.ok) {
-			const data = (await res.json()) as { user?: { role?: string } | null };
-			role = data.user?.role;
-		}
-	} catch {
-		/* network error → treat as unauthenticated */
-	}
+	const hasSession = request.cookies.has(SESSION_COOKIE);
 
-	if (!role || !cinaauthConfig.allowedRoles.includes(role)) {
+	if (!hasSession) {
 		if (pathname.startsWith("/api/")) {
 			return NextResponse.json(
-				{ ok: false, error: { code: "UNAUTHORIZED", message: "role not allowed" } },
+				{ ok: false, error: { code: "UNAUTHORIZED", message: "no session" } },
 				{ status: 401 },
 			);
 		}

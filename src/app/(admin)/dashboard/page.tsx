@@ -1,4 +1,6 @@
-import { cookies } from "next/headers";
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/charts/stat-card";
 import { ChannelPie } from "@/components/charts/channel-pie";
 import { CohortBars } from "@/components/charts/cohort-bars";
@@ -6,17 +8,11 @@ import { SignupLine } from "@/components/charts/signup-line";
 import { ActiveUsersChart } from "@/components/charts/active-users-chart";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-	statsOverview,
-	statsSecurityToday,
-	statsSignups,
-} from "@/lib/cinaauth/admin-api";
-import type { SignupPointDTO } from "@/lib/cinaauth/dto";
-
-// Force dynamic rendering (uses cookies()); edge runtime required by
-// Cloudflare Pages (@cloudflare/next-on-pages).
-export const runtime = "edge";
-export const dynamic = "force-dynamic";
+import type {
+	SignupPointDTO,
+	StatsOverviewDTO,
+	SecurityTodayDTO,
+} from "@/lib/cinaauth/dto";
 
 /** Sum counts in `series` whose date falls within the last `days` days. */
 function sumLastDays(series: SignupPointDTO[], days: number): number {
@@ -49,30 +45,71 @@ function SectionLabel({ children }: { children: string }) {
 	);
 }
 
-export default async function DashboardPage() {
-	const cookie = (await cookies()).toString();
-	const [overview, signups, security] = await Promise.all([
-		statsOverview(cookie).catch(() => null),
-		statsSignups(cookie, "30d").catch(() => []),
-		statsSecurityToday(cookie).catch(() => null),
-	]);
+const EMPTY_OVERVIEW: StatsOverviewDTO = {
+	totalUsers: 0,
+	newUsers30d: 0,
+	activeSessions: 0,
+	organizationCount: 0,
+	bannedCount: 0,
+	usersWithout2FA: 0,
+	loginChannels: {},
+};
+const EMPTY_SECURITY: SecurityTodayDTO = {
+	failedLoginsToday: 0,
+	otpRequestsToday: 0,
+	geoAnomalyCount: 0,
+};
 
-	if (!overview) {
-		return (
-			<div className="space-y-2">
-				<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
-					概览
-				</h1>
-				<p className="text-[16px] leading-6 text-body">数据加载失败</p>
-			</div>
-		);
-	}
+export default function DashboardPage() {
+	// Client-side data fetching — the shell renders instantly (no SSR await on
+	// cinaauth), so navigation to /dashboard is as fast as the other pages.
+	// Each query is independent and caches in React Query.
+	const { data: overview } = useQuery({
+		queryKey: ["stats-overview"],
+		queryFn: async () => {
+			const r = await fetch("/api/admin/stats/overview");
+			const d = (await r.json()) as {
+				ok?: boolean;
+				data?: StatsOverviewDTO;
+			};
+			return d.ok ? d.data ?? EMPTY_OVERVIEW : EMPTY_OVERVIEW;
+		},
+		staleTime: 60_000,
+	});
+	const { data: signups } = useQuery<SignupPointDTO[]>({
+		queryKey: ["stats-signups", "30d"],
+		queryFn: async () => {
+			const r = await fetch("/api/admin/stats/signups?range=30d");
+			const d = (await r.json()) as {
+				ok?: boolean;
+				data?: { data?: SignupPointDTO[] };
+			};
+			return d.ok ? d.data?.data ?? [] : [];
+		},
+		staleTime: 60_000,
+	});
+	const { data: security } = useQuery({
+		queryKey: ["stats-security"],
+		queryFn: async () => {
+			const r = await fetch("/api/admin/stats/security-today");
+			const d = (await r.json()) as {
+				ok?: boolean;
+				data?: SecurityTodayDTO;
+			};
+			return d.ok ? d.data ?? EMPTY_SECURITY : EMPTY_SECURITY;
+		},
+		staleTime: 60_000,
+	});
+
+	const ov = overview ?? EMPTY_OVERVIEW;
+	const sec = security ?? EMPTY_SECURITY;
+	const signupSeries = signups ?? [];
 
 	// Derive deltas from the 30d signup series: compare last 7d vs prior 7d.
-	const signups7d = sumLastDays(signups, 7);
-	const signupsPrev7d = sumLastDays(signups, 14) - signups7d;
+	const signups7d = sumLastDays(signupSeries, 7);
+	const signupsPrev7d = sumLastDays(signupSeries, 14) - signups7d;
 	const signupsDelta = pctChange(signups7d, signupsPrev7d);
-	const sparkSignups = signups.slice(-14).map((p) => p.count);
+	const sparkSignups = signupSeries.slice(-14).map((p) => p.count);
 
 	return (
 		<div className="space-y-8">
@@ -94,25 +131,22 @@ export default async function DashboardPage() {
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 					<StatCard
 						label="总用户"
-						value={overview.totalUsers}
+						value={ov.totalUsers}
 						spark={sparkSignups}
 					/>
 					<StatCard
 						label="活跃用户"
-						value={overview.activeSessions}
+						value={ov.activeSessions}
 						deltaLabel={`on ${todayLabel()}`}
 					/>
 					<StatCard
 						label="30 天新增"
-						value={overview.newUsers30d}
+						value={ov.newUsers30d}
 						delta={signupsDelta ?? undefined}
 						deltaLabel="vs 上周"
 						spark={sparkSignups}
 					/>
-					<StatCard
-						label="封禁账号"
-						value={overview.bannedCount}
-					/>
+					<StatCard label="封禁账号" value={ov.bannedCount} />
 				</div>
 			</section>
 
@@ -160,19 +194,19 @@ export default async function DashboardPage() {
 			<section className="space-y-3">
 				<SectionLabel>组织与安全</SectionLabel>
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-					<StatCard label="组织数" value={overview.organizationCount} />
+					<StatCard label="组织数" value={ov.organizationCount} />
 					<StatCard
 						label="未开 2FA"
-						value={overview.usersWithout2FA}
+						value={ov.usersWithout2FA}
 						hint="高危资金账号"
 					/>
 					<StatCard
 						label="今日失败登录"
-						value={security?.failedLoginsToday ?? 0}
+						value={sec.failedLoginsToday}
 					/>
 					<StatCard
 						label="今日 OTP 请求"
-						value={security?.otpRequestsToday ?? 0}
+						value={sec.otpRequestsToday}
 					/>
 				</div>
 			</section>
@@ -185,7 +219,7 @@ export default async function DashboardPage() {
 						</div>
 					</CardHeader>
 					<CardContent>
-						<SignupLine data={signups} />
+						<SignupLine data={signupSeries} />
 					</CardContent>
 				</Card>
 				<Card>
@@ -195,7 +229,7 @@ export default async function DashboardPage() {
 						</div>
 					</CardHeader>
 					<CardContent>
-						<ChannelPie channels={overview.loginChannels} />
+						<ChannelPie channels={ov.loginChannels} />
 					</CardContent>
 				</Card>
 			</div>
