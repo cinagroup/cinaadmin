@@ -184,5 +184,9 @@
 	"security.otpDailyLimit": "Daily OTP Limit",
 	"security.passwordLockout": "Password Lockout Threshold",
 	"security.force2fa": "Force 2FA",
-	"security.trustedDomains": "Trusted Domains"
+	"security.trustedDomains": "Trusted Domains",
+
+	"userDetail.delete.confirm": "This action is irreversible. The user and all sessions will be permanently deleted.",
+	"userDetail.sessions.revokeConfirm": "All active sessions for this user will be immediately revoked. They will need to sign in again.",
+	"loginTrail.deviceLabel": "Device:"
 }

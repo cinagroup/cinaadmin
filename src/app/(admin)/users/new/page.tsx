@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
+import { useI18n } from "@/lib/i18n/i18n-context";
 
 export default function NewUserPage() {
+	const { t } = useI18n();
 	const router = useRouter();
 	const [email, setEmail] = useState("");
 	const [name, setName] = useState("");
@@ -32,18 +34,18 @@ export default function NewUserPage() {
 			const d = (await r.json().catch(() => null)) as {
 				error?: { message?: string };
 			} | null;
-			setError(d?.error?.message ?? "创建失败");
+			setError(d?.error?.message ?? t("users.create.failed"));
 		}
 	};
 
 	return (
 		<div className="max-w-md">
-			<PageHeader title="手动建号" />
+			<PageHeader title={t("users.create.manual")} backHref="/users" backLabel={t("users.back")} />
 			<Card>
 				<CardContent>
 					<form onSubmit={submit} className="space-y-4">
 						<div className="space-y-1.5">
-							<Label htmlFor="email">邮箱</Label>
+							<Label htmlFor="email">{t("users.col.email")}</Label>
 							<Input
 								id="email"
 								type="email"
@@ -53,7 +55,7 @@ export default function NewUserPage() {
 							/>
 						</div>
 						<div className="space-y-1.5">
-							<Label htmlFor="name">用户名</Label>
+							<Label htmlFor="name">{t("users.col.name")}</Label>
 							<Input
 								id="name"
 								value={name}
@@ -61,7 +63,7 @@ export default function NewUserPage() {
 							/>
 						</div>
 						<div className="space-y-1.5">
-							<Label htmlFor="password">密码</Label>
+							<Label htmlFor="password">{t("users.create.password")}</Label>
 							<Input
 								id="password"
 								type="password"
@@ -74,7 +76,7 @@ export default function NewUserPage() {
 							<div className="text-[14px] leading-5 text-error">{error}</div>
 						)}
 						<Button type="submit" disabled={submitting}>
-							{submitting ? "创建中…" : "创建用户"}
+							{submitting ? t("common.creating") : t("users.create")}
 						</Button>
 					</form>
 				</CardContent>

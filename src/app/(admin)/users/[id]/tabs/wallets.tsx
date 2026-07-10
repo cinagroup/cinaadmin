@@ -10,9 +10,11 @@ import { DataTable } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RoleGuard } from "@/components/role-guard";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import type { WalletDTO } from "@/lib/cinaauth/dto";
 
 export function WalletsTab({ userId }: { userId: string }) {
+	const { t } = useI18n();
 	const { data, isFetching, refetch } = useQuery({
 		queryKey: ["user", userId, "wallets"],
 		queryFn: async () => {
@@ -39,37 +41,37 @@ export function WalletsTab({ userId }: { userId: string }) {
 	const columns: ColumnDef<WalletDTO>[] = [
 		{
 			accessorKey: "address",
-			header: "地址",
+			header: t("wallets.col.address"),
 			cell: ({ row }) => (
 				<span className="font-mono text-xs">{row.original.address}</span>
 			),
 		},
-		{ accessorKey: "chainId", header: "链 ID" },
+		{ accessorKey: "chainId", header: t("wallets.col.chainId") },
 		{
-			header: "主钱包",
+			header: t("wallets.col.primary"),
 			cell: ({ row }) =>
-				row.original.isPrimary ? <Badge variant="success">主</Badge> : null,
+				row.original.isPrimary ? <Badge variant="success">{t("wallets.col.primary")}</Badge> : null,
 		},
 		{
 			accessorKey: "boundAt",
-			header: "绑定时间",
+			header: t("wallets.col.boundAt"),
 			cell: ({ row }) => new Date(row.original.boundAt).toLocaleString(),
 		},
-		{ accessorKey: "boundIp", header: "绑定 IP" },
-		{ accessorKey: "boundSite", header: "来源站点" },
+		{ accessorKey: "boundIp", header: t("wallets.col.boundIp") },
+		{ accessorKey: "boundSite", header: t("wallets.col.boundSite") },
 		{
 			id: "actions",
-			header: "操作",
+			header: t("wallets.col.action"),
 			cell: ({ row }) => (
 				<RoleGuard allow={["super_admin", "security_admin"]}>
 					<ConfirmDialog
 						trigger={
-							<span className="cursor-pointer text-xs text-danger">解绑</span>
+							<span className="cursor-pointer text-xs text-danger">{t("wallets.unbind")}</span>
 						}
-						title="解绑钱包"
-						description={`将解绑 ${row.original.address}，该钱包相关会话将吊销。`}
+						title={t("wallets.unbind.title")}
+						description={`${t("wallets.unbind.hint")} ${row.original.address}`}
 						danger
-						confirmText="解绑"
+						confirmText={t("wallets.unbind")}
 						onConfirm={() => unbind(row.original)}
 					/>
 				</RoleGuard>
@@ -84,6 +86,9 @@ export function WalletsTab({ userId }: { userId: string }) {
 	});
 
 	return (
-		<DataTable table={table} emptyLabel={isFetching ? "加载中…" : "未绑定钱包"} />
+		<DataTable
+			table={table}
+			emptyLabel={isFetching ? t("common.loading") : t("wallets.empty")}
+		/>
 	);
 }

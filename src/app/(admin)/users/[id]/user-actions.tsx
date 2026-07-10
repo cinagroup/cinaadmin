@@ -3,6 +3,7 @@
 import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import { BanDialog } from "./ban-dialog";
 
 /** Role-gated action buttons for a user (ban/delete). */
@@ -13,6 +14,7 @@ export function UserActions({
 	userId: string;
 	banned: boolean;
 }) {
+	const { t } = useI18n();
 	const remove = async () => {
 		await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
 		window.location.href = "/users";
@@ -32,7 +34,7 @@ export function UserActions({
 							window.location.reload();
 						}}
 					>
-						解封
+						{t("userDetail.actions.unban")}
 					</Button>
 				) : (
 					<BanDialog userId={userId} />
@@ -42,12 +44,12 @@ export function UserActions({
 				<ConfirmDialog
 					trigger={
 						<Button variant="outline" size="sm">
-							模拟登录
+							{t("userDetail.actions.impersonate")}
 						</Button>
 					}
-					title="模拟登录"
-					description="将以该用户身份操作，所有操作审计留痕。"
-					confirmText="开始模拟"
+					title={t("userDetail.actions.impersonate")}
+					description={t("userDetail.impersonate.hint")}
+					confirmText={t("userDetail.impersonate.start")}
 					onConfirm={async () => {
 						await fetch(`/api/admin/users/${userId}/impersonate`, {
 							method: "POST",
@@ -60,13 +62,13 @@ export function UserActions({
 				<ConfirmDialog
 					trigger={
 						<Button variant="danger" size="sm">
-							删除
+							{t("common.delete")}
 						</Button>
 					}
-					title="删除用户"
-					description="此操作不可撤销，用户及其会话将被永久删除。"
+					title={t("userDetail.delete.title")}
+					description={t("userDetail.delete.confirm")}
 					danger
-					confirmText="永久删除"
+					confirmText={t("userDetail.delete.permanent")}
 					onConfirm={remove}
 				/>
 			</RoleGuard>

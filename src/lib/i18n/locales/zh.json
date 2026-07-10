@@ -184,5 +184,9 @@
 	"security.otpDailyLimit": "每日 OTP 上限",
 	"security.passwordLockout": "密码错误锁定阈值",
 	"security.force2fa": "强制 2FA",
-	"security.trustedDomains": "可信域名"
+	"security.trustedDomains": "可信域名",
+
+	"userDetail.delete.confirm": "此操作不可撤销，用户及其会话将被永久删除。",
+	"userDetail.sessions.revokeConfirm": "该用户的所有活跃会话将被立即吊销，需重新登录。",
+	"loginTrail.deviceLabel": "设备："
 }

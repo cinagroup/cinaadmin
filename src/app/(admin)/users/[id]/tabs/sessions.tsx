@@ -9,9 +9,11 @@ import {
 import { DataTable } from "@/components/data-table/data-table";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RoleGuard } from "@/components/role-guard";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import type { SessionDTO } from "@/lib/cinaauth/dto";
 
 export function SessionsTab({ userId }: { userId: string }) {
+	const { t } = useI18n();
 	const { data, isFetching, refetch } = useQuery({
 		queryKey: ["user", userId, "sessions"],
 		queryFn: async () => {
@@ -38,16 +40,16 @@ export function SessionsTab({ userId }: { userId: string }) {
 	const columns: ColumnDef<SessionDTO>[] = [
 		{
 			accessorKey: "createdAt",
-			header: "创建时间",
+			header: t("userSessions.col.createdAt"),
 			cell: ({ row }) => new Date(row.original.createdAt).toLocaleString(),
 		},
 		{
 			accessorKey: "expiresAt",
-			header: "过期时间",
+			header: t("userSessions.col.expiresAt"),
 			cell: ({ row }) => new Date(row.original.expiresAt).toLocaleString(),
 		},
-		{ accessorKey: "ipAddress", header: "IP" },
-		{ accessorKey: "userAgent", header: "设备" },
+		{ accessorKey: "ipAddress", header: t("userSessions.col.ip") },
+		{ accessorKey: "userAgent", header: t("userSessions.col.device") },
 	];
 
 	const table = useReactTable({
@@ -63,20 +65,20 @@ export function SessionsTab({ userId }: { userId: string }) {
 					<ConfirmDialog
 						trigger={
 							<span className="cursor-pointer text-sm text-danger">
-								吊销全部会话
+								{t("userSessions.revokeAll")}
 							</span>
 						}
-						title="吊销全部会话"
-						description="该用户的所有活跃会话将被立即吊销，需重新登录。"
+						title={t("userSessions.revokeAll")}
+						description={t("userDetail.sessions.revokeConfirm")}
 						danger
-						confirmText="吊销全部"
+						confirmText={t("userSessions.revokeAllBtn")}
 						onConfirm={revokeAll}
 					/>
 				</RoleGuard>
 			</div>
 			<DataTable
 				table={table}
-				emptyLabel={isFetching ? "加载中…" : "无活跃会话"}
+				emptyLabel={isFetching ? t("common.loading") : t("userSessions.empty")}
 			/>
 		</div>
 	);

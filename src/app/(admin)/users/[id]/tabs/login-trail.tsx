@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import type { AuditLogDTO } from "@/lib/cinaauth/dto";
 
 /**
@@ -11,6 +12,7 @@ import type { AuditLogDTO } from "@/lib/cinaauth/dto";
  * Data source is unchanged: audit log filtered by action=user.login.
  */
 export function LoginTrailTab({ userId }: { userId: string }) {
+	const { t } = useI18n();
 	const { data, isFetching } = useQuery({
 		queryKey: ["user", userId, "login-trail"],
 		queryFn: async () => {
@@ -33,12 +35,12 @@ export function LoginTrailTab({ userId }: { userId: string }) {
 	if (isFetching) {
 		return (
 			<EmptyState>
-				<div className="text-[14px] leading-5 text-mute">加载中…</div>
+				<div className="text-[14px] leading-5 text-mute">{t("common.loading")}</div>
 			</EmptyState>
 		);
 	}
 	if (rows.length === 0) {
-		return <EmptyState>无登录记录</EmptyState>;
+		return <EmptyState>{t("loginTrail.empty")}</EmptyState>;
 	}
 
 	return (
@@ -51,8 +53,8 @@ export function LoginTrailTab({ userId }: { userId: string }) {
 							<span
 								className={`absolute -left-[31px] flex h-5 w-5 items-center justify-center rounded-full ${
 									failed
-										? "bg-[var(--error-soft)] text-error"
-										: "bg-[var(--success-soft)] text-success"
+										? "bg-error-soft text-error"
+										: "bg-success-soft text-success"
 								}`}
 							>
 							{failed ? (
@@ -63,12 +65,12 @@ export function LoginTrailTab({ userId }: { userId: string }) {
 						</span>
 						<div
 							className={`rounded-[var(--radius-sm)] border border-hairline bg-canvas px-4 py-3 ${
-								failed ? "border-[var(--error-soft)]" : ""
+								failed ? "border-error-soft" : ""
 							}`}
 						>
 							<div className="flex items-center justify-between">
 								<div className="text-[14px] font-medium leading-5 text-ink">
-									{failed ? "登录失败" : "登录成功"}
+									{failed ? t("loginTrail.failed") : t("loginTrail.success")}
 								</div>
 								<div className="font-mono text-[12px] leading-4 text-mute">
 									{new Date(row.timestamp).toLocaleString()}
@@ -83,7 +85,7 @@ export function LoginTrailTab({ userId }: { userId: string }) {
 								)}
 								{row.actorUa && (
 									<span className="max-w-md truncate">
-										<span className="text-mute">设备：</span>
+										<span className="text-mute">{t("loginTrail.deviceLabel")}</span>
 										{row.actorUa}
 									</span>
 								)}

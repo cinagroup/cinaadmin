@@ -15,6 +15,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import type { UserDTO } from "@/lib/cinaauth/dto";
 
 /**
@@ -24,6 +25,7 @@ import type { UserDTO } from "@/lib/cinaauth/dto";
  * security_admin.
  */
 export function OverviewTab({ user }: { user: UserDTO }) {
+	const { t } = useI18n();
 	const qc = useQueryClient();
 	const { data: session } = useAdminSession();
 	const isSuperAdmin = session?.role === "super_admin";
@@ -61,7 +63,7 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 			const d = (await r.json().catch(() => null)) as {
 				error?: { message?: string };
 			} | null;
-			setError(d?.error?.message ?? "保存失败");
+			setError(d?.error?.message ?? t("users.create.failed"));
 		}
 	};
 
@@ -70,47 +72,49 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 			{/* Read-only details */}
 			<Card>
 				<CardHeader>
-					<div className="text-[14px] leading-5 text-body">资料详情</div>
+					<div className="text-[14px] leading-5 text-body">
+						{t("userDetail.profile.title")}
+					</div>
 				</CardHeader>
 				<CardContent>
 					<dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-[14px] leading-5">
-						<dt className="whitespace-nowrap text-mute">邮箱</dt>
+						<dt className="whitespace-nowrap text-mute">{t("users.col.email")}</dt>
 						<dd className="break-all text-ink">{user.email}</dd>
-						<dt className="whitespace-nowrap text-mute">用户名</dt>
+						<dt className="whitespace-nowrap text-mute">{t("users.col.name")}</dt>
 						<dd className="text-ink">{user.name || "—"}</dd>
-						<dt className="whitespace-nowrap text-mute">角色</dt>
+						<dt className="whitespace-nowrap text-mute">{t("userDetail.profile.role")}</dt>
 						<dd>
 							<Badge variant="outline">{user.role}</Badge>
 						</dd>
 						<dt className="whitespace-nowrap text-mute">2FA</dt>
 						<dd>
 							{user.twoFactorEnabled ? (
-								<Badge variant="success">已开启</Badge>
+								<Badge variant="success">{t("userDetail.profile.2fa.on")}</Badge>
 							) : (
-								<Badge variant="warning">未开启</Badge>
+								<Badge variant="warning">{t("userDetail.profile.2fa.off")}</Badge>
 							)}
 						</dd>
-						<dt className="whitespace-nowrap text-mute">邮箱验证</dt>
+						<dt className="whitespace-nowrap text-mute">{t("userDetail.profile.emailVerified")}</dt>
 						<dd>
 							{user.emailVerified ? (
-								<Badge variant="success">已验证</Badge>
+								<Badge variant="success">{t("userDetail.profile.verified")}</Badge>
 							) : (
-								<Badge variant="muted">未验证</Badge>
+								<Badge variant="muted">{t("userDetail.profile.unverified")}</Badge>
 							)}
 						</dd>
-						<dt className="whitespace-nowrap text-mute">封禁</dt>
+						<dt className="whitespace-nowrap text-mute">{t("userDetail.actions.ban")}</dt>
 						<dd>
 							{user.banned ? (
-								<Badge variant="danger">{user.banReason ?? "已封禁"}</Badge>
+								<Badge variant="danger">{user.banReason ?? t("userDetail.profile.banned")}</Badge>
 							) : (
-								<Badge variant="success">正常</Badge>
+								<Badge variant="success">{t("users.status.active")}</Badge>
 							)}
 						</dd>
-						<dt className="whitespace-nowrap text-mute">注册时间</dt>
+						<dt className="whitespace-nowrap text-mute">{t("userDetail.profile.createdAt")}</dt>
 						<dd className="text-ink">
 							{new Date(user.createdAt).toLocaleString()}
 						</dd>
-						<dt className="whitespace-nowrap text-mute">用户 ID</dt>
+						<dt className="whitespace-nowrap text-mute">{t("userDetail.profile.userId")}</dt>
 						<dd className="break-all font-mono text-[12px] leading-4 text-mute">
 							{user.id}
 						</dd>
@@ -121,12 +125,14 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 			{/* Edit form */}
 			<Card>
 				<CardHeader>
-					<div className="text-[14px] leading-5 text-body">编辑资料</div>
+					<div className="text-[14px] leading-5 text-body">
+						{t("userDetail.profile.edit")}
+					</div>
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={save} className="space-y-4">
 						<div className="space-y-1.5">
-							<Label htmlFor="name">用户名</Label>
+							<Label htmlFor="name">{t("users.col.name")}</Label>
 							<Input
 								id="name"
 								value={name}
@@ -135,7 +141,7 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 						</div>
 						{isSuperAdmin && (
 							<div className="space-y-1.5">
-								<Label htmlFor="email">邮箱</Label>
+								<Label htmlFor="email">{t("users.col.email")}</Label>
 								<Input
 									id="email"
 									type="email"
@@ -146,7 +152,7 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 						)}
 						{isSuperAdmin && (
 							<div className="space-y-1.5">
-								<Label>角色</Label>
+								<Label>{t("userDetail.profile.role")}</Label>
 								<Select value={role} onValueChange={setRole}>
 									<SelectTrigger className="h-10">
 										<SelectValue />
@@ -163,7 +169,7 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 						)}
 						{!isSuperAdmin && (
 							<p className="text-[12px] leading-4 text-mute">
-								邮箱与角色修改需 super_admin 权限。
+								{t("userDetail.profile.editHint")}
 							</p>
 						)}
 						{error && (
@@ -171,11 +177,11 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 						)}
 						{saved && (
 							<div className="text-[14px] leading-5 text-success">
-								已保存
+								{t("common.saved")}
 							</div>
 						)}
 						<Button type="submit" disabled={saving}>
-							{saving ? "保存中…" : "保存"}
+							{saving ? t("common.saving") : t("common.save")}
 						</Button>
 					</form>
 				</CardContent>
