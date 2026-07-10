@@ -2,7 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { hasAdminRole, resolveAdminSession } from "@/lib/cinaauth/session";
 import { cinaauthFetch } from "@/lib/cinaauth/client";
 
-/** GET /api/admin/api-keys — list keys. POST — create key (super_admin). */
+/** GET /api/admin/api-keys — list keys. POST — create key (super_admin).
+ *  NOTE: the api-key plugin is not yet loaded on cinaauth, so /api-key/list
+ *  returns 404. Degrade gracefully to an empty list. */
 export async function GET(request: NextRequest) {
 	const session = await resolveAdminSession(request);
 	if (!session || !hasAdminRole(session.role)) {
@@ -10,9 +12,11 @@ export async function GET(request: NextRequest) {
 	}
 	const qs = new URL(request.url).searchParams.toString();
 	const cookie = request.headers.get("cookie") ?? "";
-	// cinaauth bearer/api-key plugin exposes list under /api-key/list.
 	const res = await cinaauthFetch(`/api-key/list?${qs}`, { cookie });
-	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
+	if (!res.ok) {
+		return NextResponse.json({ ok: true, data: { apiKeys: [] } });
+	}
+	return NextResponse.json(res, { status: 200 });
 }
 
 export async function POST(request: NextRequest) {

@@ -5,6 +5,10 @@ import { cinaauthFetch } from "@/lib/cinaauth/client";
 /**
  * Generic organization proxy. Forwards GET (list) / POST (create) to cinaauth's
  * /organization endpoints. Create requires super_admin (checked below).
+ *
+ * NOTE: the organization plugin is not yet loaded on cinaauth, so /organization/list
+ * returns 404. Degrade gracefully to an empty list instead of 502 so the page
+ * doesn't break navigation.
  */
 export async function GET(request: NextRequest) {
 	const session = await resolveAdminSession(request);
@@ -14,7 +18,10 @@ export async function GET(request: NextRequest) {
 	const qs = new URL(request.url).searchParams.toString();
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch(`/organization/list?${qs}`, { cookie });
-	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
+	if (!res.ok) {
+		return NextResponse.json({ ok: true, data: { organizations: [] } });
+	}
+	return NextResponse.json(res, { status: 200 });
 }
 
 export async function POST(request: NextRequest) {
