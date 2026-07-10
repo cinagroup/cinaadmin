@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
-import Link from "next/link";
 import { getUser } from "@/lib/cinaauth/admin-api";
+import { translate, DEFAULT_LANG } from "@/lib/i18n/dictionary";
 import { UserTabs } from "./user-tabs";
 import { UserActions } from "./user-actions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export default async function UserDetailPage({
 	params,
@@ -16,31 +17,24 @@ export default async function UserDetailPage({
 	if (!user) {
 		return (
 			<div>
-				<Link
-					href="/users"
-					className="text-[14px] leading-5 text-body hover:text-ink"
-				>
-					← 返回列表
-				</Link>
-				<p className="mt-4 text-[16px] leading-6 text-body">用户不存在或加载失败</p>
+				<PageHeader
+					title={translate(DEFAULT_LANG, "users.notFound")}
+					backHref="/users"
+					backLabel={translate(DEFAULT_LANG, "users.back")}
+				/>
 			</div>
 		);
 	}
 
 	return (
 		<div>
-			<Link
-				href="/users"
-				className="text-[14px] leading-5 text-body hover:text-ink"
+			<PageHeader
+				title={user.email}
+				backHref="/users"
+				backLabel={translate(DEFAULT_LANG, "users.back")}
 			>
-				← 返回列表
-			</Link>
-			<div className="mt-2 flex items-center justify-between">
-				<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
-					{user.email}
-				</h1>
 				<UserActions userId={id} banned={user.banned} />
-			</div>
+			</PageHeader>
 			<UserTabs user={user} />
 		</div>
 	);

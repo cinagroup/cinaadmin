@@ -15,14 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
-
-interface OrgDTO {
-	id: string;
-	name: string;
-	slug: string;
-	createdAt: string;
-	membersCount?: number;
-}
+import type { OrgDTO } from "@/lib/cinaauth/dto";
 
 export default function OrganizationsPage() {
 	const { t } = useI18n();

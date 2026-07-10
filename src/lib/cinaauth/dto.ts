@@ -75,3 +75,24 @@ export interface Page<T> {
 	rows: T[];
 	total: number;
 }
+
+/** Organization record (organization plugin). */
+export interface OrgDTO {
+	id: string;
+	name: string;
+	slug: string;
+	createdAt: string;
+	membersCount?: number;
+}
+
+/** API key record (api-key plugin). */
+export interface ApiKeyDTO {
+	id: string;
+	name: string;
+	enabled: boolean;
+	startsAt: string | null;
+	expiresAt: string | null;
+	prefix: string;
+	lastUsedAt: string | null;
+	remaining: number | null;
+}

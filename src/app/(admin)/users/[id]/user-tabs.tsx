@@ -5,25 +5,27 @@ import { WalletsTab } from "./tabs/wallets";
 import { SessionsTab } from "./tabs/sessions";
 import { LoginTrailTab } from "./tabs/login-trail";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useI18n } from "@/lib/i18n/i18n-context";
 import type { UserDTO } from "@/lib/cinaauth/dto";
 
-const TABS = [
-	{ value: "overview", label: "概览" },
-	{ value: "wallets", label: "钱包 (SIWE)" },
-	{ value: "third-party", label: "第三方绑定" },
-	{ value: "sessions", label: "会话" },
-	{ value: "login-trail", label: "登录轨迹" },
-	{ value: "security", label: "安全" },
-] as const;
-
 export function UserTabs({ user }: { user: UserDTO }) {
+	const { t } = useI18n();
 	const userId = user.id;
+	const TABS = [
+		{ value: "overview", label: t("userDetail.tab.overview") },
+		{ value: "wallets", label: t("userDetail.tab.wallets") },
+		{ value: "third-party", label: t("userDetail.tab.wallets") },
+		{ value: "sessions", label: t("userDetail.tab.sessions") },
+		{ value: "login-trail", label: t("userDetail.tab.loginTrail") },
+		{ value: "security", label: t("userDetail.tab.security") },
+	] as const;
+
 	return (
-		<Tabs defaultValue="overview" className="mt-6">
+		<Tabs defaultValue="overview">
 			<TabsList>
-				{TABS.map((t) => (
-					<TabsTrigger key={t.value} value={t.value}>
-						{t.label}
+				{TABS.map((tab) => (
+					<TabsTrigger key={tab.value} value={tab.value}>
+						{tab.label}
 					</TabsTrigger>
 				))}
 			</TabsList>
@@ -34,7 +36,7 @@ export function UserTabs({ user }: { user: UserDTO }) {
 				<WalletsTab userId={userId} />
 			</TabsContent>
 			<TabsContent value="third-party">
-				<p className="text-[14px] leading-5 text-body">第三方绑定（OAuth 记录）</p>
+				<p className="text-[14px] leading-5 text-body">{t("placeholder.phase2")}</p>
 			</TabsContent>
 			<TabsContent value="sessions">
 				<SessionsTab userId={userId} />
@@ -43,7 +45,7 @@ export function UserTabs({ user }: { user: UserDTO }) {
 				<LoginTrailTab userId={userId} />
 			</TabsContent>
 			<TabsContent value="security">
-				<p className="text-[14px] leading-5 text-body">安全详情（Phase 3 扩展）</p>
+				<p className="text-[14px] leading-5 text-body">{t("placeholder.phase2")}</p>
 			</TabsContent>
 		</Tabs>
 	);

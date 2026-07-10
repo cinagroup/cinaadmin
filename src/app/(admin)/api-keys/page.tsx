@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import type { ApiKeyDTO } from "@/lib/cinaauth/dto";
 import {
 	Select,
 	SelectContent,
@@ -22,17 +23,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-
-interface ApiKeyDTO {
-	id: string;
-	name: string;
-	enabled: boolean;
-	startsAt: string | null;
-	expiresAt: string | null;
-	prefix: string;
-	lastUsedAt: string | null;
-	remaining: number | null;
-}
 
 export default function ApiKeysPage() {
 	const { t } = useI18n();

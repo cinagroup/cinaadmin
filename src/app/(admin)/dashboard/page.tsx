@@ -8,6 +8,8 @@ import { SignupLine } from "@/components/charts/signup-line";
 import { ActiveUsersChart } from "@/components/charts/active-users-chart";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/layout/page-header";
+import { Section } from "@/components/layout/section";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import type {
 	SignupPointDTO,
@@ -35,15 +37,6 @@ function todayLabel() {
 	const d = new Date();
 	const m = d.toLocaleString("en-US", { month: "short" });
 	return `${m} ${d.getDate()}`;
-}
-
-/** Section subheading — BAC groups tiles under these mono labels. */
-function SectionLabel({ children }: { children: string }) {
-	return (
-		<h2 className="font-mono text-[12px] uppercase tracking-wide text-mute">
-			{children}
-		</h2>
-	);
 }
 
 const EMPTY_OVERVIEW: StatsOverviewDTO = {
@@ -115,21 +108,13 @@ export default function DashboardPage() {
 
 	return (
 		<div className="space-y-8">
-			{/* BAC-style header: title + "Stats for <date>" context. */}
-			<div className="flex items-end justify-between gap-4">
-				<div>
-					<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
-						{t("dashboard.title")}
-					</h1>
-					<div className="mt-1 text-[14px] leading-5 text-body">
-						{t("dashboard.snapshot")} · {todayLabel()}
-					</div>
-				</div>
-			</div>
+			<PageHeader
+				title={t("dashboard.title")}
+				description={`${t("dashboard.snapshot")} · ${todayLabel()}`}
+			/>
 
 			{/* Users section */}
-			<section className="space-y-3">
-				<SectionLabel>{t("dashboard.section.users")}</SectionLabel>
+			<Section label={t("dashboard.section.users")}>
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 					<StatCard
 						label={t("dashboard.totalUsers")}
@@ -150,11 +135,10 @@ export default function DashboardPage() {
 					/>
 					<StatCard label={t("dashboard.bannedCount")} value={ov.bannedCount} />
 				</div>
-			</section>
+			</Section>
 
 			{/* User activity section — signature cohort chart */}
-			<section className="space-y-3">
-				<SectionLabel>{t("dashboard.section.activity")}</SectionLabel>
+			<Section label={t("dashboard.section.activity")}>
 				<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 					<Card>
 						<CardHeader>
@@ -188,35 +172,35 @@ export default function DashboardPage() {
 						<CardContent>
 							<ActiveUsersChart days={14} />
 						</CardContent>
-					</Card>
-				</div>
-			</section>
+				</Card>
+			</div>
+		</Section>
 
-			{/* Organizations + security section */}
-			<section className="space-y-3">
-				<SectionLabel>{t("dashboard.section.orgSecurity")}</SectionLabel>
-				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-					<StatCard label={t("dashboard.orgCount")} value={ov.organizationCount} />
-					<StatCard
-						label={t("dashboard.no2fa")}
-						value={ov.usersWithout2FA}
-						hint={t("dashboard.no2fa.hint")}
-					/>
-					<StatCard
-						label={t("dashboard.failedLogins")}
-						value={sec.failedLoginsToday}
-					/>
-					<StatCard
-						label={t("dashboard.otpRequests")}
-						value={sec.otpRequestsToday}
-					/>
-				</div>
-			</section>
+		{/* Organizations + security section */}
+		<Section label={t("dashboard.section.orgSecurity")}>
+			<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+				<StatCard label={t("dashboard.orgCount")} value={ov.organizationCount} />
+				<StatCard
+					label={t("dashboard.no2fa")}
+					value={ov.usersWithout2FA}
+					hint={t("dashboard.no2fa.hint")}
+				/>
+				<StatCard
+					label={t("dashboard.failedLogins")}
+					value={sec.failedLoginsToday}
+				/>
+				<StatCard
+					label={t("dashboard.otpRequests")}
+					value={sec.otpRequestsToday}
+				/>
+			</div>
+		</Section>
 
-			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-				<Card>
-					<CardHeader>
-						<div className="text-[14px] leading-5 text-body">
+		<Section label={t("dashboard.signupTrend")}>
+		<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+			<Card>
+				<CardHeader>
+					<div className="text-[14px] leading-5 text-body">
 							{t("dashboard.signupTrend")}
 						</div>
 					</CardHeader>
@@ -235,6 +219,7 @@ export default function DashboardPage() {
 					</CardContent>
 				</Card>
 			</div>
+		</Section>
 
 			{/* Retention placeholder — requires a backend cohort endpoint. */}
 			<EmptyState>
