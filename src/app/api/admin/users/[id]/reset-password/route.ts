@@ -36,7 +36,7 @@ export async function POST(
 	const origin = request.headers.get("origin") ?? "https://admin.cinagroup.com";
 	const res = await cinaauthFetch("/admin/set-user-password", {
 		method: "POST",
-		body: { userId: id, password: newPassword },
+		body: { userId: id, newPassword },
 		cookie,
 		headers: { origin },
 	});
