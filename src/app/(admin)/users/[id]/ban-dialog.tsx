@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +28,7 @@ export function BanDialog({ userId }: { userId: string }) {
 				: duration === "30d"
 					? new Date(Date.now() + 30 * 86_400_000).toISOString()
 					: undefined;
-		await fetch(`/api/admin/users/${userId}/ban`, {
+		const r = await fetch(`/api/admin/users/${userId}/ban`, {
 			method: "POST",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({
@@ -35,7 +36,10 @@ export function BanDialog({ userId }: { userId: string }) {
 				...(expirationTime ? { expirationTime } : {}),
 			}),
 		});
-		window.location.reload();
+		if (r.ok) {
+			toast.success(t("toast.banned"));
+			window.location.reload();
+		}
 	};
 
 	return (

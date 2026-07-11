@@ -15,6 +15,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import type { UserDTO } from "@/lib/cinaauth/dto";
 
@@ -57,13 +58,15 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 		});
 		setSaving(false);
 		if (r.ok) {
-			setSaved(true);
+			toast.success(t("toast.saved"));
 			await qc.invalidateQueries({ queryKey: ["users"] });
 		} else {
 			const d = (await r.json().catch(() => null)) as {
 				error?: { message?: string };
 			} | null;
-			setError(d?.error?.message ?? t("users.create.failed"));
+			const msg = d?.error?.message ?? t("toast.saveFailed");
+			setError(msg);
+			toast.error(msg);
 		}
 	};
 

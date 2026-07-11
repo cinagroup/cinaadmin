@@ -177,5 +177,16 @@
 	"userDetail.sessions.revokeConfirm": "该用户的所有活跃会话将被立即吊销，需重新登录。",
 	"loginTrail.deviceLabel": "设备：",
 	"error.generic.title": "出错了",
-	"error.retry": "重试"
+	"error.retry": "重试",
+	"toast.saved": "已保存",
+	"toast.saveFailed": "保存失败",
+	"toast.banned": "已封禁用户",
+	"toast.unbanned": "已解封用户",
+	"toast.deleted": "已删除用户",
+	"toast.deleteFailed": "删除失败",
+	"toast.impersonating": "正在以该用户身份操作",
+	"toast.sessionsRevoked": "已吊销全部会话",
+	"toast.walletUnbound": "已解绑钱包",
+	"toast.created": "创建成功",
+	"toast.createFailed": "创建失败"
 }

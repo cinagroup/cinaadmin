@@ -16,10 +16,12 @@ export function DataTable<T>({
 	table,
 	rowClassName,
 	emptyLabel,
+	onRowClick,
 }: {
 	table: Table<T>;
 	rowClassName?: (row: T) => string | undefined;
 	emptyLabel?: string;
+	onRowClick?: (row: T) => void;
 }) {
 	const { t } = useI18n();
 	if (table.getRowModel().rows.length === 0) {
@@ -51,15 +53,17 @@ export function DataTable<T>({
 						</tr>
 					))}
 				</thead>
-				<tbody>
-					{table.getRowModel().rows.map((row) => (
-						<tr
-							key={row.id}
-							className={cn(
-								"border-b border-hairline last:border-b-0 transition-colors hover:bg-canvas-soft",
-								rowClassName?.(row.original),
-							)}
-						>
+			<tbody>
+				{table.getRowModel().rows.map((row) => (
+					<tr
+						key={row.id}
+						className={cn(
+							"border-b border-hairline last:border-b-0 transition-colors hover:bg-canvas-soft",
+							onRowClick && "cursor-pointer",
+							rowClassName?.(row.original),
+						)}
+						onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+					>
 							{row.getVisibleCells().map((cell) => (
 								<td
 									key={cell.id}

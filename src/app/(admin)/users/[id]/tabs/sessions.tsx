@@ -9,6 +9,7 @@ import {
 import { DataTable } from "@/components/data-table/data-table";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RoleGuard } from "@/components/role-guard";
+import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import type { SessionDTO } from "@/lib/cinaauth/dto";
 
@@ -34,6 +35,7 @@ export function SessionsTab({ userId }: { userId: string }) {
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({ userId }),
 		});
+		toast.success(t("toast.sessionsRevoked"));
 		await refetch();
 	};
 

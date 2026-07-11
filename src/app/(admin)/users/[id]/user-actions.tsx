@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
@@ -16,8 +17,13 @@ export function UserActions({
 }) {
 	const { t } = useI18n();
 	const remove = async () => {
-		await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
-		window.location.href = "/users";
+		const r = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+		if (r.ok) {
+			toast.success(t("toast.deleted"));
+			window.location.href = "/users";
+		} else {
+			toast.error(t("toast.deleteFailed"));
+		}
 	};
 
 	return (
@@ -28,10 +34,13 @@ export function UserActions({
 						variant="secondary"
 						size="sm"
 						onClick={async () => {
-							await fetch(`/api/admin/users/${userId}/unban`, {
+							const r = await fetch(`/api/admin/users/${userId}/unban`, {
 								method: "POST",
 							});
-							window.location.reload();
+							if (r.ok) {
+								toast.success(t("toast.unbanned"));
+								window.location.reload();
+							}
 						}}
 					>
 						{t("userDetail.actions.unban")}
@@ -51,10 +60,13 @@ export function UserActions({
 					description={t("userDetail.impersonate.hint")}
 					confirmText={t("userDetail.impersonate.start")}
 					onConfirm={async () => {
-						await fetch(`/api/admin/users/${userId}/impersonate`, {
+						const r = await fetch(`/api/admin/users/${userId}/impersonate`, {
 							method: "POST",
 						});
-						window.location.reload();
+						if (r.ok) {
+							toast.success(t("toast.impersonating"));
+							window.location.reload();
+						}
 					}}
 				/>
 			</RoleGuard>

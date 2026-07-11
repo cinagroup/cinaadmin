@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
 	getCoreRowModel,
 	useReactTable,
 	type ColumnDef,
 } from "@tanstack/react-table";
-import Link from "next/link";
 import { DataTable } from "@/components/data-table/data-table";
 import { FilterBar, type FilterState } from "@/components/data-table/filter-bar";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ const PAGE_SIZE = 20;
 
 export default function UsersPage() {
 	const { t } = useI18n();
+	const router = useRouter();
 	const [filter, setFilter] = useState<FilterState>({});
 	const [offset, setOffset] = useState(0);
 
@@ -55,12 +56,7 @@ export default function UsersPage() {
 				accessorKey: "email",
 				header: t("users.col.email"),
 				cell: ({ row }) => (
-					<Link
-						href={`/users/${row.original.id}`}
-						className="text-link underline-offset-4 hover:underline"
-					>
-						{row.original.email}
-					</Link>
+					<span className="font-medium text-ink">{row.original.email}</span>
 				),
 			},
 			{ accessorKey: "name", header: t("users.col.name") },
@@ -115,6 +111,7 @@ export default function UsersPage() {
 			<DataTable
 				table={table}
 				emptyLabel={isFetching ? t("common.loading") : t("users.empty")}
+				onRowClick={(user) => router.push(`/users/${user.id}`)}
 			/>
 			<Pagination
 				offset={offset}

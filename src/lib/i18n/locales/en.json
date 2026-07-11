@@ -177,5 +177,16 @@
 	"userDetail.sessions.revokeConfirm": "All active sessions for this user will be immediately revoked. They will need to sign in again.",
 	"loginTrail.deviceLabel": "Device:",
 	"error.generic.title": "Something went wrong",
-	"error.retry": "Retry"
+	"error.retry": "Retry",
+	"toast.saved": "Saved",
+	"toast.saveFailed": "Save failed",
+	"toast.banned": "User banned",
+	"toast.unbanned": "User unbanned",
+	"toast.deleted": "User deleted",
+	"toast.deleteFailed": "Delete failed",
+	"toast.impersonating": "Now impersonating user",
+	"toast.sessionsRevoked": "All sessions revoked",
+	"toast.walletUnbound": "Wallet unbound",
+	"toast.created": "Created successfully",
+	"toast.createFailed": "Create failed"
 }
