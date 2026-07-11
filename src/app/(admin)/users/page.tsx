@@ -113,13 +113,15 @@ export default function UsersPage() {
 				emptyLabel={isFetching ? t("common.loading") : t("users.empty")}
 				onRowClick={(user) => router.push(`/users/${user.id}`)}
 			/>
-			<Pagination
-				offset={offset}
-				pageSize={PAGE_SIZE}
-				total={total}
-				onPrev={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
-				onNext={() => setOffset(offset + PAGE_SIZE)}
-			/>
+			{total > 0 && (
+				<Pagination
+					offset={offset}
+					pageSize={PAGE_SIZE}
+					total={total}
+					onPrev={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
+					onNext={() => setOffset(offset + PAGE_SIZE)}
+				/>
+			)}
 		</div>
 	);
 }

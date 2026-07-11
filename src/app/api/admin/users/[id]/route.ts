@@ -7,6 +7,19 @@ import {
 } from "@/lib/auth-guard";
 import { cinaauthFetch } from "@/lib/cinaauth/client";
 
+/** GET /api/admin/users/[id] — fetch a single user's profile. */
+export async function GET(
+	request: NextRequest,
+	{ params }: { params: Promise<{ id: string }> },
+) {
+	const { id } = await params;
+	const session = await requireAdmin(request).catch((e: Response) => e);
+	if (session instanceof Response) return session;
+	const cookie = request.headers.get("cookie") ?? "";
+	const res = await cinaauthFetch(`/admin/get-user?id=${encodeURIComponent(id)}`, { cookie });
+	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
+}
+
 /** DELETE /api/admin/users/[id] — remove user (super_admin only). */
 export async function DELETE(
 	request: NextRequest,
