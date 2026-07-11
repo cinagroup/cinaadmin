@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
 	getCoreRowModel,
 	useReactTable,
@@ -13,6 +14,14 @@ import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import type { ApiKeyDTO } from "@/lib/cinaauth/dto";
@@ -44,16 +53,26 @@ export default function ApiKeysPage() {
 	const [name, setName] = useState("");
 	const [scope, setScope] = useState("read-users");
 	const [creating, setCreating] = useState(false);
+	const [createdKey, setCreatedKey] = useState<string | null>(null);
 
 	const create = async () => {
 		setCreating(true);
-		await fetch("/api/admin/api-keys", {
+		const r = await fetch("/api/admin/api-keys", {
 			method: "POST",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({ name, prefixes: [scope] }),
 		});
 		setCreating(false);
 		setName("");
+		// Capture the generated key — it's only returned once at creation.
+		const d = (await r.json().catch(() => ({}))) as {
+			ok?: boolean;
+			data?: { key?: string; apiKeys?: Array<{ key?: string }> };
+		};
+		const key = d.data?.key ?? d.data?.apiKeys?.[0]?.key;
+		if (key) {
+			setCreatedKey(key);
+		}
 		await qc.invalidateQueries({ queryKey: ["api-keys"] });
 	};
 
@@ -131,6 +150,38 @@ export default function ApiKeysPage() {
 				table={table}
 				emptyLabel={isFetching ? t("common.loading") : t("apiKeys.empty")}
 			/>
+
+			{/* Key reveal dialog — shown only once after creation */}
+			{createdKey && (
+				<Dialog open={!!createdKey} onOpenChange={(o) => !o && setCreatedKey(null)}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>{t("apiKeys.created.title")}</DialogTitle>
+							<DialogDescription>{t("apiKeys.created.warning")}</DialogDescription>
+						</DialogHeader>
+						<div className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-hairline bg-canvas-soft p-3">
+							<code className="flex-1 break-all font-mono text-[13px] text-ink">
+								{createdKey}
+							</code>
+							<Button
+								variant="secondary"
+								size="sm"
+								onClick={() => {
+									navigator.clipboard?.writeText(createdKey);
+									toast.success(t("apiKeys.created.copied"));
+								}}
+							>
+								{t("apiKeys.created.copy")}
+							</Button>
+						</div>
+						<DialogFooter>
+							<Button variant="primary" size="sm" onClick={() => setCreatedKey(null)}>
+								{t("apiKeys.created.close")}
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
+			)}
 		</div>
 	);
 }

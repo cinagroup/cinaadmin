@@ -8,6 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 export default function NewUserPage() {
 	const { t } = useI18n();
@@ -15,6 +22,7 @@ export default function NewUserPage() {
 	const [email, setEmail] = useState("");
 	const [name, setName] = useState("");
 	const [password, setPassword] = useState("");
+	const [role, setRole] = useState("user");
 	const [error, setError] = useState<string | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 
@@ -25,7 +33,7 @@ export default function NewUserPage() {
 		const r = await fetch("/api/admin/users/create", {
 			method: "POST",
 			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ email, name, password }),
+			body: JSON.stringify({ email, name, password, role }),
 		});
 		setSubmitting(false);
 		if (r.ok) {
@@ -71,6 +79,19 @@ export default function NewUserPage() {
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
 							/>
+						</div>
+						<div className="space-y-1.5">
+							<Label>{t("userDetail.profile.role")}</Label>
+							<Select value={role} onValueChange={setRole}>
+								<SelectTrigger className="h-10">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="user">user</SelectItem>
+									<SelectItem value="security_admin">security_admin</SelectItem>
+									<SelectItem value="super_admin">super_admin</SelectItem>
+								</SelectContent>
+							</Select>
 						</div>
 						{error && (
 							<div className="text-[14px] leading-5 text-error">{error}</div>

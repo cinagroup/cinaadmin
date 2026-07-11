@@ -200,5 +200,10 @@
 	"dashboard.securityAlerts.empty": "No suspicious activity in the last 24h",
 	"dashboard.securityAlerts.actor": "Actor",
 	"dashboard.securityAlerts.failures": "Failures",
-	"dashboard.securityAlerts.lastIp": "Last IP"
+	"dashboard.securityAlerts.lastIp": "Last IP",
+	"apiKeys.created.title": "Key Created",
+	"apiKeys.created.warning": "Copy this key now — it cannot be viewed again after closing.",
+	"apiKeys.created.copy": "Copy",
+	"apiKeys.created.copied": "Copied",
+	"apiKeys.created.close": "Close"
 }

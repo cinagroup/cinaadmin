@@ -57,12 +57,7 @@ export default function OrganizationsPage() {
 				accessorKey: "name",
 				header: t("organizations.col.name"),
 				cell: ({ row }) => (
-					<Link
-						href={`/organizations/${row.original.id}`}
-						className="text-link underline-offset-4 hover:underline"
-					>
-						{row.original.name}
-					</Link>
+					<span className="font-medium text-ink">{row.original.name}</span>
 				),
 			},
 			{ accessorKey: "slug", header: t("organizations.col.slug") },
