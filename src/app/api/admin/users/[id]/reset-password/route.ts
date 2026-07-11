@@ -35,7 +35,7 @@ export async function POST(
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch("/admin/set-user-password", {
 		method: "POST",
-		body: { userId: id, newPassword },
+		body: { userId: id, password: newPassword },
 		cookie,
 	});
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
