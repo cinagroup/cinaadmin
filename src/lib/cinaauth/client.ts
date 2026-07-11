@@ -18,6 +18,7 @@ export async function cinaauthFetch<T>(
 		method?: "GET" | "POST" | "PATCH" | "DELETE";
 		body?: unknown;
 		cookie?: string;
+		headers?: Record<string, string>;
 	} = {},
 ): Promise<StandardResponse<T>> {
 	const headers: Record<string, string> = {
@@ -25,6 +26,7 @@ export async function cinaauthFetch<T>(
 	};
 	if (opts.cookie) headers.cookie = opts.cookie;
 	if (opts.body !== undefined) headers["content-type"] = "application/json";
+	if (opts.headers) Object.assign(headers, opts.headers);
 
 	// Ensure the path is mounted under the Better Auth handler ("/api/auth").
 	const mountPath = path.startsWith("/api/auth") ? path : `/api/auth${path}`;
