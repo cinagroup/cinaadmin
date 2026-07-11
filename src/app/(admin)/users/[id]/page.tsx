@@ -31,10 +31,10 @@ export default function UserDetailPage({
 			const r = await fetch(`/api/admin/users/${id}`);
 			const d = (await r.json()) as {
 				ok?: boolean;
-				user?: Record<string, unknown>;
+				data?: Record<string, unknown>;
 			};
-			if (!d.ok || !d.user) return null;
-			const u = d.user;
+			if (!d.ok || !d.data) return null;
+			const u = d.data;
 			return {
 				id: String(u.id ?? ""),
 				email: String(u.email ?? ""),
