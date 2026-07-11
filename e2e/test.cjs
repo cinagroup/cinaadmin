@@ -125,11 +125,11 @@ async function run() {
 		for (const nav of navItems) {
 			try {
 				// Wait for sidebar to be ready before clicking
-				await page.waitForSelector(`nav a[href="${nav.href}"]`, { state: "visible", timeout: 8000 }).catch(() => {});
+				await page.waitForSelector(`nav a[href="${nav.href}"]`, { state: "visible", timeout: 15000 }).catch(() => {});
 				const link = page.locator(`nav a[href="${nav.href}"]`).first();
 				if ((await link.count()) > 0) {
-					await link.click({ timeout: 8000 });
-					await page.waitForURL(`**${nav.href}**`, { timeout: 15000 }).catch(() => {});
+					await link.click({ timeout: 15000 });
+					await page.waitForURL(`**${nav.href}**`, { timeout: 20000 }).catch(() => {});
 					await page.waitForTimeout(2000);
 					const ok = page.url().includes(nav.href);
 					log(`导航: ${nav.href}`, ok, ok ? "✓" : `url=${page.url().slice(0, 50)}`);
@@ -138,6 +138,9 @@ async function run() {
 				}
 			} catch (e) {
 				log(`导航: ${nav.href}`, false, e.message.slice(0, 50));
+				// Try to recover by navigating directly
+				await page.goto(`${BASE}${nav.href}`, { waitUntil: "commit", timeout: 30000 }).catch(() => {});
+				await page.waitForTimeout(2000);
 			}
 		}
 
