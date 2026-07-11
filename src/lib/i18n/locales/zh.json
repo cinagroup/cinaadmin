@@ -188,5 +188,17 @@
 	"toast.sessionsRevoked": "已吊销全部会话",
 	"toast.walletUnbound": "已解绑钱包",
 	"toast.created": "创建成功",
-	"toast.createFailed": "创建失败"
+	"toast.createFailed": "创建失败",
+	"userDetail.actions.resetPassword": "重置密码",
+	"userDetail.resetPassword.title": "重置密码",
+	"userDetail.resetPassword.hint": "为该用户设置新密码，用户需用新密码重新登录。",
+	"userDetail.resetPassword.label": "新密码",
+	"userDetail.resetPassword.placeholder": "至少 8 位",
+	"userDetail.resetPassword.confirm": "设置密码",
+	"toast.passwordReset": "密码已重置",
+	"dashboard.securityAlerts": "安全告警",
+	"dashboard.securityAlerts.empty": "近 24 小时无异常活动",
+	"dashboard.securityAlerts.actor": "操作者",
+	"dashboard.securityAlerts.failures": "失败次数",
+	"dashboard.securityAlerts.lastIp": "最近 IP"
 }

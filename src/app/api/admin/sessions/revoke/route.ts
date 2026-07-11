@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
 	const path = body.userId
 		? "/admin/revoke-user-sessions"
-		: "/admin/revoke-session";
+		: "/admin/revoke-user-session";
 	const res = await cinaauthFetch(path, { method: "POST", body, cookie });
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }

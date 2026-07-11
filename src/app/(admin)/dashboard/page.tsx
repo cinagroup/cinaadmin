@@ -96,6 +96,18 @@ export default function DashboardPage() {
 		},
 		staleTime: 60_000,
 	});
+	const { data: alerts } = useQuery({
+		queryKey: ["audit-alerts"],
+		queryFn: async () => {
+			const r = await fetch("/api/admin/audit/alerts?windowHours=24&failThreshold=5");
+			const d = (await r.json()) as {
+				ok?: boolean;
+				data?: { alerts?: Array<{ actorId?: string; failureCount?: number; lastIp?: string }> };
+			};
+			return d.ok ? d.data?.alerts ?? [] : [];
+		},
+		staleTime: 60_000,
+	});
 
 	const ov = overview ?? EMPTY_OVERVIEW;
 	const sec = security ?? EMPTY_SECURITY;
@@ -247,6 +259,29 @@ export default function DashboardPage() {
 				</Card>
 			</div>
 		</Section>
+
+			{/* Security alerts — flagged actors from audit/alerts */}
+			{(alerts?.length ?? 0) > 0 && (
+				<Section label={t("dashboard.securityAlerts")}>
+					<Card>
+						<CardContent className="pt-6">
+							<div className="space-y-2">
+								{(alerts ?? []).map((a, i) => (
+									<div key={i} className="flex items-center justify-between rounded-[var(--radius-sm)] bg-error-soft px-4 py-2 text-[14px]">
+										<span className="font-medium text-ink">
+											{t("dashboard.securityAlerts.actor")}: {a.actorId || "unknown"}
+										</span>
+										<div className="flex items-center gap-4 text-body">
+											<span>{t("dashboard.securityAlerts.failures")}: <strong className="text-error">{a.failureCount ?? 0}</strong></span>
+											{a.lastIp && <span className="font-mono text-[12px]">{a.lastIp}</span>}
+										</div>
+									</div>
+								))}
+							</div>
+						</CardContent>
+					</Card>
+				</Section>
+			)}
 
 			{/* Retention placeholder — requires a backend cohort endpoint. */}
 			<EmptyState>

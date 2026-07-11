@@ -188,5 +188,17 @@
 	"toast.sessionsRevoked": "All sessions revoked",
 	"toast.walletUnbound": "Wallet unbound",
 	"toast.created": "Created successfully",
-	"toast.createFailed": "Create failed"
+	"toast.createFailed": "Create failed",
+	"userDetail.actions.resetPassword": "Reset Password",
+	"userDetail.resetPassword.title": "Reset Password",
+	"userDetail.resetPassword.hint": "Set a new password for this user. They will need to sign in again.",
+	"userDetail.resetPassword.label": "New Password",
+	"userDetail.resetPassword.placeholder": "At least 8 characters",
+	"userDetail.resetPassword.confirm": "Set Password",
+	"toast.passwordReset": "Password has been reset",
+	"dashboard.securityAlerts": "Security Alerts",
+	"dashboard.securityAlerts.empty": "No suspicious activity in the last 24h",
+	"dashboard.securityAlerts.actor": "Actor",
+	"dashboard.securityAlerts.failures": "Failures",
+	"dashboard.securityAlerts.lastIp": "Last IP"
 }
