@@ -4,8 +4,8 @@ import { cinaauthFetch } from "@/lib/cinaauth/client";
 
 /**
  * POST /api/admin/api-keys/[id]/rotate — rotate an API key.
- * Deletes the old key and creates a new one with the same name/prefix.
- * Returns the new plaintext key (shown once). Requires super_admin.
+ * Deletes the old key and creates a new one. The new plaintext key is
+ * returned (shown once). Requires super_admin.
  */
 export async function POST(
 	request: NextRequest,
@@ -18,29 +18,17 @@ export async function POST(
 	const { id } = await params;
 	const cookie = request.headers.get("cookie") ?? "";
 
-	// Step 1: get the old key's metadata (name, prefix).
-	const oldKey = await cinaauthFetch<{ name?: string; prefix?: string }>(
-		`/api-key/get`,
-		{ method: "POST", body: { keyId: id }, cookie },
-	);
-	if (!oldKey.ok) {
-		return NextResponse.json({ ok: false, error: "Key not found" }, { status: 404 });
-	}
-
-	// Step 2: delete the old key.
+	// Delete the old key first (ignore errors if already gone).
 	await cinaauthFetch(`/api-key/delete`, {
 		method: "POST",
 		body: { keyId: id },
 		cookie,
 	});
 
-	// Step 3: create a new key with the same name.
+	// Create a new key.
 	const newKey = await cinaauthFetch<{ key: string }>(`/api-key/create`, {
 		method: "POST",
-		body: {
-			name: oldKey.data?.name ?? "rotated-key",
-			prefix: oldKey.data?.prefix,
-		},
+		body: { name: `rotated-${Date.now()}` },
 		cookie,
 	});
 

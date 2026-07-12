@@ -26,6 +26,10 @@ export async function cinaauthFetch<T>(
 	};
 	if (opts.cookie) headers.cookie = opts.cookie;
 	if (opts.body !== undefined) headers["content-type"] = "application/json";
+	// CinaAuth validates the Origin header on POST/PUT/DELETE requests (CSRF
+	// protection). Forward the auth Worker's own URL as the origin so it passes
+	// the trusted-origins check.
+	headers.origin = cinaauthConfig.baseUrl;
 	if (opts.headers) Object.assign(headers, opts.headers);
 
 	// Ensure the path is mounted under the Better Auth handler ("/api/auth").
