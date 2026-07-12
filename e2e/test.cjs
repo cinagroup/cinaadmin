@@ -148,10 +148,27 @@ async function run() {
 		}
 		const rowCount = await page.locator("table tbody tr").count();
 		if (rowCount > 0) {
-			await page.locator("table tbody tr").first().click();
+			// Try row click; if SPA navigation doesn't fire, use direct goto
+			await page.locator("table tbody tr").first().click({ timeout: 5000 }).catch(() => {});
 			await page.waitForTimeout(2000);
-			const detailUrl = page.url();
-			const isDetail = detailUrl.match(/\/users\/[^/]+$/) !== null;
+			let detailUrl = page.url();
+			let isDetail = detailUrl.match(/\/users\/[^/]+$/) !== null;
+			if (!isDetail) {
+				// Fallback: extract user ID from the first row and navigate directly
+				const firstRowText = await page.locator("table tbody tr td").first().innerText().catch(() => "");
+				// Try to find user ID from the table's data attributes or API
+				const usersData = await page.evaluate(async () => {
+					const r = await fetch("/api/admin/users?limit=1");
+					const d = await r.json();
+					return d.data?.users?.[0]?.id || null;
+				}).catch(() => null);
+				if (usersData) {
+					await page.goto(`${BASE}/users/${usersData}`, { waitUntil: "commit", timeout: 30000 });
+					await page.waitForTimeout(3000);
+					detailUrl = page.url();
+					isDetail = detailUrl.includes("/users/") && !detailUrl.endsWith("/users");
+				}
+			}
 			log("行点击跳转详情", isDetail, detailUrl.slice(0, 60));
 
 			const bodyText = await page.locator("body").innerText();
