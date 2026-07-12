@@ -205,5 +205,18 @@
 	"apiKeys.created.warning": "请立即复制此密钥，关闭后将无法再次查看。",
 	"apiKeys.created.copy": "复制",
 	"apiKeys.created.copied": "已复制",
-	"apiKeys.created.close": "关闭"
+	"apiKeys.created.close": "关闭",
+	"common.rotate": "轮换",
+	"common.enable": "启用",
+	"common.disable": "禁用",
+	"common.inviting": "邀请中...",
+	"common.send": "发送",
+	"common.remove": "移除",
+	"userDetail.actions.reset2fa": "重置 2FA",
+	"userDetail.reset2fa.hint": "这将禁用双因素认证并清除用户的 2FA 密钥和备用代码。",
+	"userDetail.reset2fa.confirm": "重置 2FA",
+	"toast.reset2fa": "2FA 重置成功",
+	"organizations.invite": "邀请成员",
+	"organizations.removeMember": "移除成员",
+	"organizations.noMembers": "暂无成员"
 }

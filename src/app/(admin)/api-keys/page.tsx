@@ -76,6 +76,32 @@ export default function ApiKeysPage() {
 		await qc.invalidateQueries({ queryKey: ["api-keys"] });
 	};
 
+	const toggleKey = async (id: string, enabled: boolean) => {
+		await fetch(`/api/admin/api-keys/${id}/toggle`, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ enabled }),
+		});
+		await qc.invalidateQueries({ queryKey: ["api-keys"] });
+	};
+
+	const deleteKey = async (id: string) => {
+		await fetch(`/api/admin/api-keys/${id}`, { method: "DELETE" });
+		await qc.invalidateQueries({ queryKey: ["api-keys"] });
+	};
+
+	const rotateKey = async (id: string) => {
+		const r = await fetch(`/api/admin/api-keys/${id}/rotate`, { method: "POST" });
+		const d = (await r.json().catch(() => ({}))) as {
+			ok?: boolean;
+			data?: { key?: string };
+		};
+		if (d.data?.key) {
+			setCreatedKey(d.data.key);
+		}
+		await qc.invalidateQueries({ queryKey: ["api-keys"] });
+	};
+
 	const columns = useMemo<ColumnDef<ApiKeyDTO>[]>(
 		() => [
 			{ accessorKey: "name", header: t("organizations.col.name") },
@@ -104,6 +130,42 @@ export default function ApiKeysPage() {
 					row.original.expiresAt
 						? new Date(row.original.expiresAt).toLocaleDateString()
 						: t("common.permanent"),
+			},
+			{
+				id: "actions",
+				header: "",
+				cell: ({ row }) => {
+					const key = row.original;
+					return (
+						<RoleGuard allow={["super_admin"]}>
+							<div className="flex items-center gap-1">
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => toggleKey(key.id, !key.enabled)}
+								>
+									{key.enabled ? t("common.disable") : t("common.enable")}
+								</Button>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => rotateKey(key.id)}
+								>
+									{t("common.rotate")}
+								</Button>
+								<ConfirmDialog
+									trigger={
+										<Button variant="ghost" size="sm" className="text-danger">
+											{t("common.delete")}
+										</Button>
+									}
+									title={t("apiKeys.delete.title")}
+									onConfirm={() => deleteKey(key.id)}
+								/>
+							</div>
+						</RoleGuard>
+					);
+				},
 			},
 		],
 		[t],

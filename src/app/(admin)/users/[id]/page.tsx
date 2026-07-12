@@ -83,7 +83,11 @@ export default function UserDetailPage({
 				backHref="/users"
 				backLabel={t("users.back")}
 			>
-				<UserActions userId={id} banned={user.banned} />
+				<UserActions
+					userId={id}
+					banned={user.banned}
+					twoFactorEnabled={user.twoFactorEnabled}
+				/>
 			</PageHeader>
 			<UserTabs user={user} />
 		</div>

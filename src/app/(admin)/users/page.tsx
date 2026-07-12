@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
 	getCoreRowModel,
+	getFilteredRowModel,
 	useReactTable,
 	type ColumnDef,
+	type RowSelectionState,
 } from "@tanstack/react-table";
 import { DataTable } from "@/components/data-table/data-table";
+import { BatchActionBar } from "@/components/data-table/batch-action-bar";
 import { FilterBar, type FilterState } from "@/components/data-table/filter-bar";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Pagination } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
@@ -24,6 +28,7 @@ export default function UsersPage() {
 	const router = useRouter();
 	const [filter, setFilter] = useState<FilterState>({});
 	const [offset, setOffset] = useState(0);
+	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
 	const { data, isFetching } = useQuery({
 		queryKey: ["users", filter, offset],
@@ -52,6 +57,31 @@ export default function UsersPage() {
 
 	const columns = useMemo<ColumnDef<UserDTO>[]>(
 		() => [
+			{
+				id: "select",
+				header: ({ table }) => (
+					<Checkbox
+						checked={
+							table.getIsAllPageRowsSelected() ||
+							(table.getIsSomePageRowsSelected() && "indeterminate")
+						}
+						onCheckedChange={(value) =>
+							table.toggleAllPageRowsSelected(!!value)
+						}
+						aria-label="Select all"
+					/>
+				),
+				cell: ({ row }) => (
+					<Checkbox
+						checked={row.getIsSelected()}
+						onCheckedChange={(value) => row.toggleSelected(!!value)}
+						onClick={(e) => e.stopPropagation()}
+						aria-label="Select row"
+					/>
+				),
+				enableSorting: false,
+				enableHiding: false,
+			},
 			{
 				accessorKey: "email",
 				header: t("users.col.email"),
@@ -84,8 +114,14 @@ export default function UsersPage() {
 		data: users,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+		enableRowSelection: true,
+		onRowSelectionChange: setRowSelection,
+		state: { rowSelection },
+		getRowId: (row) => row.id,
 	});
 
+	const selectedIds = Object.keys(rowSelection);
 	const exportHref = `/api/admin/export?kind=users&${new URLSearchParams(
 		filter as Record<string, string>,
 	)}`;
@@ -122,6 +158,10 @@ export default function UsersPage() {
 					onNext={() => setOffset(offset + PAGE_SIZE)}
 				/>
 			)}
+			<BatchActionBar
+				selectedIds={selectedIds}
+				onClear={() => setRowSelection({})}
+			/>
 		</div>
 	);
 }

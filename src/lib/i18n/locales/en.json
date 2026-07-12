@@ -205,5 +205,19 @@
 	"apiKeys.created.warning": "Copy this key now — it cannot be viewed again after closing.",
 	"apiKeys.created.copy": "Copy",
 	"apiKeys.created.copied": "Copied",
-	"apiKeys.created.close": "Close"
+	"apiKeys.created.close": "Close",
+	"common.rotate": "Rotate",
+	"common.enable": "Enable",
+	"common.disable": "Disable",
+	"common.inviting": "Inviting...",
+	"common.send": "Send",
+	"common.remove": "Remove",
+	"userDetail.actions.reset2fa": "Reset 2FA",
+	"userDetail.reset2fa.hint": "This will disable two-factor authentication and clear the user's 2FA secret and backup codes.",
+	"userDetail.reset2fa.confirm": "Reset 2FA",
+	"toast.reset2fa": "2FA reset successfully",
+	"organizations.invite": "Invite Member",
+	"organizations.removeMember": "Remove Member",
+	"organizations.noMembers": "No members yet",
+	"apiKeys.delete.title": "Delete API Key"
 }

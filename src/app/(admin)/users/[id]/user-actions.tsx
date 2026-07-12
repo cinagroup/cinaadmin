@@ -10,13 +10,15 @@ import { Label } from "@/components/ui/label";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import { BanDialog } from "./ban-dialog";
 
-/** Role-gated action buttons for a user (ban/delete). */
+/** Role-gated action buttons for a user (ban/delete/reset-2fa). */
 export function UserActions({
 	userId,
 	banned,
+	twoFactorEnabled,
 }: {
 	userId: string;
 	banned: boolean;
+	twoFactorEnabled?: boolean;
 }) {
 	const { t } = useI18n();
 	const [newPassword, setNewPassword] = useState("");
@@ -91,6 +93,32 @@ export function UserActions({
 					</div>
 				</ConfirmDialog>
 			</RoleGuard>
+			{twoFactorEnabled && (
+				<RoleGuard allow={["super_admin"]}>
+					<ConfirmDialog
+						trigger={
+							<Button variant="outline" size="sm">
+								{t("userDetail.actions.reset2fa")}
+							</Button>
+						}
+						title={t("userDetail.actions.reset2fa")}
+						description={t("userDetail.reset2fa.hint")}
+						danger
+						confirmText={t("userDetail.reset2fa.confirm")}
+						onConfirm={async () => {
+							const r = await fetch(`/api/admin/users/${userId}/reset-2fa`, {
+								method: "POST",
+							});
+							if (r.ok) {
+								toast.success(t("toast.reset2fa"));
+								window.location.reload();
+							} else {
+								toast.error(t("toast.saveFailed"));
+							}
+						}}
+					/>
+				</RoleGuard>
+			)}
 			<RoleGuard allow={["super_admin"]}>
 				<ConfirmDialog
 					trigger={
