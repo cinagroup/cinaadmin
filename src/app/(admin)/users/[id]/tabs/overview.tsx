@@ -98,11 +98,32 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 							)}
 						</dd>
 						<dt className="whitespace-nowrap text-mute">{t("userDetail.profile.emailVerified")}</dt>
-						<dd>
+						<dd className="flex items-center gap-2">
 							{user.emailVerified ? (
 								<Badge variant="success">{t("userDetail.profile.verified")}</Badge>
 							) : (
-								<Badge variant="muted">{t("userDetail.profile.unverified")}</Badge>
+								<>
+									<Badge variant="muted">{t("userDetail.profile.unverified")}</Badge>
+									{isSuperAdmin && (
+										<button
+											type="button"
+											className="text-[12px] text-link underline-offset-4 hover:underline"
+											onClick={async () => {
+												const r = await fetch(`/api/admin/users/${user.id}`, {
+													method: "PATCH",
+													headers: { "content-type": "application/json" },
+													body: JSON.stringify({ emailVerified: true }),
+												});
+												if (r.ok) {
+													toast.success(t("userDetail.profile.verified"));
+													await qc.invalidateQueries({ queryKey: ["user", user.id] });
+												}
+											}}
+										>
+											{t("userDetail.profile.markVerified")}
+										</button>
+									)}
+								</>
 							)}
 						</dd>
 						<dt className="whitespace-nowrap text-mute">{t("userDetail.actions.ban")}</dt>

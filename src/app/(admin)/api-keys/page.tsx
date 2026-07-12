@@ -132,6 +132,22 @@ export default function ApiKeysPage() {
 						: t("common.permanent"),
 			},
 			{
+				accessorKey: "lastUsedAt",
+				header: t("apiKeys.lastUsed"),
+				cell: ({ row }) =>
+					row.original.lastUsedAt
+						? new Date(row.original.lastUsedAt).toLocaleDateString()
+						: "—",
+			},
+			{
+				accessorKey: "remaining",
+				header: t("apiKeys.remaining"),
+				cell: ({ row }) =>
+					row.original.remaining != null
+						? row.original.remaining
+						: t("common.permanent"),
+			},
+			{
 				id: "actions",
 				header: "",
 				cell: ({ row }) => {

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHeader } from "@/components/layout/page-header";
@@ -39,7 +40,7 @@ export default function SecurityPolicyPage() {
 	if (!policy) {
 		return (
 			<div>
-				<PageHeader title={t("security.title")} />
+				<PageHeader title={t("security.title")}><Badge variant="muted">{t("security.readOnly")}</Badge></PageHeader>
 				<p className="text-[16px] leading-6 text-body">{t("common.loading")}</p>
 			</div>
 		);
@@ -56,7 +57,7 @@ export default function SecurityPolicyPage() {
 
 	return (
 		<div className="max-w-2xl">
-			<PageHeader title={t("security.title")} />
+			<PageHeader title={t("security.title")}><Badge variant="muted">{t("security.readOnly")}</Badge></PageHeader>
 			<Card>
 				<CardContent className="space-y-5">
 					<Row label={t("security.otpExpiry")}>

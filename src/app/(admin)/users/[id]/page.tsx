@@ -86,6 +86,7 @@ export default function UserDetailPage({
 				<UserActions
 					userId={id}
 					banned={user.banned}
+					role={user.role}
 					twoFactorEnabled={user.twoFactorEnabled}
 				/>
 			</PageHeader>

@@ -219,5 +219,10 @@
 	"organizations.invite": "Invite Member",
 	"organizations.removeMember": "Remove Member",
 	"organizations.noMembers": "No members yet",
-	"apiKeys.delete.title": "Delete API Key"
+	"apiKeys.delete.title": "Delete API Key",
+	"userDetail.profile.markVerified": "Mark verified",
+	"userDetail.actions.impersonateBlocked": "Cannot impersonate admin accounts",
+	"security.readOnly": "Read-only",
+	"apiKeys.lastUsed": "Last Used",
+	"apiKeys.remaining": "Remaining"
 }

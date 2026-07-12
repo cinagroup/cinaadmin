@@ -14,10 +14,12 @@ import { BanDialog } from "./ban-dialog";
 export function UserActions({
 	userId,
 	banned,
+	role,
 	twoFactorEnabled,
 }: {
 	userId: string;
 	banned: boolean;
+	role: string;
 	twoFactorEnabled?: boolean;
 }) {
 	const { t } = useI18n();
@@ -122,7 +124,12 @@ export function UserActions({
 			<RoleGuard allow={["super_admin"]}>
 				<ConfirmDialog
 					trigger={
-						<Button variant="outline" size="sm">
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={role === "super_admin" || role === "security_admin"}
+							title={role === "super_admin" || role === "security_admin" ? t("userDetail.actions.impersonateBlocked") : undefined}
+						>
 							{t("userDetail.actions.impersonate")}
 						</Button>
 					}

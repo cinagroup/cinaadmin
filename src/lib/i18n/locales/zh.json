@@ -218,5 +218,10 @@
 	"toast.reset2fa": "2FA 重置成功",
 	"organizations.invite": "邀请成员",
 	"organizations.removeMember": "移除成员",
-	"organizations.noMembers": "暂无成员"
+	"organizations.noMembers": "暂无成员",
+	"userDetail.profile.markVerified": "标记已验证",
+	"userDetail.actions.impersonateBlocked": "不能模拟管理员账户",
+	"security.readOnly": "只读展示",
+	"apiKeys.lastUsed": "最近使用",
+	"apiKeys.remaining": "剩余次数"
 }

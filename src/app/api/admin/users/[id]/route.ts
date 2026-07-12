@@ -63,7 +63,7 @@ export async function PATCH(
 	const session = await requireAdmin(request).catch((e: Response) => e);
 	if (session instanceof Response) return session;
 
-	let body: { name?: string; email?: string; role?: string };
+	let body: { name?: string; email?: string; role?: string; emailVerified?: boolean };
 	try {
 		body = await request.json();
 	} catch {
@@ -85,6 +85,15 @@ export async function PATCH(
 			return e as Response;
 		}
 		data.name = body.name;
+	}
+	// emailVerified: super_admin only (manual verification override)
+	if (body.emailVerified !== undefined) {
+		try {
+			requireRole(session, SUPER_ADMIN_ONLY);
+		} catch (e) {
+			return e as Response;
+		}
+		data.emailVerified = body.emailVerified;
 	}
 	// email + role changes require super_admin.
 	const wantsSensitive = body.email !== undefined || body.role !== undefined;
