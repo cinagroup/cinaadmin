@@ -17,7 +17,11 @@ export async function GET(
 	if (session instanceof Response) return session;
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch(`/admin/get-user?id=${encodeURIComponent(id)}`, { cookie });
-	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
+	if (!res.ok) {
+		// Degrade gracefully — user may not exist or cinaauth may be unavailable.
+		return NextResponse.json({ ok: false, error: res.error }, { status: 404 });
+	}
+	return NextResponse.json(res, { status: 200 });
 }
 
 /** DELETE /api/admin/users/[id] — remove user (super_admin only). */
