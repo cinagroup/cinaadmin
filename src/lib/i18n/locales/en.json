@@ -228,5 +228,11 @@
 	"audit.allTime": "All time",
 	"audit.last1d": "Last 24h",
 	"audit.last7d": "Last 7 days",
-	"audit.last30d": "Last 30 days"
+	"audit.last30d": "Last 30 days",
+	"login.title": "CinaGroup Admin",
+	"login.subtitle": "Sign in with your admin account",
+	"login.email": "Email",
+	"login.password": "Password",
+	"login.signIn": "Sign in",
+	"login.signingIn": "Signing in…"
 }

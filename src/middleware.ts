@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { cinaauthConfig } from "@/lib/cinaauth/config";
 
 /** Paths that bypass the auth gate. */
-const PUBLIC_PATHS = ["/sign-in", "/api/auth", "/_next", "/favicon.ico"];
+const PUBLIC_PATHS = ["/login", "/sign-in", "/api/auth", "/_next", "/favicon.ico"];
 
 /**
  * Edge auth gate.
@@ -37,9 +36,11 @@ export async function middleware(request: NextRequest) {
 				{ status: 401 },
 			);
 		}
-		const signInUrl = new URL(`${cinaauthConfig.authUrl}/sign-in`);
-		signInUrl.searchParams.set("callbackURL", request.url);
-		return NextResponse.redirect(signInUrl);
+		// Redirect to the embedded /login page (not demo-auth, which has a
+		// SPA hydration bug that prevents the login form from rendering).
+		const loginUrl = new URL("/login", request.url);
+		loginUrl.searchParams.set("callbackURL", request.url);
+		return NextResponse.redirect(loginUrl);
 	}
 	return NextResponse.next();
 }

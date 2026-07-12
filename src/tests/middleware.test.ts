@@ -31,9 +31,9 @@ describe("middleware access control", () => {
 		const res = await runMiddleware("/users", false);
 		expect(res.status).toBeGreaterThanOrEqual(300);
 		const loc = res.headers.get("location") ?? "";
-		// Must hit the FRONTEND host (CINAUTH_AUTH_URL), not the API host.
-		expect(loc).toContain("https://auth-frontend.test/sign-in");
-		expect(loc).toContain("/sign-in");
+		// Must redirect to the embedded /login page (not demo-auth).
+		expect(loc).toContain("/login");
+		expect(loc).toContain("callbackURL=");
 	});
 
 	it("allows through when session cookie present", async () => {
