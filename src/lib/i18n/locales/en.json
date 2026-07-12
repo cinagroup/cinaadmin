@@ -224,5 +224,9 @@
 	"userDetail.actions.impersonateBlocked": "Cannot impersonate admin accounts",
 	"security.readOnly": "Read-only",
 	"apiKeys.lastUsed": "Last Used",
-	"apiKeys.remaining": "Remaining"
+	"apiKeys.remaining": "Remaining",
+	"audit.allTime": "All time",
+	"audit.last1d": "Last 24h",
+	"audit.last7d": "Last 7 days",
+	"audit.last30d": "Last 30 days"
 }

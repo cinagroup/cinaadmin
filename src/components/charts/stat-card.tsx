@@ -41,7 +41,7 @@ export function StatCard({
 				{hasDelta && (
 					<div className="mt-1 flex items-center gap-1 text-[12px] leading-4">
 						<span
-							className={`inline-flex items-center gap-0.5 ${up ? "text-success" : "text-body"}`}
+							className={`inline-flex items-center gap-0.5 ${up ? "text-success" : "text-error"}`}
 						>
 							{up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
 							{up ? "+" : ""}

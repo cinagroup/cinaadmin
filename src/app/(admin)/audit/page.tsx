@@ -36,15 +36,24 @@ export default function AuditPage() {
 	const { t } = useI18n();
 	const [category, setCategory] = useState("all");
 	const [result, setResult] = useState("all");
+	const [dateRange, setDateRange] = useState("all");
 
 	const { data, isFetching } = useQuery({
-		queryKey: ["audit", category, result],
+		queryKey: ["audit", category, result, dateRange],
 		queryFn: async () => {
+			const now = new Date();
 			const qs = new URLSearchParams({
 				limit: "100",
 				...(category !== "all" && { category }),
 				...(result !== "all" && { result }),
 			});
+			// Add date range filter
+			if (dateRange !== "all") {
+				const days = parseInt(dateRange, 10);
+				const start = new Date(now);
+				start.setDate(start.getDate() - days);
+				qs.set("start", start.toISOString());
+			}
 			const r = await fetch(`/api/admin/audit?${qs}`);
 			const d = (await r.json()) as {
 				ok: boolean;
@@ -120,6 +129,17 @@ export default function AuditPage() {
 						<SelectItem value="all">{t("audit.allResults")}</SelectItem>
 						<SelectItem value="success">{t("common.result.success")}</SelectItem>
 						<SelectItem value="failure">{t("common.result.failure")}</SelectItem>
+					</SelectContent>
+				</Select>
+				<Select value={dateRange} onValueChange={setDateRange}>
+					<SelectTrigger className="h-10 w-[140px]">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">{t("audit.allTime")}</SelectItem>
+						<SelectItem value="1">{t("audit.last1d")}</SelectItem>
+						<SelectItem value="7">{t("audit.last7d")}</SelectItem>
+						<SelectItem value="30">{t("audit.last30d")}</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>

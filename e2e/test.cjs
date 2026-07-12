@@ -184,17 +184,39 @@ async function run() {
 
 		// ── 4. Toast feedback ──
 		console.log("\n【4. Toast 反馈】");
-		// Go to user detail and try saving
+		// Go to user detail and try saving — the edit form is in the overview
+		// tab's second card, which needs extra time to hydrate after the page
+		// loads data via React Query.
 		const currentUrl = page.url();
 		if (currentUrl.includes("/users/")) {
-			const saveBtn = page.locator('button[type="submit"]').first();
-			if ((await saveBtn.count()) > 0) {
+			// Wait for the save button to appear (edit form hydration)
+			let saveBtn = null;
+			for (let i = 0; i < 15; i++) {
+				await page.waitForTimeout(1000);
+				const btn = page.locator('button[type="submit"]').first();
+				if ((await btn.count()) > 0) {
+					saveBtn = btn;
+					break;
+				}
+			}
+			if (saveBtn) {
+				// Modify a field first so the save has something to submit
+				const nameInput = page.locator('input[id="name"]').first();
+				if ((await nameInput.count()) > 0) {
+					const currentName = await nameInput.inputValue().catch(() => "");
+					await nameInput.fill(currentName + " "); // tiny change to trigger save
+				}
 				await saveBtn.click();
-				await page.waitForTimeout(2000);
-				const toastCount = await page.locator('[data-sonner-toast], [class*="sonner"]').count();
-				log("Toast 反馈", toastCount > 0, toastCount > 0 ? "toast 出现" : "无 toast");
+				// Wait for toast to appear (sonner renders async)
+				let toastFound = false;
+				for (let i = 0; i < 10; i++) {
+					await page.waitForTimeout(500);
+					const toastCount = await page.locator('[data-sonner-toast], [class*="sonner"]').count();
+					if (toastCount > 0) { toastFound = true; break; }
+				}
+				log("Toast 反馈", toastFound, toastFound ? "toast 出现 ✓" : "无 toast");
 			} else {
-				log("Toast 反馈", false, "无保存按钮");
+				log("Toast 反馈", false, "保存按钮未渲染");
 			}
 		} else {
 			log("Toast 反馈", false, "不在用户详情页");
