@@ -66,7 +66,7 @@ export function ActiveUsersChart({ days = 14 }: { days?: number }) {
 	if (!isFetching && chartData.every((d) => d.active === 0)) {
 		return (
 			<div className="flex h-[240px] items-center justify-center text-[14px] leading-5 text-mute">
-				近 {days} 天无登录数据
+				No login data in the last {days} days
 			</div>
 		);
 	}

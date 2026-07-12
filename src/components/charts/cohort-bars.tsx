@@ -89,8 +89,8 @@ export function CohortBars({ days = 14 }: { days?: number }) {
 
 	const chartData = Array.from(byDay.entries()).map(([date, b]) => ({
 		date: date.slice(5), // MM-DD
-		新增: b.newUsers,
-		回流: b.returning,
+		new: b.newUsers,
+		returning: b.returning,
 	}));
 
 	const { v, themeKey } = useThemeTokens();
@@ -119,13 +119,13 @@ export function CohortBars({ days = 14 }: { days?: number }) {
 					}}
 				/>
 				<Bar
-					dataKey="新增"
+					dataKey="new"
 					stackId="cohort"
 					fill={c1}
 					radius={[0, 0, 0, 0]}
 				/>
 				<Bar
-					dataKey="回流"
+					dataKey="returning"
 					stackId="cohort"
 					fill={c2}
 					radius={[4, 4, 0, 0]}

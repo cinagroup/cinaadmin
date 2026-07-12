@@ -27,7 +27,7 @@ export function ChannelPie({
 	];
 
 	if (data.length === 0) {
-		return <div className="text-[14px] leading-5 text-mute">暂无数据</div>;
+		return <div className="text-[14px] leading-5 text-mute">No data</div>;
 	}
 
 	return (

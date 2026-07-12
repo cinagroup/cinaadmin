@@ -23,7 +23,7 @@ export interface FilterState {
 export function FilterBar({
 	fields,
 	onChange,
-	searchLabel = "搜索…",
+	searchLabel = "Search…",
 }: {
 	fields: { label: string; value: string }[];
 	onChange: (f: FilterState) => void;
