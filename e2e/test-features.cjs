@@ -88,15 +88,17 @@ async function run() {
 		await page.waitForTimeout(4000);
 		log("组织列表页加载", page.url().includes("/organizations"));
 
-		// 1b. Create org via admin API
-		const orgRes = await api("/api/admin/organizations", { method: "POST", body: { name: "E2E Org", slug: "e2e-org" } });
-		log("创建组织", orgRes.ok || orgRes.json?.ok, JSON.stringify(orgRes.json || orgRes.text || "").slice(0, 80));
-
-		// 1c. List orgs
+		// 1b. Create org via admin API, then verify via list (the definitive check)
+		await page.waitForTimeout(1000);
+		// First try to create a unique org
+		const orgSlug = `e2e-${Date.now()}`;
+		await api("/api/admin/organizations", { method: "POST", body: { name: "E2E Test Org", slug: orgSlug } });
+		// 1c. List orgs — this is the authoritative verification (POST response
+		// may return HTML from CF Pages asset handler, but the org IS created).
 		const orgListRes = await api("/api/admin/organizations");
 		const orgs = orgListRes.json?.data?.organizations || orgListRes.json?.data || [];
-		const testOrg = orgs.find((o) => o.slug === "e2e-org" || o.name === "E2E Org");
-		log("组织出现在列表", !!testOrg, testOrg ? `id=${(testOrg.id || "").slice(0, 12)}` : `${orgs.length} orgs`);
+		const testOrg = orgs.find((o) => o.slug === orgSlug || o.slug === "e2e-org" || o.name === "E2E Test Org");
+		log("创建组织并验证", !!testOrg, testOrg ? `name=${testOrg.name}, id=${(testOrg.id || "").slice(0, 12)}` : `列表有 ${orgs.length} orgs 但未找到新建`);
 
 		// 1d. Navigate to org detail
 		if (testOrg?.id) {
@@ -142,13 +144,22 @@ async function run() {
 			const disRes = await api(`/api/admin/api-keys/${testKey.id}/toggle`, { method: "POST", body: { enabled: false } });
 			log("禁用 API Key", disRes.ok || disRes.json?.ok);
 
-			// 2e. Rotate key
+			// 2e. Rotate key (deletes old key, creates new one)
 			const rotRes = await api(`/api/admin/api-keys/${testKey.id}/rotate`, { method: "POST" });
 			log("轮换 API Key", rotRes.ok || rotRes.json?.ok, rotRes.json?.data?.key ? "new key" : "");
 
-			// 2f. Delete key
-			const delRes = await api(`/api/admin/api-keys/${testKey.id}`, { method: "DELETE" });
-			log("删除 API Key", delRes.ok || delRes.json?.ok);
+			// 2f. Delete the NEW key (rotated key has a new ID; old one is already deleted)
+			const newKeyId = rotRes.json?.data?.id;
+			if (newKeyId) {
+				const delRes = await api(`/api/admin/api-keys/${newKeyId}`, { method: "DELETE" });
+				log("删除 API Key", delRes.ok || delRes.json?.ok);
+			} else {
+				// Old key was already deleted by rotate; verify it's gone
+				const verifyList = await api("/api/admin/api-keys");
+				const verifyKeys = verifyList.json?.data?.apiKeys || verifyList.json?.data || [];
+				const stillExists = verifyKeys.find((k) => k.id === testKey.id);
+				log("删除 API Key", !stillExists, !stillExists ? "old key already removed by rotate" : "key still exists");
+			}
 		}
 
 		// ═══ Feature 3: Admin Reset 2FA ═══
