@@ -41,15 +41,12 @@ function LoginForm() {
 		setError(null);
 		setLoading(true);
 		try {
-			const resp = await fetch(
-				`${process.env.NEXT_PUBLIC_CINAUTH_BASE_URL ?? "https://auth.cinagroup.com"}/api/auth/sign-in/email`,
-				{
-					method: "POST",
-					headers: { "content-type": "application/json" },
-					body: JSON.stringify({ email, password, callbackURL }),
-					credentials: "include",
-				},
-			);
+			// Call the same-origin proxy (avoids CORS with auth.cinagroup.com).
+			const resp = await fetch("/api/auth/sign-in", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ email, password, callbackURL }),
+			});
 			const data = await resp.json();
 			if (resp.ok) {
 				// Cookie is set on .cinagroup.com — navigate to the callback URL.
