@@ -236,5 +236,22 @@
 	"login.signingIn": "登录中…",
 	"nav.developer": "开发者",
 	"nav.apiDocs": "API 文档",
-	"apiDocs.title": "API 文档"
+	"apiDocs.title": "API 文档",
+	"userDetail.actions.oneTimeToken": "一次性令牌",
+	"userDetail.oneTimeToken.title": "一次性登录令牌",
+	"userDetail.oneTimeToken.hint": "生成一个跨设备登录令牌，用户可用它在其他设备上登录。",
+	"userDetail.oneTimeToken.copy": "复制令牌",
+	"userDetail.oneTimeToken.copied": "已复制",
+	"userDetail.actions.sendVerification": "发送验证",
+	"userDetail.sendVerification.title": "发送验证",
+	"userDetail.sendVerification.emailOTP": "邮箱验证码",
+	"userDetail.sendVerification.magicLink": "魔法链接",
+	"toast.otpSent": "验证码已发送",
+	"toast.magicLinkSent": "魔法链接已发送",
+	"toast.tokenGenerated": "令牌已生成",
+	"userDetail.tab.devices": "设备",
+	"userDetail.profile.lastLoginMethod": "登录方式",
+	"userDetail.devices.title": "设备会话",
+	"userDetail.devices.revoke": "吊销",
+	"userDetail.devices.empty": "无设备会话"
 }

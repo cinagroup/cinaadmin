@@ -7,6 +7,12 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import { BanDialog } from "./ban-dialog";
 
@@ -160,6 +166,66 @@ export function UserActions({
 					confirmText={t("userDetail.delete.permanent")}
 					onConfirm={remove}
 				/>
+			</RoleGuard>
+
+			{/* Send verification (email OTP / magic link) */}
+			<RoleGuard allow={["super_admin", "security_admin"]}>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button variant="ghost" size="sm">
+							{t("userDetail.actions.sendVerification")}
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem onClick={async () => {
+							const r = await fetch(`/api/admin/users/${userId}/send-verification`, {
+								method: "POST",
+								headers: { "content-type": "application/json" },
+								body: JSON.stringify({ type: "email-otp" }),
+							});
+							if (r.ok) toast.success(t("toast.otpSent"));
+							else toast.error(t("toast.saveFailed"));
+						}}>
+							{t("userDetail.sendVerification.emailOTP")}
+						</DropdownMenuItem>
+						<DropdownMenuItem onClick={async () => {
+							const r = await fetch(`/api/admin/users/${userId}/send-verification`, {
+								method: "POST",
+								headers: { "content-type": "application/json" },
+								body: JSON.stringify({ type: "magic-link" }),
+							});
+							if (r.ok) toast.success(t("toast.magicLinkSent"));
+							else toast.error(t("toast.saveFailed"));
+						}}>
+							{t("userDetail.sendVerification.magicLink")}
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			</RoleGuard>
+
+			{/* One-time token (super_admin) */}
+			<RoleGuard allow={["super_admin"]}>
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={async () => {
+						const r = await fetch(`/api/admin/users/${userId}/one-time-token`, {
+							method: "POST",
+						});
+						const d = (await r.json().catch(() => ({}))) as {
+							ok?: boolean;
+							data?: { token?: string };
+						};
+						if (d.ok && d.data?.token) {
+							navigator.clipboard?.writeText(d.data.token);
+							toast.success(t("toast.tokenGenerated"));
+						} else {
+							toast.error(t("toast.saveFailed"));
+						}
+					}}
+				>
+					{t("userDetail.actions.oneTimeToken")}
+				</Button>
 			</RoleGuard>
 		</div>
 	);

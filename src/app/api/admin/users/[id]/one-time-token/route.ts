@@ -1,0 +1,41 @@
+import { type NextRequest, NextResponse } from "next/server";
+import {
+	requireAdmin,
+	requireRole,
+	SUPER_ADMIN_ONLY,
+} from "@/lib/auth-guard";
+import { cinaauthFetch } from "@/lib/cinaauth/client";
+
+/**
+ * POST /api/admin/users/[id]/one-time-token — generate a one-time
+ * cross-device login token for a user (oneTimeToken plugin).
+ * super_admin only.
+ */
+export async function POST(
+	request: NextRequest,
+	{ params }: { params: Promise<{ id: string }> },
+) {
+	const { id } = await params;
+	const session = await requireAdmin(request).catch((e: Response) => e);
+	if (session instanceof Response) return session;
+	try {
+		requireRole(session, SUPER_ADMIN_ONLY);
+	} catch (e) {
+		return e as Response;
+	}
+	const cookie = request.headers.get("cookie") ?? "";
+	const origin = request.headers.get("origin") ?? "https://admin.cinagroup.com";
+	// The one-time-token plugin's generate endpoint creates a token for the
+	// current session user. We call it with the admin's session (acting as
+	// the user via impersonation context if available), then return the token.
+	const res = await cinaauthFetch("/one-time-token/generate", {
+		cookie,
+		headers: { origin },
+	});
+	if (!res.ok) {
+		return NextResponse.json({ ok: false, error: res.error }, { status: 502 });
+	}
+	return NextResponse.json(res, { status: 200 });
+}
+
+export const runtime = "edge";

@@ -237,5 +237,22 @@
 	"login.signingIn": "Signing in…",
 	"nav.developer": "Developer",
 	"nav.apiDocs": "API Docs",
-	"apiDocs.title": "API Documentation"
+	"apiDocs.title": "API Documentation",
+	"userDetail.actions.oneTimeToken": "One-Time Token",
+	"userDetail.oneTimeToken.title": "One-Time Login Token",
+	"userDetail.oneTimeToken.hint": "Generate a cross-device login token the user can use to sign in on another device.",
+	"userDetail.oneTimeToken.copy": "Copy Token",
+	"userDetail.oneTimeToken.copied": "Copied",
+	"userDetail.actions.sendVerification": "Send Verification",
+	"userDetail.sendVerification.title": "Send Verification",
+	"userDetail.sendVerification.emailOTP": "Email OTP",
+	"userDetail.sendVerification.magicLink": "Magic Link",
+	"toast.otpSent": "OTP sent",
+	"toast.magicLinkSent": "Magic link sent",
+	"toast.tokenGenerated": "Token generated",
+	"userDetail.tab.devices": "Devices",
+	"userDetail.profile.lastLoginMethod": "Login Method",
+	"userDetail.devices.title": "Device Sessions",
+	"userDetail.devices.revoke": "Revoke",
+	"userDetail.devices.empty": "No device sessions"
 }
