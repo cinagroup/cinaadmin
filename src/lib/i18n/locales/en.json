@@ -234,5 +234,8 @@
 	"login.email": "Email",
 	"login.password": "Password",
 	"login.signIn": "Sign in",
-	"login.signingIn": "Signing in…"
+	"login.signingIn": "Signing in…",
+	"nav.developer": "Developer",
+	"nav.apiDocs": "API Docs",
+	"apiDocs.title": "API Documentation"
 }

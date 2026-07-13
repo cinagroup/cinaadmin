@@ -12,6 +12,7 @@ import {
 	ShieldCheck,
 	ScrollText,
 	Shield,
+	BookOpen,
 	type LucideIcon,
 } from "lucide-react";
 
@@ -44,6 +45,12 @@ const NAV: NavSection[] = [
 		items: [
 			{ href: "/audit", key: "nav.auditLog", icon: ScrollText },
 			{ href: "/settings/security", key: "nav.securityPolicy", icon: ShieldCheck },
+		],
+	},
+	{
+		groupKey: "nav.developer",
+		items: [
+			{ href: "/api-docs", key: "nav.apiDocs", icon: BookOpen },
 		],
 	},
 ];
