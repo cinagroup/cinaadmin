@@ -62,21 +62,18 @@ async function run() {
 	try {
 		// ── 1. Login flow ──
 		console.log("【1. 登录流程】");
-		// Use domcontentloaded — networkidle never fires on SPA redirects
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 30000 });
 		await page.waitForTimeout(3000);
 		const url1 = page.url();
-		const redirectedToLogin = url1.includes("demo-auth") || url1.includes("sign-in");
-		log("未登录重定向到登录页", redirectedToLogin, url1.slice(0, 80));
+		const redirectedToLogin = url1.includes("/login");
+		log("未登录重定向到内嵌登录页", redirectedToLogin, url1.slice(0, 80));
 
-		// Login via page.evaluate (fetch from the browser context, which has
-		// the correct origin/referer and receives Set-Cookie automatically).
+		// Login via the same-origin proxy (avoids CORS).
 		const loginResult = await page.evaluate(async ({ email, password, callbackURL }) => {
-			const resp = await fetch("https://auth.cinagroup.com/api/auth/sign-in/email", {
+			const resp = await fetch("/api/auth/sign-in", {
 				method: "POST",
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({ email, password, callbackURL }),
-				credentials: "include",
 			});
 			return { ok: resp.ok, status: resp.status };
 		}, { email: EMAIL, password: PASSWORD, callbackURL: `${BASE}/dashboard` });
@@ -87,7 +84,7 @@ async function run() {
 		// Wait for either the admin shell to appear or a redirect back to login
 		await page.waitForTimeout(5000);
 		// If redirected back to login, try adding cookies manually
-		if (page.url().includes("sign-in") || page.url().includes("demo-auth")) {
+		if (page.url().includes("/login")) {
 			// Get cookies from the fetch response and add them to context
 			const cookies = await context.cookies("https://auth.cinagroup.com");
 			// Re-add for admin domain
