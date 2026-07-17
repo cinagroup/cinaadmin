@@ -199,6 +199,17 @@ export function UserActions({
 						}}>
 							{t("userDetail.sendVerification.magicLink")}
 						</DropdownMenuItem>
+						<DropdownMenuItem onClick={async () => {
+							const r = await fetch(`/api/admin/users/${userId}/send-verification`, {
+								method: "POST",
+								headers: { "content-type": "application/json" },
+								body: JSON.stringify({ type: "phone-number" }),
+							});
+							if (r.ok) toast.success(t("toast.otpSent"));
+							else toast.error(t("toast.saveFailed"));
+						}}>
+							{t("userDetail.sendVerification.phoneNumber")}
+						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</RoleGuard>

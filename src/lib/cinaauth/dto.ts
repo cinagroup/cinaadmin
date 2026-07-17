@@ -1,5 +1,11 @@
 /** DTOs for the admin console. UI depends ONLY on these — never on cinaauth's
- *  raw response shapes. Field names mirror what admin-api.ts maps to. */
+ *  raw response shapes. Field names mirror what admin-api.ts maps to.
+ *
+ *  Note: cinaauth may return timestamps as either ISO strings or epoch
+ *  milliseconds (number) depending on the drizzle adapter mode. The `new Date()`
+ *  constructor handles both, so we type as string | number for safety. */
+
+export type Timestamp = string | number;
 
 export interface UserDTO {
 	id: string;
@@ -8,10 +14,10 @@ export interface UserDTO {
 	role: string;
 	banned: boolean;
 	banReason: string | null;
-	banExpires: string | null;
+	banExpires: Timestamp | null;
 	twoFactorEnabled: boolean;
 	emailVerified: boolean;
-	createdAt: string;
+	createdAt: Timestamp;
 	image: string | null;
 }
 
@@ -19,7 +25,7 @@ export interface WalletDTO {
 	address: string;
 	chainId: number;
 	isPrimary: boolean;
-	boundAt: string;
+	boundAt: Timestamp;
 	boundIp: string | null;
 	boundSite: string | null;
 }
@@ -27,8 +33,8 @@ export interface WalletDTO {
 export interface SessionDTO {
 	id: string;
 	userId: string;
-	createdAt: string;
-	expiresAt: string;
+	createdAt: Timestamp;
+	expiresAt: Timestamp;
 	ipAddress: string | null;
 	userAgent: string | null;
 }

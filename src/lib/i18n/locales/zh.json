@@ -253,5 +253,6 @@
 	"userDetail.profile.lastLoginMethod": "登录方式",
 	"userDetail.devices.title": "设备会话",
 	"userDetail.devices.revoke": "吊销",
-	"userDetail.devices.empty": "无设备会话"
+	"userDetail.devices.empty": "无设备会话",
+	"userDetail.sendVerification.phoneNumber": "手机验证码"
 }

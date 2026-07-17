@@ -254,5 +254,6 @@
 	"userDetail.profile.lastLoginMethod": "Login Method",
 	"userDetail.devices.title": "Device Sessions",
 	"userDetail.devices.revoke": "Revoke",
-	"userDetail.devices.empty": "No device sessions"
+	"userDetail.devices.empty": "No device sessions",
+	"userDetail.sendVerification.phoneNumber": "Phone OTP"
 }

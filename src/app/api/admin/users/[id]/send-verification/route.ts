@@ -48,6 +48,17 @@ export async function POST(
 	if (type === "magic-link") {
 		endpoint = "/sign-in/magic-link";
 		reqBody = { email };
+	} else if (type === "phone-number") {
+		// phoneNumber plugin requires a phone number; the user record may have one
+		const phoneNumber = (userRes.data as Record<string, unknown>).phoneNumber as string | undefined;
+		if (!phoneNumber) {
+			return NextResponse.json(
+				{ ok: false, error: { code: "NO_PHONE", message: "User has no phone number" } },
+				{ status: 400 },
+			);
+		}
+		endpoint = "/phone-number/send-otp";
+		reqBody = { phoneNumber };
 	} else {
 		endpoint = "/email-otp/send-verification-otp";
 		reqBody = { email };
