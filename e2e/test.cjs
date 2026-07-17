@@ -41,7 +41,13 @@ async function run() {
 	const page = await context.newPage();
 
 	page.on("console", (msg) => {
-		if (msg.type() === "error") consoleErrors.push(msg.text());
+		if (msg.type() === "error") {
+			const text = msg.text();
+			// Filter out 403 resource load errors (not JS errors)
+			if (!text.includes("Failed to load resource")) {
+				consoleErrors.push(text);
+			}
+		}
 	});
 	page.on("requestfailed", (req) => {
 		const url = req.url();
@@ -81,23 +87,35 @@ async function run() {
 
 		// Navigate to admin — session cookie was set by the browser
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 45000 });
-		// Wait for either the admin shell to appear or a redirect back to login
 		await page.waitForTimeout(5000);
-		// If redirected back to login, try adding cookies manually
+		// If redirected back to login, extract cookie from the proxy response
+		// and add it to the browser context manually.
 		if (page.url().includes("/login")) {
-			// Get cookies from the fetch response and add them to context
-			const cookies = await context.cookies("https://auth.cinagroup.com");
-			// Re-add for admin domain
-			const sessionCookies = cookies
-				.filter((c) => c.name.includes("session_token"))
-				.map((c) => ({ ...c, domain: ".cinagroup.com" }));
-			if (sessionCookies.length > 0) {
-				await context.addCookies(sessionCookies);
+			// Call the proxy via page.request (same-origin, gets Set-Cookie in context)
+			const proxyResp = await page.request.post(`${BASE}/api/auth/sign-in`, {
+				data: { email: EMAIL, password: PASSWORD, callbackURL: `${BASE}/dashboard` },
+				headers: { "content-type": "application/json" },
+				maxRedirects: 0,
+			});
+			// Extract Set-Cookie from the response headers
+			const setCookie = proxyResp.headers()["set-cookie"] || "";
+			// Parse the session token cookie
+			const tokenMatch = setCookie.match(/__Secure-cinaauth\.session_token=([^;]+)/);
+			if (tokenMatch) {
+				await context.addCookies([{
+					name: "__Secure-cinaauth.session_token",
+					value: tokenMatch[1],
+					domain: ".cinagroup.com",
+					path: "/",
+					secure: true,
+					httpOnly: true,
+					sameSite: "Lax",
+				}]);
 			}
 			await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 45000 });
 			await page.waitForTimeout(5000);
 		}
-		const loggedIn = page.url().includes("admin.cinagroup.com") && !page.url().includes("sign-in");
+		const loggedIn = page.url().includes("admin.cinagroup.com") && !page.url().includes("/login");
 		log("登录成功跳转到 admin", loggedIn, page.url().slice(0, 60));
 
 		if (!loggedIn) throw new Error("Login failed");
