@@ -7,6 +7,7 @@ import {
 	useReactTable,
 	type ColumnDef,
 } from "@tanstack/react-table";
+import { Search } from "lucide-react";
 import { DataTable } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,9 +38,10 @@ export default function AuditPage() {
 	const [category, setCategory] = useState("all");
 	const [result, setResult] = useState("all");
 	const [dateRange, setDateRange] = useState("all");
+	const [search, setSearch] = useState("");
 
 	const { data, isFetching } = useQuery({
-		queryKey: ["audit", category, result, dateRange],
+		queryKey: ["audit", category, result, dateRange, search],
 		queryFn: async () => {
 			const now = new Date();
 			const qs = new URLSearchParams({
@@ -47,7 +49,6 @@ export default function AuditPage() {
 				...(category !== "all" && { category }),
 				...(result !== "all" && { result }),
 			});
-			// Add date range filter
 			if (dateRange !== "all") {
 				const days = parseInt(dateRange, 10);
 				const start = new Date(now);
@@ -59,7 +60,19 @@ export default function AuditPage() {
 				ok: boolean;
 				data?: { rows: AuditLogDTO[] };
 			};
-			return d.ok ? d.data?.rows ?? [] : [];
+			let rows = d.ok ? d.data?.rows ?? [] : [];
+			// Client-side search filter (IP, actor, action, target)
+			if (search.trim()) {
+				const q = search.toLowerCase();
+				rows = rows.filter(r =>
+					(r.actorIp ?? "").toLowerCase().includes(q) ||
+					(r.actorId ?? "").toLowerCase().includes(q) ||
+					(r.action ?? "").toLowerCase().includes(q) ||
+					(r.targetId ?? "").toLowerCase().includes(q) ||
+					(r.category ?? "").toLowerCase().includes(q)
+				);
+			}
+			return rows;
 		},
 	});
 
@@ -142,6 +155,16 @@ export default function AuditPage() {
 						<SelectItem value="30">{t("audit.last30d")}</SelectItem>
 					</SelectContent>
 				</Select>
+				<div className="relative flex-1">
+					<Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-mute" />
+					<input
+						type="text"
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+						placeholder={t("common.search")}
+						className="h-10 w-full rounded-[var(--radius-sm)] border border-hairline bg-canvas pl-9 pr-3 text-[14px] text-ink placeholder:text-mute focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+					/>
+				</div>
 			</div>
 			<DataTable
 				table={table}
