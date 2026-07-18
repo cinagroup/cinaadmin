@@ -46,7 +46,7 @@ describe("resolveAdminSession", () => {
 			),
 		);
 		const req = new Request("https://admin.test/api/x", {
-			headers: { cookie: "s=1" },
+			headers: { cookie: "__Secure-cinaauth.session_token=test-token" },
 		});
 		const session = await resolveAdminSession(req);
 		expect(session?.userId).toBe("u1");

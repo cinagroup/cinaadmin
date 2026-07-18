@@ -19,7 +19,7 @@ const PUBLIC_PATHS = ["/login", "/sign-in", "/api/auth", "/_next", "/favicon.ico
  * This keeps navigation instant while access control remains two-layered
  * (edge cookie gate + handler role check).
  */
-const SESSION_COOKIE = "__Secure-cinaauth.session_data";
+const SESSION_COOKIE = "__Secure-cinaauth.session_token";
 
 export async function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;

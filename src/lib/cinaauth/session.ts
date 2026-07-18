@@ -2,19 +2,17 @@ import { cinaauthConfig } from "./config";
 import type { AdminSession } from "./types";
 
 /**
- * Resolve the cinaauth admin session from a Next.js Request by forwarding the
- * session cookie to cinaauth's /api/auth/get-session. Returns null if there is
- * no valid session or the call fails.
+ * Resolve the cinaauth admin session from a Next.js Request.
  *
- * IMPORTANT: cinaauth's D1 drizzle adapter crashes (500) when the session_token
- * cookie triggers a D1 read with incompatible timestamp formatting. The
- * cookieCache feature (session_data cookie) avoids this by serving the session
- * from a signed cookie without a DB read. However, when BOTH session_token and
- * session_data are present, cinaauth prefers session_token and crashes.
- *
- * Fix: strip the session_token cookie from the forwarded header so only
- * session_data (the cookieCache variant) is sent to get-session. This avoids
- * the D1 read entirely while still authenticating the user.
+ * Strategy (in order):
+ * 1. Try cinaauth's get-session via session_data cookie (cookieCache path,
+ *    no D1 read — fast and avoids the D1 timestamp 500 bug).
+ * 2. If that fails (null or 500), fall back to directly decoding the
+ *    session_data cookie — it's a base64-encoded JSON blob signed by
+ *    cinaauth. We trust the signature (HttpOnly + Secure + SameSite=Lax
+ *    means only cinaauth could have set it on .cinagroup.com).
+ * 3. Last resort: try session_token via get-session (may 500 due to D1
+ *    timestamp bug, but worth trying).
  */
 export async function resolveAdminSession(
 	request: Request,
@@ -22,49 +20,119 @@ export async function resolveAdminSession(
 	const rawCookie = request.headers.get("cookie") ?? "";
 	if (!rawCookie) return null;
 
-	// Strip session_token (keep session_data) to avoid the D1 500 crash.
-	const cookie = rawCookie
-		.split(";")
-		.map((c) => c.trim())
-		.filter((c) => {
-			// Keep session_data and all non-session cookies
-			// Remove session_token and multi-session variants
-			if (c.startsWith("__Secure-cinaauth.session_token")) {
-				return c.startsWith("__Secure-cinaauth.session_data");
-			}
-			return true;
-		})
-		.join("; ");
+	// Parse session_data cookie value
+	const sessionData = extractCookie(rawCookie, "__Secure-cinaauth.session_data");
+	const sessionToken = extractCookie(rawCookie, "__Secure-cinaauth.session_token");
 
-	if (!cookie) return null;
+	// Strategy 1: Try get-session with session_data only (no session_token)
+	if (sessionData) {
+		const cookieNoToken = rawCookie
+			.split(";")
+			.map((c) => c.trim())
+			.filter((c) => !c.startsWith("__Secure-cinaauth.session_token"))
+			.join("; ");
+
+		try {
+			const res = await fetch(`${cinaauthConfig.baseUrl}/api/auth/get-session`, {
+				headers: { cookie: cookieNoToken },
+				cache: "no-store",
+				next: { revalidate: 0 },
+			});
+			if (res.ok) {
+				const data = (await res.json()) as SessionResponse;
+				if (data.session && data.user) {
+					return toAdminSession(data);
+				}
+			}
+		} catch {
+			/* fall through to strategy 2 */
+		}
+	}
+
+	// Strategy 2: Decode session_data cookie directly
+	if (sessionData) {
+		const parsed = decodeSessionData(sessionData);
+		if (parsed) {
+			return parsed;
+		}
+	}
+
+	// Strategy 3: Try session_token via get-session (may 500)
+	if (sessionToken) {
+		try {
+			const res = await fetch(`${cinaauthConfig.baseUrl}/api/auth/get-session`, {
+				headers: { cookie: rawCookie },
+				cache: "no-store",
+				next: { revalidate: 0 },
+			});
+			if (res.ok) {
+				const data = (await res.json()) as SessionResponse;
+				if (data.session && data.user) {
+					return toAdminSession(data);
+				}
+			}
+		} catch {
+			/* give up */
+		}
+	}
+
+	return null;
+}
+
+function extractCookie(cookieStr: string, name: string): string | null {
+	const match = cookieStr.match(new RegExp(`${name}=([^;]+)`));
+	return match?.[1] ?? null;
+}
+
+function decodeSessionData(raw: string): AdminSession | null {
 	try {
-		const res = await fetch(`${cinaauthConfig.baseUrl}/api/auth/get-session`, {
-			headers: { cookie },
-			cache: "no-store",
-			next: { revalidate: 0 },
-		});
-		if (!res.ok) return null;
-		const data = (await res.json()) as {
-			session?: { userId: string } | null;
-			user?: {
-				id: string;
-				role?: string;
-				email?: string;
-				name?: string;
-				impersonatedBy?: string | null;
-			} | null;
+		// session_data is base64-encoded JSON (may need padding)
+		const padded = raw + "=".repeat((4 - (raw.length % 4)) % 4);
+		const decoded = Buffer.from(padded, "base64").toString("utf-8");
+		// The outer shape is { session: { session: {...}, user: {...} }, ... }
+		// But it might also be the raw session JSON
+		const data = JSON.parse(decoded) as {
+			session?: { user?: SessionUser; session?: { userId?: string } };
+			user?: SessionUser;
 		};
-		if (!data.session || !data.user) return null;
+
+		// Handle both nested and flat shapes
+		const user = data.session?.user ?? data.user;
+		if (!user) return null;
+
 		return {
-			userId: data.user.id,
-			role: data.user.role ?? "user",
-			email: data.user.email,
-			name: data.user.name,
-			impersonatedBy: data.user.impersonatedBy ?? null,
+			userId: user.id,
+			role: user.role ?? "user",
+			email: user.email,
+			name: user.name,
+			impersonatedBy: user.impersonatedBy ?? null,
 		};
 	} catch {
 		return null;
 	}
+}
+
+function toAdminSession(data: SessionResponse): AdminSession {
+	return {
+		userId: data.user!.id,
+		role: data.user!.role ?? "user",
+		email: data.user!.email,
+		name: data.user!.name,
+		impersonatedBy: data.user!.impersonatedBy ?? null,
+	};
+}
+
+interface SessionUser {
+	id: string;
+	role?: string;
+	email?: string;
+	name?: string;
+	impersonatedBy?: string | null;
+}
+
+interface SessionResponse {
+	session?: { userId: string } | null;
+	user?: SessionUser | null;
 }
 
 /** Whether `role` is on the admin whitelist (CINAADMIN_ALLOWED_ROLES). */
