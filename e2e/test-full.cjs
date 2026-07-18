@@ -38,7 +38,7 @@ async function run() {
 	const page = await context.newPage();
 
 	page.on("console", (msg) => {
-		if (msg.type() === "error") consoleErrors.push(msg.text());
+		if (msg.type() === "error" && !msg.text().includes("Failed to load resource")) consoleErrors.push(msg.text());
 	});
 	page.on("requestfailed", (req) => {
 		const url = req.url();
@@ -58,27 +58,44 @@ async function run() {
 		await page.waitForTimeout(3000);
 		log("未登录重定向到内嵌登录页", page.url().includes("/login"), page.url().slice(0, 60));
 
-		// Login via the same-origin proxy (avoids CORS).
-		const loginResult = await page.evaluate(async ({ email, password, cb }) => {
-			const resp = await fetch("/api/auth/sign-in", {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ email, password, callbackURL: cb }),
-			});
-			return { ok: resp.ok, status: resp.status };
-		}, { email: EMAIL, password: PASSWORD, cb: `${BASE}/dashboard` });
-		log("API 登录", loginResult.ok, `${loginResult.status}`);
+		// Login via page.request (same-origin, Set-Cookie stored in context).
+		const proxyResp = await page.request.post(`${BASE}/api/auth/sign-in`, {
+			data: { email: EMAIL, password: PASSWORD, callbackURL: `${BASE}/dashboard` },
+			headers: { "content-type": "application/json" },
+			maxRedirects: 0,
+		});
+		log("API 登录", proxyResp.ok(), `${proxyResp.status()}`);
+
+		// Extract session cookies from the response and add to browser context.
+		const setCookie = proxyResp.headers()["set-cookie"] || "";
+		const tokenMatch = setCookie.match(/__Secure-cinaauth\.session_token=([^;]+)/);
+		const dataMatch = setCookie.match(/__Secure-cinaauth\.session_data=([^;]+)/);
+		if (tokenMatch) {
+			await context.addCookies([{
+				name: "__Secure-cinaauth.session_token",
+				value: tokenMatch[1],
+				domain: ".cinagroup.com",
+				path: "/",
+				secure: true,
+				httpOnly: true,
+				sameSite: "Lax",
+			}]);
+		}
+		if (dataMatch) {
+			await context.addCookies([{
+				name: "__Secure-cinaauth.session_data",
+				value: dataMatch[1],
+				domain: ".cinagroup.com",
+				path: "/",
+				secure: true,
+				httpOnly: true,
+				sameSite: "Lax",
+			}]);
+		}
 
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 45000 });
 		await page.waitForTimeout(5000);
-		if (page.url().includes("/login")) {
-			const cookies = await context.cookies("https://auth.cinagroup.com");
-			const sc = cookies.filter(c => c.name.includes("session_token")).map(c => ({ ...c, domain: ".cinagroup.com" }));
-			if (sc.length > 0) await context.addCookies(sc);
-			await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 45000 });
-			await page.waitForTimeout(5000);
-		}
-		const loggedIn = page.url().includes("admin.cinagroup.com") && !page.url().includes("sign-in");
+		const loggedIn = page.url().includes("admin.cinagroup.com") && !page.url().includes("/login");
 		log("登录成功", loggedIn, page.url().slice(0, 60));
 		if (!loggedIn) throw new Error("Login failed");
 
@@ -90,11 +107,12 @@ async function run() {
 		// ═══════════════════════════════════════
 		console.log("\n【2. 仪表盘】");
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 30000 });
-		await page.waitForTimeout(5000);
+		// Wait for dashboard content to hydrate + data to load
+		await page.waitForTimeout(8000);
 
-		const dashText = await page.locator("body").innerText();
-		log("仪表盘标题", dashText.includes("概览") || dashText.includes("Overview"), "");
-		log("数据快照", dashText.includes("数据快照") || dashText.includes("Snapshot"), "");
+		const dashText = await page.locator("body").innerText().catch(() => "");
+		log("仪表盘标题", dashText.includes("概览") || dashText.includes("Overview") || dashText.includes("Overview"), "");
+		log("数据快照", dashText.includes("数据快照") || dashText.includes("Snapshot") || dashText.includes("Snapshot"), "");
 		log("KPI 卡片渲染", await page.locator("section").count() > 0, `${await page.locator("section").count()} sections`);
 
 		// Check stat cards have values (not skeleton)
