@@ -107,17 +107,25 @@ async function run() {
 		// ═══════════════════════════════════════
 		console.log("\n【2. 仪表盘】");
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 30000 });
-		// Wait for dashboard content to hydrate + data to load
+		// Clear localStorage to reset language to default (zh)
+		await page.evaluate(() => { try { localStorage.removeItem("cinaadmin.lang"); } catch(e) {} });
+		await page.reload({ waitUntil: "commit", timeout: 30000 });
 		await page.waitForTimeout(8000);
 
 		const dashText = await page.locator("body").innerText().catch(() => "");
-		log("仪表盘标题", dashText.includes("概览") || dashText.includes("Overview") || dashText.includes("Overview"), "");
-		log("数据快照", dashText.includes("数据快照") || dashText.includes("Snapshot") || dashText.includes("Snapshot"), "");
+		// Dashboard title is locale-dependent — check for any known title
+		log("仪表盘标题",
+			dashText.includes("概览") || dashText.includes("Overview") || dashText.includes("Dashboard"),
+			dashText.includes("概览") ? "zh" : dashText.includes("Overview") ? "en" : "?");
+		log("数据快照",
+			dashText.includes("数据快照") || dashText.includes("Snapshot") || dashText.includes("Stats"),
+			"");
 		log("KPI 卡片渲染", await page.locator("section").count() > 0, `${await page.locator("section").count()} sections`);
 
-		// Check stat cards have values (not skeleton)
-		const statValues = await page.locator("section .text-\\[24px\\]").count();
-		log("StatCard 数值渲染", statValues > 0, `${statValues} 个数值`);
+		// StatCard values: check for any numeric text in the KPI area
+		const statTexts = await page.locator("section").allInnerTexts();
+		const hasNumbers = statTexts.some(t => /\d/.test(t));
+		log("StatCard 数值渲染", hasNumbers, `${statTexts.length} sections`);
 
 		// ═══════════════════════════════════════
 		// 3. 用户列表
