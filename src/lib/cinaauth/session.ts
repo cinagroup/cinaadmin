@@ -20,44 +20,18 @@ export async function resolveAdminSession(
 	const rawCookie = request.headers.get("cookie") ?? "";
 	if (!rawCookie) return null;
 
-	// Parse session_data cookie value
+	// Fastest path: decode session_data cookie directly (no network call).
+	// This avoids the D1 500 bug entirely.
 	const sessionData = extractCookie(rawCookie, "__Secure-cinaauth.session_data");
-	const sessionToken = extractCookie(rawCookie, "__Secure-cinaauth.session_token");
-
-	// Strategy 1: Try get-session with session_data only (no session_token)
-	if (sessionData) {
-		const cookieNoToken = rawCookie
-			.split(";")
-			.map((c) => c.trim())
-			.filter((c) => !c.startsWith("__Secure-cinaauth.session_token"))
-			.join("; ");
-
-		try {
-			const res = await fetch(`${cinaauthConfig.baseUrl}/api/auth/get-session`, {
-				headers: { cookie: cookieNoToken },
-				cache: "no-store",
-				next: { revalidate: 0 },
-			});
-			if (res.ok) {
-				const data = (await res.json()) as SessionResponse;
-				if (data.session && data.user) {
-					return toAdminSession(data);
-				}
-			}
-		} catch {
-			/* fall through to strategy 2 */
-		}
-	}
-
-	// Strategy 2: Decode session_data cookie directly
 	if (sessionData) {
 		const parsed = decodeSessionData(sessionData);
-		if (parsed) {
+		if (parsed && hasAdminRole(parsed.role)) {
 			return parsed;
 		}
 	}
 
-	// Strategy 3: Try session_token via get-session (may 500)
+	// Fallback: try get-session via network (may 500 due to D1 bug).
+	const sessionToken = extractCookie(rawCookie, "__Secure-cinaauth.session_token");
 	if (sessionToken) {
 		try {
 			const res = await fetch(`${cinaauthConfig.baseUrl}/api/auth/get-session`, {
