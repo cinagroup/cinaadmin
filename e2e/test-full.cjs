@@ -56,14 +56,14 @@ async function run() {
 		console.log("【1. 登录流程】");
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 30000 });
 		await page.waitForTimeout(3000);
-		log("未登录重定向到登录页", page.url().includes("demo-auth") || page.url().includes("sign-in"), page.url().slice(0, 60));
+		log("未登录重定向到内嵌登录页", page.url().includes("/login"), page.url().slice(0, 60));
 
+		// Login via the same-origin proxy (avoids CORS).
 		const loginResult = await page.evaluate(async ({ email, password, cb }) => {
-			const resp = await fetch("https://auth.cinagroup.com/api/auth/sign-in/email", {
+			const resp = await fetch("/api/auth/sign-in", {
 				method: "POST",
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({ email, password, callbackURL: cb }),
-				credentials: "include",
 			});
 			return { ok: resp.ok, status: resp.status };
 		}, { email: EMAIL, password: PASSWORD, cb: `${BASE}/dashboard` });
@@ -71,7 +71,7 @@ async function run() {
 
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 45000 });
 		await page.waitForTimeout(5000);
-		if (page.url().includes("sign-in")) {
+		if (page.url().includes("/login")) {
 			const cookies = await context.cookies("https://auth.cinagroup.com");
 			const sc = cookies.filter(c => c.name.includes("session_token")).map(c => ({ ...c, domain: ".cinagroup.com" }));
 			if (sc.length > 0) await context.addCookies(sc);

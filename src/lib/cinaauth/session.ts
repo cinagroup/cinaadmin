@@ -60,9 +60,10 @@ function extractCookie(cookieStr: string, name: string): string | null {
 
 function decodeSessionData(raw: string): AdminSession | null {
 	try {
-		// session_data is base64-encoded JSON (may need padding)
+		// session_data is base64-encoded JSON (may need padding).
+		// Use atob (available in both edge and node runtimes) instead of Buffer.
 		const padded = raw + "=".repeat((4 - (raw.length % 4)) % 4);
-		const decoded = Buffer.from(padded, "base64").toString("utf-8");
+		const decoded = atob(padded);
 		// The outer shape is { session: { session: {...}, user: {...} }, ... }
 		// But it might also be the raw session JSON
 		const data = JSON.parse(decoded) as {
