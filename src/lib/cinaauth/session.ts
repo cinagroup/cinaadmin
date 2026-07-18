@@ -6,12 +6,36 @@ import type { AdminSession } from "./types";
  * session cookie to cinaauth's /api/auth/get-session. Returns null if there is
  * no valid session or the call fails.
  *
- * Used by middleware and Route Handlers (second-layer access enforcement).
+ * IMPORTANT: cinaauth's D1 drizzle adapter crashes (500) when the session_token
+ * cookie triggers a D1 read with incompatible timestamp formatting. The
+ * cookieCache feature (session_data cookie) avoids this by serving the session
+ * from a signed cookie without a DB read. However, when BOTH session_token and
+ * session_data are present, cinaauth prefers session_token and crashes.
+ *
+ * Fix: strip the session_token cookie from the forwarded header so only
+ * session_data (the cookieCache variant) is sent to get-session. This avoids
+ * the D1 read entirely while still authenticating the user.
  */
 export async function resolveAdminSession(
 	request: Request,
 ): Promise<AdminSession | null> {
-	const cookie = request.headers.get("cookie") ?? "";
+	const rawCookie = request.headers.get("cookie") ?? "";
+	if (!rawCookie) return null;
+
+	// Strip session_token (keep session_data) to avoid the D1 500 crash.
+	const cookie = rawCookie
+		.split(";")
+		.map((c) => c.trim())
+		.filter((c) => {
+			// Keep session_data and all non-session cookies
+			// Remove session_token and multi-session variants
+			if (c.startsWith("__Secure-cinaauth.session_token")) {
+				return c.startsWith("__Secure-cinaauth.session_data");
+			}
+			return true;
+		})
+		.join("; ");
+
 	if (!cookie) return null;
 	try {
 		const res = await fetch(`${cinaauthConfig.baseUrl}/api/auth/get-session`, {

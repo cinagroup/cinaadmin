@@ -6,7 +6,7 @@ beforeEach(() => {
 	vi.stubEnv("CINAUTH_AUTH_URL", "https://auth-frontend.test");
 });
 
-const SESSION_COOKIE = "__Secure-cinaauth.session_token";
+const SESSION_COOKIE = "__Secure-cinaauth.session_data";
 
 /**
  * Build a NextRequest with an optional session cookie. The middleware now does
