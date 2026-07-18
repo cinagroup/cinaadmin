@@ -24,20 +24,7 @@ export async function cinaauthFetch<T>(
 	const headers: Record<string, string> = {
 		authorization: `Bearer ${cinaauthConfig.serviceKey}`,
 	};
-	if (opts.cookie) {
-		// Strip session_token cookies to avoid the D1 500 crash.
-		// Keep session_data (cookieCache) which serves get-session without DB.
-		headers.cookie = opts.cookie
-			.split(";")
-			.map((c) => c.trim())
-			.filter((c) => {
-				if (c.startsWith("__Secure-cinaauth.session_token")) {
-					return c.startsWith("__Secure-cinaauth.session_data");
-				}
-				return true;
-			})
-			.join("; ");
-	}
+	if (opts.cookie) headers.cookie = opts.cookie;
 	if (opts.body !== undefined) headers["content-type"] = "application/json";
 	// CinaAuth validates the Origin header on POST/PUT/DELETE requests (CSRF
 	// protection). Forward the auth Worker's own URL as the origin so it passes
