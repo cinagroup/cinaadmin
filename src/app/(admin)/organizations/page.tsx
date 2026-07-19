@@ -7,6 +7,7 @@ import {
 	useReactTable,
 	type ColumnDef,
 } from "@tanstack/react-table";
+import { toast } from "sonner";
 import { DataTable } from "@/components/data-table/data-table";
 import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -39,14 +40,19 @@ export default function OrganizationsPage() {
 
 	const create = async () => {
 		setCreating(true);
-		await fetch("/api/admin/organizations", {
+		const r = await fetch("/api/admin/organizations", {
 			method: "POST",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({ name, slug }),
 		});
 		setCreating(false);
-		setName("");
-		setSlug("");
+		if (r.ok) {
+			setName("");
+			setSlug("");
+		} else {
+			// Keep the form values so the admin can retry.
+			toast.error(t("toast.createFailed"));
+		}
 		await qc.invalidateQueries({ queryKey: ["organizations"] });
 	};
 

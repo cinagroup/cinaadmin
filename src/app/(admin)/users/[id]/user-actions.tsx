@@ -68,6 +68,8 @@ export function UserActions({
 							if (r.ok) {
 								toast.success(t("toast.unbanned"));
 								window.location.reload();
+							} else {
+								toast.error(t("toast.actionFailed"));
 							}
 						}}
 					>
@@ -149,6 +151,8 @@ export function UserActions({
 						if (r.ok) {
 							toast.success(t("toast.impersonating"));
 							window.location.reload();
+						} else {
+							toast.error(t("toast.actionFailed"));
 						}
 					}}
 				/>

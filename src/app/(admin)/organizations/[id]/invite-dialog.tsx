@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,13 +24,20 @@ export function InviteDialog({ orgId }: { orgId: string }) {
 
 	const invite = async () => {
 		setInviting(true);
-		await fetch(`/api/admin/organizations/${orgId}/invite`, {
+		const r = await fetch(`/api/admin/organizations/${orgId}/invite`, {
 			method: "POST",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({ email, role }),
 		});
 		setInviting(false);
-		setEmail("");
+		// A failed invite must not look like a sent one — keep the email and
+		// tell the admin, instead of silently clearing the form.
+		if (r.ok) {
+			setEmail("");
+			toast.success(t("toast.inviteSent"));
+		} else {
+			toast.error(t("toast.actionFailed"));
+		}
 		await qc.invalidateQueries({ queryKey: ["organization-members", orgId] });
 	};
 

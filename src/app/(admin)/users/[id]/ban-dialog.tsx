@@ -39,6 +39,11 @@ export function BanDialog({ userId }: { userId: string }) {
 		if (r.ok) {
 			toast.success(t("toast.banned"));
 			window.location.reload();
+		} else {
+			const d = (await r.json().catch(() => null)) as {
+				error?: { message?: string };
+			} | null;
+			toast.error(d?.error?.message ?? t("toast.actionFailed"));
 		}
 	};
 

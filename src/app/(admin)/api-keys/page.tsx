@@ -67,30 +67,37 @@ export default function ApiKeysPage() {
 			body: JSON.stringify({ name, prefixes: [scope] }),
 		});
 		setCreating(false);
-		setName("");
 		// Capture the generated key — it's only returned once at creation.
 		const d = (await r.json().catch(() => ({}))) as {
 			ok?: boolean;
 			data?: { key?: string; apiKeys?: Array<{ key?: string }> };
 		};
 		const key = d.data?.key ?? d.data?.apiKeys?.[0]?.key;
-		if (key) {
-			setCreatedKey(key);
+		if (!r.ok || !d.ok) {
+			// Keep the typed name so the admin can retry.
+			toast.error(t("toast.createFailed"));
+		} else {
+			setName("");
+			if (key) {
+				setCreatedKey(key);
+			}
 		}
 		await qc.invalidateQueries({ queryKey: ["api-keys"] });
 	};
 
 	const toggleKey = async (id: string, enabled: boolean) => {
-		await fetch(`/api/admin/api-keys/${id}/toggle`, {
+		const r = await fetch(`/api/admin/api-keys/${id}/toggle`, {
 			method: "POST",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({ enabled }),
 		});
+		if (!r.ok) toast.error(t("toast.actionFailed"));
 		await qc.invalidateQueries({ queryKey: ["api-keys"] });
 	};
 
 	const deleteKey = async (id: string) => {
-		await fetch(`/api/admin/api-keys/${id}`, { method: "DELETE" });
+		const r = await fetch(`/api/admin/api-keys/${id}`, { method: "DELETE" });
+		if (!r.ok) toast.error(t("toast.deleteFailed"));
 		await qc.invalidateQueries({ queryKey: ["api-keys"] });
 	};
 
@@ -102,6 +109,10 @@ export default function ApiKeysPage() {
 		};
 		if (d.data?.key) {
 			setCreatedKey(d.data.key);
+		} else {
+			// A rotate that returns no key means the old key may still be live
+			// and no replacement was issued — the admin must know it failed.
+			toast.error(t("toast.actionFailed"));
 		}
 		await qc.invalidateQueries({ queryKey: ["api-keys"] });
 	};

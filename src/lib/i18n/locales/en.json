@@ -180,6 +180,8 @@
 	"error.retry": "Retry",
 	"toast.saved": "Saved",
 	"toast.saveFailed": "Save failed",
+	"toast.actionFailed": "Operation failed",
+	"toast.inviteSent": "Invitation sent",
 	"toast.banned": "User banned",
 	"toast.unbanned": "User unbanned",
 	"toast.deleted": "User deleted",

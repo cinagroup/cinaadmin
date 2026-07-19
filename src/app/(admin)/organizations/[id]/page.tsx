@@ -75,9 +75,10 @@ export default function OrganizationDetailPage() {
 	const members: MemberDTO[] = membersData ?? [];
 
 	const removeMember = async (memberId: string) => {
-		await fetch(`/api/admin/organizations/${orgId}/members/${memberId}`, {
+		const r = await fetch(`/api/admin/organizations/${orgId}/members/${memberId}`, {
 			method: "DELETE",
 		});
+		if (!r.ok) toast.error(t("toast.deleteFailed"));
 		await qc.invalidateQueries({ queryKey: ["organization-members", orgId] });
 	};
 

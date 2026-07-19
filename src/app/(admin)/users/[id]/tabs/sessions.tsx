@@ -30,12 +30,18 @@ export function SessionsTab({ userId }: { userId: string }) {
 	const sessions = data ?? [];
 
 	const revokeAll = async () => {
-		await fetch("/api/admin/sessions/revoke", {
+		const r = await fetch("/api/admin/sessions/revoke", {
 			method: "POST",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({ userId }),
 		});
-		toast.success(t("toast.sessionsRevoked"));
+		// Never report success for a failed revoke — an admin cutting off a
+		// compromised account must know if the sessions are actually dead.
+		if (r.ok) {
+			toast.success(t("toast.sessionsRevoked"));
+		} else {
+			toast.error(t("toast.actionFailed"));
+		}
 		await refetch();
 	};
 

@@ -6,6 +6,7 @@ import {
 	useReactTable,
 	type ColumnDef,
 } from "@tanstack/react-table";
+import { toast } from "sonner";
 import { DataTable } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -30,11 +31,16 @@ export function WalletsTab({ userId }: { userId: string }) {
 	const wallets = data ?? [];
 
 	const unbind = async (w: WalletDTO) => {
-		await fetch(`/api/admin/users/${userId}/wallets/${w.address}`, {
+		const r = await fetch(`/api/admin/users/${userId}/wallets/${w.address}`, {
 			method: "DELETE",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({ chainId: w.chainId }),
 		});
+		if (r.ok) {
+			toast.success(t("toast.walletUnbound"));
+		} else {
+			toast.error(t("toast.actionFailed"));
+		}
 		await refetch();
 	};
 
