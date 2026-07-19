@@ -279,5 +279,18 @@
 	"organizations.cancelInvite": "取消邀请",
 	"organizations.inviteEmail": "邮箱",
 	"organizations.inviteRole": "角色",
-	"organizations.inviteStatus": "状态"
+	"organizations.inviteStatus": "状态",
+	"organizations.teams": "团队",
+	"organizations.noTeams": "暂无团队",
+	"organizations.createTeam": "创建团队",
+	"organizations.teamName": "团队名称",
+	"organizations.teamMembers": "成员",
+	"organizations.addMember": "添加成员",
+	"organizations.removeTeamMember": "移除",
+	"organizations.deleteTeam": "删除团队",
+	"organizations.teamMemberUserId": "用户 ID",
+	"toast.teamCreated": "团队已创建",
+	"toast.teamDeleted": "团队已删除",
+	"toast.memberAdded": "成员已添加",
+	"toast.memberRemoved": "成员已移除"
 }

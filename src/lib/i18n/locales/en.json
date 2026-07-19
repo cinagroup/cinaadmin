@@ -279,5 +279,18 @@
 	"organizations.cancelInvite": "Cancel Invitation",
 	"organizations.inviteEmail": "Email",
 	"organizations.inviteRole": "Role",
-	"organizations.inviteStatus": "Status"
+	"organizations.inviteStatus": "Status",
+	"organizations.teams": "Teams",
+	"organizations.noTeams": "No teams",
+	"organizations.createTeam": "Create Team",
+	"organizations.teamName": "Team Name",
+	"organizations.teamMembers": "Members",
+	"organizations.addMember": "Add Member",
+	"organizations.removeTeamMember": "Remove",
+	"organizations.deleteTeam": "Delete Team",
+	"organizations.teamMemberUserId": "User ID",
+	"toast.teamCreated": "Team created",
+	"toast.teamDeleted": "Team deleted",
+	"toast.memberAdded": "Member added",
+	"toast.memberRemoved": "Member removed"
 }
