@@ -3,8 +3,9 @@
 export const runtime = "edge";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
 	getCoreRowModel,
 	useReactTable,
@@ -15,8 +16,22 @@ import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import { InviteDialog } from "./invite-dialog";
@@ -34,6 +49,10 @@ export default function OrganizationDetailPage() {
 	const params = useParams<{ id: string }>();
 	const orgId = params.id;
 	const qc = useQueryClient();
+	const router = useRouter();
+	const [editOpen, setEditOpen] = useState(false);
+	const [editName, setEditName] = useState("");
+	const [editSlug, setEditSlug] = useState("");
 
 	const { data: org, isFetching } = useQuery({
 		queryKey: ["organization", orgId],
@@ -62,6 +81,41 @@ export default function OrganizationDetailPage() {
 		await qc.invalidateQueries({ queryKey: ["organization-members", orgId] });
 	};
 
+	const changeRole = async (memberId: string, role: string) => {
+		const r = await fetch(`/api/admin/organizations/${orgId}/members/${memberId}/role`, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ role }),
+		});
+		if (r.ok) {
+			toast.success(t("toast.roleChanged"));
+			await qc.invalidateQueries({ queryKey: ["organization-members", orgId] });
+		}
+	};
+
+	const saveOrg = async () => {
+		const r = await fetch(`/api/admin/organizations/${orgId}/update`, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ name: editName, slug: editSlug }),
+		});
+		if (r.ok) {
+			toast.success(t("toast.orgUpdated"));
+			setEditOpen(false);
+			await qc.invalidateQueries({ queryKey: ["organization", orgId] });
+		}
+	};
+
+	const deleteOrg = async () => {
+		const r = await fetch(`/api/admin/organizations/${orgId}/delete`, {
+			method: "POST",
+		});
+		if (r.ok) {
+			toast.success(t("toast.orgDeleted"));
+			router.push("/organizations");
+		}
+	};
+
 	const memberColumns: ColumnDef<MemberDTO>[] = [
 		{
 			accessorKey: "user.email",
@@ -82,10 +136,24 @@ export default function OrganizationDetailPage() {
 			header: "Role",
 			cell: ({ row }) => {
 				const role = row.original.role;
+				if (role === "owner") {
+					return <Badge variant="success">{role}</Badge>;
+				}
 				return (
-					<Badge variant={role === "owner" ? "success" : "default"}>
-						{role}
-					</Badge>
+					<RoleGuard allow={["super_admin"]} fallback={<Badge>{role}</Badge>}>
+						<Select
+							value={role}
+							onValueChange={(v) => changeRole(row.original.id, v)}
+						>
+							<SelectTrigger className="h-7 w-[110px] text-[13px]">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="admin">admin</SelectItem>
+								<SelectItem value="member">member</SelectItem>
+							</SelectContent>
+						</Select>
+					</RoleGuard>
 				);
 			},
 		},
@@ -118,9 +186,28 @@ export default function OrganizationDetailPage() {
 
 	return (
 		<div>
-			<PageHeader title={org?.name ?? t("common.loading")}>
+			<PageHeader title={org?.name ?? t("common.loading")} backHref="/organizations" backLabel={t("nav.organizations")}>
 				<RoleGuard allow={["super_admin"]}>
 					<InviteDialog orgId={orgId} />
+					<Button
+						variant="secondary"
+						size="sm"
+						onClick={() => {
+							setEditName(org?.name ?? "");
+							setEditSlug(org?.slug ?? "");
+							setEditOpen(true);
+						}}
+					>
+						{t("organizations.editOrg")}
+					</Button>
+					<ConfirmDialog
+						trigger={<Button variant="danger" size="sm">{t("organizations.deleteOrg")}</Button>}
+						title={t("organizations.deleteOrg")}
+						description={t("organizations.deleteConfirm")}
+						danger
+						confirmText={t("common.delete")}
+						onConfirm={deleteOrg}
+					/>
 				</RoleGuard>
 			</PageHeader>
 			<div className="mb-4 flex items-center gap-4 text-sm text-ink-light">
@@ -133,6 +220,41 @@ export default function OrganizationDetailPage() {
 					isFetching ? t("common.loading") : t("organizations.noMembers")
 				}
 			/>
+
+			{/* Edit organization dialog */}
+			<Dialog open={editOpen} onOpenChange={setEditOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>{t("organizations.editOrg")}</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4">
+						<div className="space-y-1.5">
+							<Label htmlFor="org-name">{t("organizations.orgName")}</Label>
+							<Input
+								id="org-name"
+								value={editName}
+								onChange={(e) => setEditName(e.target.value)}
+							/>
+						</div>
+						<div className="space-y-1.5">
+							<Label htmlFor="org-slug">{t("organizations.slug")}</Label>
+							<Input
+								id="org-slug"
+								value={editSlug}
+								onChange={(e) => setEditSlug(e.target.value)}
+							/>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button variant="secondary" size="sm" onClick={() => setEditOpen(false)}>
+							{t("common.cancel")}
+						</Button>
+						<Button variant="primary" size="sm" onClick={saveOrg}>
+							{t("organizations.save")}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

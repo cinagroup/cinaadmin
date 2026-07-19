@@ -5,10 +5,10 @@ import { cinaauthFetch } from "@/lib/cinaauth/client";
 /**
  * GET /api/admin/settings/security — return the current security policy view.
  *
- * Fetches the live rate-limit configuration from cinaauth's
- * /admin/rate-limit-config endpoint. Other policy fields (otpTtl,
- * lockoutThreshold, etc.) are documented defaults that are set at deploy
- * time via environment variables and CinaAuth options.
+ * Returns compile-time/deploy-time constants as read-only display values.
+ * Rate-limit configuration is set in cinaauth's auth.ts and not exposed
+ * via an API endpoint (the previous /admin/rate-limit-config call was a
+ * dead reference — no such endpoint exists in cinaauth).
  */
 export async function GET(request: NextRequest) {
 	const session = await resolveAdminSession(request);
@@ -16,36 +16,25 @@ export async function GET(request: NextRequest) {
 		return NextResponse.json({ ok: false }, { status: 403 });
 	}
 
-	// Fetch live rate-limit config from the auth Worker.
-	const cookie = request.headers.get("cookie") ?? "";
-	const rlRes = await cinaauthFetch<{
-		enabled: boolean;
-		window: number;
-		max: number;
-		storage: string;
-		customRules: Record<string, unknown>;
-	}>(`/admin/rate-limit-config`, { cookie });
-
-	const rateLimit = rlRes.ok ? rlRes.data : null;
-
 	return NextResponse.json({
 		ok: true,
 		data: {
-			rateLimit: rateLimit
-				? {
-						enabled: rateLimit.enabled,
-						window: rateLimit.window,
-						max: rateLimit.max,
-						storage: rateLimit.storage,
-					}
-				: null,
-			// These are compile-time / deploy-time constants (read-only).
+			rateLimit: {
+				enabled: true,
+				window: 60,
+				max: 300,
+				storage: "memory (per-isolate)",
+			},
 			otpTtl: "15m",
 			otpDailyMax: 10,
 			lockoutThreshold: 5,
 			banDuration: "permanent",
 			force2fa: { cinacoin: false, cinatoken: false },
-			trustedOrigins: [] as string[],
+			trustedOrigins: [
+				"https://auth.cinagroup.com",
+				"https://demo-auth.cinagroup.com",
+				"https://admin.cinagroup.com",
+			],
 		},
 	});
 }

@@ -157,7 +157,7 @@
 	"organizations.col.slug": "Slug",
 	"organizations.col.createdAt": "Created",
 	"organizations.name": "Organization name",
-	"organizations.slug": "slug (unique identifier)",
+	"organizations.slug": "Slug",
 	"organizations.empty": "No organizations",
 	"apiKeys.title": "API Keys",
 	"apiKeys.create": "New Key",
@@ -218,7 +218,7 @@
 	"toast.reset2fa": "2FA reset successfully",
 	"organizations.invite": "Invite Member",
 	"organizations.removeMember": "Remove Member",
-	"organizations.noMembers": "No members yet",
+	"organizations.noMembers": "No members",
 	"apiKeys.delete.title": "Delete API Key",
 	"userDetail.profile.markVerified": "Mark verified",
 	"userDetail.actions.impersonateBlocked": "Cannot impersonate admin accounts",
@@ -255,5 +255,14 @@
 	"userDetail.devices.title": "Device Sessions",
 	"userDetail.devices.revoke": "Revoke",
 	"userDetail.devices.empty": "No device sessions",
-	"userDetail.sendVerification.phoneNumber": "Phone OTP"
+	"userDetail.sendVerification.phoneNumber": "Phone OTP",
+	"organizations.editOrg": "Edit Organization",
+	"organizations.deleteOrg": "Delete Organization",
+	"organizations.deleteConfirm": "This action is irreversible. The organization and all its data will be permanently deleted.",
+	"organizations.changeRole": "Change Role",
+	"organizations.orgName": "Organization Name",
+	"organizations.save": "Save",
+	"toast.orgUpdated": "Organization updated",
+	"toast.orgDeleted": "Organization deleted",
+	"toast.roleChanged": "Role changed"
 }
