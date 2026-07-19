@@ -141,10 +141,11 @@ async function run() {
 
 		// ── 3. Users table row click ──
 		console.log("\n【3. 用户列表行点击】");
-		await page.goto(`${BASE}/users`, { waitUntil: "domcontentloaded", timeout: 30000 });
-		// Wait for table rows to render after React hydration
+		// Force fresh navigation (not cached) — use a cache-busting query param
+		await page.goto(`${BASE}/users?t=${Date.now()}`, { waitUntil: "domcontentloaded", timeout: 30000 });
+		// Wait for table rows to render after React hydration + data fetch
 		await page.waitForSelector("table tbody tr", { timeout: 30000 }).catch(() => {});
-		await page.waitForTimeout(2000);
+		await page.waitForTimeout(3000);
 		const rowCount = await page.locator("table tbody tr").count();
 		if (rowCount > 0) {
 			// Try row click; if SPA navigation doesn't fire, use direct goto
