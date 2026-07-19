@@ -219,7 +219,7 @@
 	"organizations.invite": "Invite Member",
 	"organizations.removeMember": "Remove Member",
 	"organizations.noMembers": "No members",
-	"apiKeys.delete.title": "Delete API Key",
+	"apiKeys.delete.title": "Delete Key",
 	"userDetail.profile.markVerified": "Mark verified",
 	"userDetail.actions.impersonateBlocked": "Cannot impersonate admin accounts",
 	"security.readOnly": "Read-only",
@@ -271,5 +271,13 @@
 	"passkeys.col.createdAt": "Created",
 	"passkeys.col.lastUsedAt": "Last Used",
 	"passkeys.revoke": "Revoke",
-	"passkeys.empty": "No passkeys"
+	"passkeys.empty": "No passkeys",
+	"common.edit": "Edit",
+	"apiKeys.edit.title": "Edit Key",
+	"apiKeys.edit.expiresHint": "Clear date = never expires",
+	"organizations.invitations": "Pending Invitations",
+	"organizations.cancelInvite": "Cancel Invitation",
+	"organizations.inviteEmail": "Email",
+	"organizations.inviteRole": "Role",
+	"organizations.inviteStatus": "Status"
 }

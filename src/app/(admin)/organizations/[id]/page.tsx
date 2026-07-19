@@ -221,7 +221,44 @@ export default function OrganizationDetailPage() {
 				}
 			/>
 
-			{/* Edit organization dialog */}
+			{/* Pending invitations */}
+			{org?.invitations && org.invitations.length > 0 && (
+				<div className="mt-6">
+					<h3 className="mb-3 font-mono text-[12px] uppercase tracking-wide text-mute">
+						{t("organizations.invitations")} ({org.invitations.length})
+					</h3>
+					<div className="space-y-2">
+						{org.invitations.map((inv: Record<string, unknown>) => (
+							<div key={String(inv.id)} className="flex items-center justify-between rounded-[var(--radius-sm)] border border-hairline bg-canvas px-4 py-2">
+								<div className="flex items-center gap-3 text-[14px]">
+									<span className="font-medium text-ink">{String(inv.email ?? "—")}</span>
+									<Badge variant="muted">{String(inv.role ?? "member")}</Badge>
+									<span className="text-mute">{String(inv.status ?? "pending")}</span>
+								</div>
+								<RoleGuard allow={["super_admin"]}>
+									<ConfirmDialog
+										trigger={
+											<Button variant="ghost" size="sm" className="text-danger">
+												{t("organizations.cancelInvite")}
+											</Button>
+										}
+										title={t("organizations.cancelInvite")}
+										onConfirm={async () => {
+											await fetch(`/api/admin/organizations/${orgId}/invitations/${inv.id}`, {
+												method: "DELETE",
+											});
+											toast.success(t("organizations.cancelInvite"));
+											await qc.invalidateQueries({ queryKey: ["organization", orgId] });
+										}}
+									/>
+								</RoleGuard>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+
+				{/* Edit organization dialog */}
 			<Dialog open={editOpen} onOpenChange={setEditOpen}>
 				<DialogContent>
 					<DialogHeader>

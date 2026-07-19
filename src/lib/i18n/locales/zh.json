@@ -270,5 +270,14 @@
 	"passkeys.col.createdAt": "创建时间",
 	"passkeys.col.lastUsedAt": "最近使用",
 	"passkeys.revoke": "吊销",
-	"passkeys.empty": "无通行密钥"
+	"passkeys.empty": "无通行密钥",
+	"common.edit": "编辑",
+	"apiKeys.edit.title": "编辑密钥",
+	"apiKeys.edit.expiresHint": "清空日期 = 永不过期",
+	"apiKeys.delete.title": "删除密钥",
+	"organizations.invitations": "待处理邀请",
+	"organizations.cancelInvite": "取消邀请",
+	"organizations.inviteEmail": "邮箱",
+	"organizations.inviteRole": "角色",
+	"organizations.inviteStatus": "状态"
 }

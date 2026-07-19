@@ -14,6 +14,7 @@ import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
 	Dialog,
 	DialogContent,
@@ -54,6 +55,9 @@ export default function ApiKeysPage() {
 	const [scope, setScope] = useState("read-users");
 	const [creating, setCreating] = useState(false);
 	const [createdKey, setCreatedKey] = useState<string | null>(null);
+	const [editKeyId, setEditKeyId] = useState<string | null>(null);
+	const [editName, setEditName] = useState("");
+	const [editExpiresAt, setEditExpiresAt] = useState("");
 
 	const create = async () => {
 		setCreating(true);
@@ -150,38 +154,50 @@ export default function ApiKeysPage() {
 			{
 				id: "actions",
 				header: "",
-				cell: ({ row }) => {
-					const key = row.original;
-					return (
-						<RoleGuard allow={["super_admin"]}>
-							<div className="flex items-center gap-1">
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => toggleKey(key.id, !key.enabled)}
-								>
-									{key.enabled ? t("common.disable") : t("common.enable")}
-								</Button>
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => rotateKey(key.id)}
-								>
-									{t("common.rotate")}
-								</Button>
-								<ConfirmDialog
-									trigger={
-										<Button variant="ghost" size="sm" className="text-danger">
-											{t("common.delete")}
-										</Button>
-									}
-									title={t("apiKeys.delete.title")}
-									onConfirm={() => deleteKey(key.id)}
-								/>
-							</div>
-						</RoleGuard>
-					);
-				},
+					cell: ({ row }) => {
+						const key = row.original;
+						return (
+							<RoleGuard allow={["super_admin"]}>
+								<div className="flex items-center gap-1">
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => {
+											setEditKeyId(key.id);
+											setEditName(key.name);
+											setEditExpiresAt(key.expiresAt ? new Date(key.expiresAt).toISOString().slice(0, 10) : "");
+											setEditKeyId(key.id);
+										}}
+									>
+										{t("common.edit")}
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => toggleKey(key.id, !key.enabled)}
+									>
+										{key.enabled ? t("common.disable") : t("common.enable")}
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => rotateKey(key.id)}
+									>
+										{t("common.rotate")}
+									</Button>
+									<ConfirmDialog
+										trigger={
+											<Button variant="ghost" size="sm" className="text-danger">
+												{t("common.delete")}
+											</Button>
+										}
+										title={t("apiKeys.delete.title")}
+										onConfirm={() => deleteKey(key.id)}
+									/>
+								</div>
+							</RoleGuard>
+						);
+					},
 			},
 		],
 		[t],
@@ -258,8 +274,62 @@ export default function ApiKeysPage() {
 							</Button>
 						</DialogFooter>
 					</DialogContent>
+					</Dialog>
+				)}
+
+			{/* Edit key dialog */}
+			{editKeyId && (
+				<Dialog open={!!editKeyId} onOpenChange={(o) => !o && setEditKeyId(null)}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>{t("apiKeys.edit.title")}</DialogTitle>
+						</DialogHeader>
+						<div className="space-y-4">
+							<div className="space-y-1.5">
+								<Label htmlFor="edit-name">{t("apiKeys.name")}</Label>
+								<Input
+									id="edit-name"
+									value={editName}
+									onChange={(e) => setEditName(e.target.value)}
+								/>
+							</div>
+							<div className="space-y-1.5">
+								<Label htmlFor="edit-expires">{t("common.expired")}</Label>
+								<Input
+									id="edit-expires"
+									type="date"
+									value={editExpiresAt}
+									onChange={(e) => setEditExpiresAt(e.target.value)}
+								/>
+								<p className="text-[12px] text-mute">{t("apiKeys.edit.expiresHint")}</p>
+							</div>
+						</div>
+						<DialogFooter>
+							<Button variant="secondary" size="sm" onClick={() => setEditKeyId(null)}>
+								{t("common.cancel")}
+							</Button>
+							<Button variant="primary" size="sm" onClick={async () => {
+								const body: Record<string, unknown> = { name: editName };
+								if (editExpiresAt) {
+									body.expiresAt = new Date(editExpiresAt).toISOString();
+								}
+								const r = await fetch(`/api/admin/api-keys/${editKeyId}/edit`, {
+									method: "POST",
+									headers: { "content-type": "application/json" },
+									body: JSON.stringify(body),
+								});
+								if (r.ok) {
+									toast.success(t("toast.saved"));
+									setEditKeyId(null);
+									await qc.invalidateQueries({ queryKey: ["api-keys"] });
+								}
+							}}>
+								{t("common.save")}
+							</Button>
+						</DialogFooter>
+					</DialogContent>
 				</Dialog>
 			)}
-		</div>
-	);
-}
+			</div>
+		);
+	}
