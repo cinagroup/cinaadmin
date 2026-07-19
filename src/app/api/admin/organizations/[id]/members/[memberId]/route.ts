@@ -16,6 +16,8 @@ export async function DELETE(
 		return NextResponse.json({ ok: false }, { status: 403 });
 	}
 	const { id, memberId } = await params;
+	// Consume request body to prevent request smuggling.
+	await request.json().catch(() => ({}));
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch(`/organization/remove-member`, {
 		method: "POST",
