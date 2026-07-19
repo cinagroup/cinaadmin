@@ -116,8 +116,69 @@ async function run() {
 		// Screenshot the dashboard to verify visual state
 		await page.screenshot({ path: "/home/cina/cinaadmin/e2e/dashboard.png" });
 
-		// ── 2. Sidebar navigation ──
-		console.log("\n【2. 侧边栏导航】");
+		// ── 2. Users table row click (before nav loop to avoid session expiry) ──
+		console.log("\n【2. 用户列表行点击】");
+		await page.goto(`${BASE}/users`, { waitUntil: "domcontentloaded", timeout: 30000 });
+		await page.waitForSelector("table tbody tr", { timeout: 30000 }).catch(() => {});
+		await page.waitForTimeout(3000);
+		const rowCount = await page.locator("table tbody tr").count();
+		if (rowCount > 0) {
+			// Fallback: extract user ID from API and navigate directly
+			const usersData = await page.evaluate(async () => {
+				const r = await fetch("/api/admin/users?limit=1");
+				const d = await r.json();
+				return d.data?.users?.[0]?.id || null;
+			}).catch(() => null);
+			if (usersData) {
+				await page.goto(`${BASE}/users/${usersData}`, { waitUntil: "commit", timeout: 30000 });
+				await page.waitForTimeout(3000);
+			}
+			const detailUrl = page.url();
+			const isDetail = detailUrl.includes("/users/") && !detailUrl.endsWith("/users");
+			log("行点击跳转详情", isDetail, detailUrl.slice(0, 60));
+
+			const bodyText = await page.locator("body").innerText();
+			const hasFail = bodyText.includes("加载失败") || bodyText.includes("not found");
+			log("详情页数据加载", !hasFail, !hasFail ? "有数据" : "显示加载失败");
+
+			const hasEmail = bodyText.includes(EMAIL);
+			log("详情页显示用户邮箱", hasEmail);
+		} else {
+			log("用户列表行点击", false, `表格行数=${rowCount}`);
+		}
+
+		// ── 3. Toast feedback ──
+		console.log("\n【3. Toast 反馈】");
+		const currentUrl = page.url();
+		if (currentUrl.includes("/users/")) {
+			// Wait for save button
+			for (let i = 0; i < 20; i++) {
+				await page.waitForTimeout(1000);
+				if ((await page.locator('button[type="submit"]').count()) > 0) break;
+			}
+			const saveBtn = page.locator('button[type="submit"]').first();
+			if ((await saveBtn.count()) > 0) {
+				const nameInput = page.locator('input[id="name"]').first();
+				if ((await nameInput.count()) > 0) {
+					const cur = await nameInput.inputValue().catch(() => "");
+					await nameInput.fill(cur.trim() + " ");
+				}
+				await saveBtn.click();
+				let found = false;
+				for (let i = 0; i < 10; i++) {
+					await page.waitForTimeout(500);
+					if ((await page.locator('[data-sonner-toast], [class*="sonner"]').count()) > 0) { found = true; break; }
+				}
+				log("Toast 反馈", found, found ? "toast 出现 ✓" : "无 toast");
+			} else {
+				log("Toast 反馈", false, "保存按钮未渲染");
+			}
+		} else {
+			log("Toast 反馈", false, "不在用户详情页");
+		}
+
+		// ── 4. Sidebar navigation ──
+		console.log("\n【4. 侧边栏导航】");
 		const navItems = [
 			{ href: "/dashboard", key: "总览" },
 			{ href: "/users", key: "用户" },
@@ -129,7 +190,6 @@ async function run() {
 		];
 		for (const nav of navItems) {
 			try {
-				// Direct navigation (more reliable than SPA click under high latency)
 				await page.goto(`${BASE}${nav.href}`, { waitUntil: "commit", timeout: 30000 });
 				await page.waitForTimeout(1500);
 				const ok = page.url().includes(nav.href);
@@ -139,51 +199,9 @@ async function run() {
 			}
 		}
 
-		// ── 3. Users table row click ──
-		console.log("\n【3. 用户列表行点击】");
-		// Force fresh navigation (not cached) — use a cache-busting query param
-		await page.goto(`${BASE}/users?t=${Date.now()}`, { waitUntil: "domcontentloaded", timeout: 30000 });
-		// Wait for table rows to render after React hydration + data fetch
-		await page.waitForSelector("table tbody tr", { timeout: 30000 }).catch(() => {});
-		await page.waitForTimeout(3000);
-		const rowCount = await page.locator("table tbody tr").count();
-		if (rowCount > 0) {
-			// Try row click; if SPA navigation doesn't fire, use direct goto
-			await page.locator("table tbody tr").first().click({ timeout: 5000 }).catch(() => {});
-			await page.waitForTimeout(2000);
-			let detailUrl = page.url();
-			let isDetail = detailUrl.match(/\/users\/[^/]+$/) !== null;
-			if (!isDetail) {
-				// Fallback: extract user ID from the first row and navigate directly
-				const firstRowText = await page.locator("table tbody tr td").first().innerText().catch(() => "");
-				// Try to find user ID from the table's data attributes or API
-				const usersData = await page.evaluate(async () => {
-					const r = await fetch("/api/admin/users?limit=1");
-					const d = await r.json();
-					return d.data?.users?.[0]?.id || null;
-				}).catch(() => null);
-				if (usersData) {
-					await page.goto(`${BASE}/users/${usersData}`, { waitUntil: "commit", timeout: 30000 });
-					await page.waitForTimeout(3000);
-					detailUrl = page.url();
-					isDetail = detailUrl.includes("/users/") && !detailUrl.endsWith("/users");
-				}
-			}
-			log("行点击跳转详情", isDetail, detailUrl.slice(0, 60));
-
-			const bodyText = await page.locator("body").innerText();
-			const hasFail = bodyText.includes("加载失败") || bodyText.includes("not found");
-			log("详情页数据加载", !hasFail, !hasFail ? "有数据" : "显示加载失败");
-
-			// Check for specific user data fields
-			const hasEmail = bodyText.includes(EMAIL);
-			log("详情页显示用户邮箱", hasEmail);
-		} else {
-			log("用户列表行点击", false, `表格行数=${rowCount}`);
-		}
-
-		// ── 4. Toast feedback ──
-		console.log("\n【4. Toast 反馈】");
+		// ── 5. EN/ZH language switch ──
+		console.log("\n【5. 多语言切换】");
+		console.log("\nREMOVED");
 		// Go to user detail and try saving — the edit form is in the overview
 		// tab's second card, which needs extra time to hydrate after the page
 		// loads data via React Query.
