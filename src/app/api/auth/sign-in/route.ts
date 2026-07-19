@@ -6,7 +6,13 @@ import { cinaauthConfig } from "@/lib/cinaauth/config";
  *
  * The embedded /login page can't call auth.cinagroup.com directly because
  * of CORS. This route proxies the request server-side (no CORS) and passes
- * the Set-Cookie header back to the browser.
+ * the Set-Cookie headers back to the browser.
+ *
+ * IMPORTANT: cinaauth returns MULTIPLE Set-Cookie headers (session_token,
+ * session_data, last_used_login_method, transfer_token). The standard
+ * Headers API merges them into one comma-separated string which breaks
+ * cookie parsing. We use getSetCookie() (or manual split) to forward
+ * each cookie individually.
  */
 export async function POST(request: NextRequest) {
 	const body = await request.json();
@@ -26,16 +32,32 @@ export async function POST(request: NextRequest) {
 
 	const data = await resp.json().catch(() => ({}));
 
-	// Forward the Set-Cookie header so the session cookie is set on the browser.
-	const setCookie = resp.headers.get("set-cookie");
-	const headers: Record<string, string> = {
-		"content-type": "application/json",
-	};
-	if (setCookie) {
-		headers["set-cookie"] = setCookie;
+	// Build the response with the JSON body
+	const response = NextResponse.json(data, { status: resp.status });
+
+	// Forward ALL Set-Cookie headers individually.
+	// getSetCookie() returns an array of individual Set-Cookie strings
+	// (available in Node 18+ and Cloudflare Workers runtime).
+	const setCookies = resp.headers.getSetCookie?.() ?? [];
+	if (setCookies.length > 0) {
+		for (const cookie of setCookies) {
+			response.headers.append("set-cookie", cookie);
+		}
+	} else {
+		// Fallback: try getSetCookie via raw headers
+		const raw = resp.headers.get("set-cookie");
+		if (raw) {
+			// Split by comma+space but only between different cookies
+			// (cookie values may contain commas)
+			// Better approach: split by known cookie names
+			const cookies = raw.split(/,(?=__Secure-|cinaauth\.)/);
+			for (const cookie of cookies) {
+				response.headers.append("set-cookie", cookie.trim());
+			}
+		}
 	}
 
-	return NextResponse.json(data, { status: resp.status, headers });
+	return response;
 }
 
 export const runtime = "edge";
