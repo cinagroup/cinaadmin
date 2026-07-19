@@ -264,5 +264,12 @@
 	"organizations.save": "Save",
 	"toast.orgUpdated": "Organization updated",
 	"toast.orgDeleted": "Organization deleted",
-	"toast.roleChanged": "Role changed"
+	"toast.roleChanged": "Role changed",
+	"userDetail.tab.passkeys": "Passkeys",
+	"passkeys.col.name": "Name",
+	"passkeys.col.device": "Device",
+	"passkeys.col.createdAt": "Created",
+	"passkeys.col.lastUsedAt": "Last Used",
+	"passkeys.revoke": "Revoke",
+	"passkeys.empty": "No passkeys"
 }

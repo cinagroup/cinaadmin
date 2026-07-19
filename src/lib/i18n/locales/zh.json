@@ -263,5 +263,12 @@
 	"organizations.save": "保存",
 	"toast.orgUpdated": "组织已更新",
 	"toast.orgDeleted": "组织已删除",
-	"toast.roleChanged": "角色已修改"
+	"toast.roleChanged": "角色已修改",
+	"userDetail.tab.passkeys": "通行密钥",
+	"passkeys.col.name": "名称",
+	"passkeys.col.device": "设备",
+	"passkeys.col.createdAt": "创建时间",
+	"passkeys.col.lastUsedAt": "最近使用",
+	"passkeys.revoke": "吊销",
+	"passkeys.empty": "无通行密钥"
 }

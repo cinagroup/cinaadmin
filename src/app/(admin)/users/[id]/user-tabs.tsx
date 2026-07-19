@@ -4,6 +4,7 @@ import { OverviewTab } from "./tabs/overview";
 import { WalletsTab } from "./tabs/wallets";
 import { SessionsTab } from "./tabs/sessions";
 import { LoginTrailTab } from "./tabs/login-trail";
+import { PasskeysTab } from "./tabs/passkeys";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import type { UserDTO } from "@/lib/cinaauth/dto";
@@ -16,6 +17,7 @@ export function UserTabs({ user }: { user: UserDTO }) {
 		{ value: "wallets", label: t("userDetail.tab.wallets") },
 		{ value: "third-party", label: t("userDetail.tab.wallets") },
 		{ value: "sessions", label: t("userDetail.tab.sessions") },
+		{ value: "passkeys", label: t("userDetail.tab.passkeys") },
 		{ value: "login-trail", label: t("userDetail.tab.loginTrail") },
 		{ value: "security", label: t("userDetail.tab.security") },
 	] as const;
@@ -40,6 +42,9 @@ export function UserTabs({ user }: { user: UserDTO }) {
 			</TabsContent>
 			<TabsContent value="sessions">
 				<SessionsTab userId={userId} />
+			</TabsContent>
+			<TabsContent value="passkeys">
+				<PasskeysTab userId={userId} />
 			</TabsContent>
 			<TabsContent value="login-trail">
 				<LoginTrailTab userId={userId} />
