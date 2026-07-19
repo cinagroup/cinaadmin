@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,6 @@ export default function LoginPage() {
 
 function LoginForm() {
 	const { t } = useI18n();
-	const router = useRouter();
 	const searchParams = useSearchParams();
 	const callbackURL = searchParams.get("callbackURL") ?? "/dashboard";
 
@@ -49,9 +48,10 @@ function LoginForm() {
 			});
 			const data = await resp.json();
 			if (resp.ok) {
-				// Cookie is set on .cinagroup.com — navigate to the callback URL.
-				router.push(callbackURL);
-				router.refresh();
+				// Cookie is set by Set-Cookie header in the proxy response.
+				// Use hard navigation (not router.push) to ensure cookies are
+				// persisted by the browser before the new page loads.
+				window.location.href = callbackURL;
 			} else {
 				setError(data?.message ?? data?.error?.message ?? "Login failed");
 			}
