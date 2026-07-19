@@ -11,6 +11,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/i18n-context";
 
@@ -68,7 +69,14 @@ export function ConfirmDialog({
 							type="button"
 							variant={danger ? "danger" : "primary"}
 							size="sm"
-							onClick={onConfirm}
+							onClick={() => {
+								// Handlers are often async; a network-level failure rejects
+								// without ever reaching their r.ok branches. Surface it here
+								// so no confirmed action can fail with zero feedback.
+								void Promise.resolve(onConfirm()).catch(() =>
+									toast.error(t("toast.actionFailed")),
+								);
+							}}
 						>
 							{_confirmText}
 						</Button>
