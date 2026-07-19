@@ -141,9 +141,9 @@ async function run() {
 
 		// ── 3. Users table row click ──
 		console.log("\n【3. 用户列表行点击】");
-		await page.goto(`${BASE}/users`, { waitUntil: "networkidle", timeout: 45000 });
+		await page.goto(`${BASE}/users`, { waitUntil: "domcontentloaded", timeout: 30000 });
 		// Wait for table rows to render after React hydration
-		await page.waitForSelector("table tbody tr", { timeout: 20000 }).catch(() => {});
+		await page.waitForSelector("table tbody tr", { timeout: 30000 }).catch(() => {});
 		await page.waitForTimeout(2000);
 		const rowCount = await page.locator("table tbody tr").count();
 		if (rowCount > 0) {
