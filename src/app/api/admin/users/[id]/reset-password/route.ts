@@ -25,9 +25,16 @@ export async function POST(
 
 	const body = await request.json().catch(() => ({}));
 	const { newPassword } = body as { newPassword?: string };
-	if (!newPassword || newPassword.length < 8) {
+	// Password validation: min 8 chars, max 128 chars, must have letter + digit
+	if (!newPassword || newPassword.length < 8 || newPassword.length > 128) {
 		return NextResponse.json(
-			{ ok: false, error: { code: "BAD_REQUEST", message: "Password must be at least 8 characters" } },
+			{ ok: false, error: { code: "BAD_REQUEST", message: "Password must be 8-128 characters" } },
+			{ status: 400 },
+		);
+	}
+	if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+		return NextResponse.json(
+			{ ok: false, error: { code: "BAD_REQUEST", message: "Password must contain letters and numbers" } },
 			{ status: 400 },
 		);
 	}

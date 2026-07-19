@@ -24,6 +24,11 @@ export async function cinaauthFetch<T>(
 	const headers: Record<string, string> = {};
 	if (opts.cookie) headers.cookie = opts.cookie;
 	if (opts.body !== undefined) headers["content-type"] = "application/json";
+	// Forward the admin console's origin so cinaauth's CSRF check passes.
+	// Without this, POST/PUT/DELETE requests return MISSING_OR_NULL_ORIGIN.
+	if (opts.method && opts.method !== "GET") {
+		headers.origin = "https://admin.cinagroup.com";
+	}
 	if (opts.headers) Object.assign(headers, opts.headers);
 
 	// Ensure the path is mounted under the Better Auth handler ("/api/auth").

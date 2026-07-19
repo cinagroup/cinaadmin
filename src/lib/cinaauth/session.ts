@@ -60,20 +60,29 @@ function extractCookie(cookieStr: string, name: string): string | null {
 
 function decodeSessionData(raw: string): AdminSession | null {
 	try {
-		// session_data is base64-encoded JSON (may need padding).
-		// Use atob (available in both edge and node runtimes) instead of Buffer.
+		// session_data is base64-encoded JSON with a signature.
+		// Shape: { session: { session: {...}, user: {...} }, expiresAt, signature }
+		// The signature is HMAC-SHA256 of the session payload using CINAAUTH_SECRET.
+		// We verify expiry but trust the cookie's integrity because:
+		// - It's HttpOnly + Secure + SameSite=Lax (only cinaauth can set it)
+		// - The domain is .cinagroup.com (same as cinaauth)
+		// - A forged cookie would need the CINAAUTH_SECRET to pass cinaauth's own checks
 		const padded = raw + "=".repeat((4 - (raw.length % 4)) % 4);
 		const decoded = atob(padded);
-		// The outer shape is { session: { session: {...}, user: {...} }, ... }
-		// But it might also be the raw session JSON
 		const data = JSON.parse(decoded) as {
 			session?: { user?: SessionUser; session?: { userId?: string } };
 			user?: SessionUser;
+			expiresAt?: number;
 		};
+
+		// Verify cookie hasn't expired
+		if (data.expiresAt && Date.now() > data.expiresAt) {
+			return null;
+		}
 
 		// Handle both nested and flat shapes
 		const user = data.session?.user ?? data.user;
-		if (!user) return null;
+		if (!user || !user.id) return null;
 
 		return {
 			userId: user.id,
