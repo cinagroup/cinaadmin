@@ -88,7 +88,20 @@ export default function AuditPage() {
 			{ accessorKey: "category", header: t("audit.col.category") },
 			{ accessorKey: "action", header: t("audit.col.action") },
 			{ accessorKey: "actorId", header: t("audit.col.actor") },
-			{ accessorKey: "actorIp", header: t("audit.col.ip") },
+			{
+				accessorKey: "actorIp",
+				header: t("audit.col.ip"),
+				cell: ({ row }) => {
+					const ip = row.original.actorIp;
+					if (!ip) return "—";
+					// Mask last two octets for privacy: 1.2.3.4 → 1.2.x.x
+					const v4 = ip.match(/^(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+					if (v4) return (
+						<span className="font-mono text-[12px] text-mute">{v4[1]}.{v4[2]}.x.x</span>
+					);
+					return <span className="font-mono text-[12px] text-mute">{ip}</span>;
+				},
+			},
 			{
 				header: t("audit.col.result"),
 				cell: ({ row }) =>
