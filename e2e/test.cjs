@@ -141,24 +141,10 @@ async function run() {
 
 		// ── 3. Users table row click ──
 		console.log("\n【3. 用户列表行点击】");
-		await page.goto(`${BASE}/users`, { waitUntil: "commit", timeout: 45000 });
-		// Wait for data to load via React Query, then table to render.
-		// The users API returns 200 with data — we just need to wait for
-		// the client component to render the table rows.
-		let dataReady = false;
-		for (let i = 0; i < 30; i++) {
-			await page.waitForTimeout(1000);
-			// Check for table rows OR loading state
-			const rows = await page.locator("table tbody tr").count();
-			if (rows > 0) { dataReady = true; break; }
-			// Also check if the page shows loading text (meaning data hasn't arrived yet)
-			const loading = await page.locator("text=加载中").count();
-			if (loading === 0 && i > 10) {
-				// Not loading anymore but no rows — data might be empty or error
-				// Try triggering a reload
-				break;
-			}
-		}
+		await page.goto(`${BASE}/users`, { waitUntil: "networkidle", timeout: 45000 });
+		// Wait for table rows to render after React hydration
+		await page.waitForSelector("table tbody tr", { timeout: 20000 }).catch(() => {});
+		await page.waitForTimeout(2000);
 		const rowCount = await page.locator("table tbody tr").count();
 		if (rowCount > 0) {
 			// Try row click; if SPA navigation doesn't fire, use direct goto
