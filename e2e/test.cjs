@@ -149,32 +149,45 @@ async function run() {
 
 		// ── 3. Toast feedback ──
 		console.log("\n【3. Toast 反馈】");
-		const currentUrl = page.url();
-		if (currentUrl.includes("/users/")) {
-			// Wait for save button
-			for (let i = 0; i < 20; i++) {
-				await page.waitForTimeout(1000);
-				if ((await page.locator('button[type="submit"]').count()) > 0) break;
-			}
-			const saveBtn = page.locator('button[type="submit"]').first();
-			if ((await saveBtn.count()) > 0) {
-				const nameInput = page.locator('input[id="name"]').first();
-				if ((await nameInput.count()) > 0) {
-					const cur = await nameInput.inputValue().catch(() => "");
-					await nameInput.fill(cur.trim() + " ");
+		{
+			// Navigate to user detail fresh (ensures we're on a detail page)
+			const uid = await page.evaluate(async () => {
+				const r = await fetch("/api/admin/users?limit=1");
+				const d = await r.json();
+				return d.data?.users?.[0]?.id || null;
+			}).catch(() => null);
+			if (uid) {
+				await page.goto(`${BASE}/users/${uid}`, { waitUntil: "domcontentloaded", timeout: 30000 });
+				// Wait for the overview tab + edit form to hydrate
+				for (let i = 0; i < 30; i++) {
+					await page.waitForTimeout(1000);
+					if ((await page.locator('button[type="submit"]').count()) > 0) break;
 				}
-				await saveBtn.click();
-				let found = false;
-				for (let i = 0; i < 10; i++) {
-					await page.waitForTimeout(500);
-					if ((await page.locator('[data-sonner-toast], [class*="sonner"]').count()) > 0) { found = true; break; }
+				const saveBtn = page.locator('button[type="submit"]').first();
+				if ((await saveBtn.count()) > 0) {
+					// Modify name to trigger an actual change
+					const nameInput = page.locator('input[id="name"]').first();
+					if ((await nameInput.count()) > 0) {
+						const cur = await nameInput.inputValue().catch(() => "");
+						// Toggle trailing space: add if not present, remove if present
+						const newVal = cur.endsWith(" ") ? cur.trimEnd() : cur + " ";
+						await nameInput.fill(newVal);
+					}
+					await saveBtn.click();
+					// Wait for toast — poll for up to 15s
+					let found = false;
+					for (let i = 0; i < 30; i++) {
+						await page.waitForTimeout(500);
+						const count = await page.locator('[data-sonner-toast], [class*="sonner"]').count();
+						if (count > 0) { found = true; break; }
+					}
+					log("Toast 反馈", found, found ? "toast 出现 ✓" : "无 toast");
+				} else {
+					log("Toast 反馈", false, "保存按钮未渲染 (30s超时)");
 				}
-				log("Toast 反馈", found, found ? "toast 出现 ✓" : "无 toast");
 			} else {
-				log("Toast 反馈", false, "保存按钮未渲染");
+				log("Toast 反馈", false, "无法获取用户ID");
 			}
-		} else {
-			log("Toast 反馈", false, "不在用户详情页");
 		}
 
 		// ── 4. Sidebar navigation ──
