@@ -13,6 +13,9 @@ import {
 	ScrollText,
 	Shield,
 	BookOpen,
+	Smartphone,
+	Key,
+	CreditCard,
 	type LucideIcon,
 } from "lucide-react";
 
@@ -45,6 +48,15 @@ const NAV: NavSection[] = [
 		items: [
 			{ href: "/audit", key: "nav.auditLog", icon: ScrollText },
 			{ href: "/settings/security", key: "nav.securityPolicy", icon: ShieldCheck },
+		],
+	},
+	{
+		groupKey: "nav.integrations",
+		items: [
+			{ href: "/settings/sso", key: "nav.sso", icon: Shield },
+			{ href: "/settings/scim", key: "nav.scim", icon: Key },
+			{ href: "/devices", key: "nav.devices", icon: Smartphone },
+			{ href: "/billing", key: "nav.billing", icon: CreditCard },
 		],
 	},
 	{
