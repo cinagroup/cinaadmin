@@ -19,6 +19,9 @@ export async function POST(
 	} catch (e) {
 		return e as Response;
 	}
+	// Consume request body to prevent request smuggling.
+	// No validation needed: this is an action-only route (no body expected).
+	await request.json().catch(() => ({}));
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch("/admin/unban-user", {
 		method: "POST",

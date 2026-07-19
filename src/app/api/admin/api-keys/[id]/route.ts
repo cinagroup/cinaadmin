@@ -14,6 +14,9 @@ export async function DELETE(
 	if (!session || !hasAdminRole(session.role) || session.role !== "super_admin") {
 		return NextResponse.json({ ok: false }, { status: 403 });
 	}
+	// Consume request body to prevent request smuggling.
+	// No validation needed: this is an action-only route (no body expected).
+	await request.json().catch(() => ({}));
 	const { id } = await params;
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch(`/api-key/delete`, {

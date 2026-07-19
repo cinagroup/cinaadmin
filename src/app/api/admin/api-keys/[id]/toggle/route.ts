@@ -16,7 +16,14 @@ export async function POST(
 		return NextResponse.json({ ok: false }, { status: 403 });
 	}
 	const { id } = await params;
-	const body = await request.json();
+	const body = await request.json().catch(() => ({}));
+	// Validate: enabled must be a boolean, reject all other fields.
+	if (typeof body.enabled !== "boolean") {
+		return NextResponse.json(
+			{ ok: false, error: { code: "BAD_REQUEST", message: "Field 'enabled' must be a boolean" } },
+			{ status: 400 },
+		);
+	}
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch(`/api-key/update`, {
 		method: "POST",
