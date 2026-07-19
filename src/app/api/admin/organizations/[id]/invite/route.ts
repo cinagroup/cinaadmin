@@ -15,11 +15,20 @@ export async function POST(
 		return NextResponse.json({ ok: false }, { status: 403 });
 	}
 	const { id } = await params;
-	const body = await request.json();
+	let body: Record<string, unknown>;
+	try {
+		body = await request.json();
+	} catch {
+		return NextResponse.json(
+			{ ok: false, error: { code: "BAD_BODY", message: "Invalid JSON" } },
+			{ status: 400 },
+		);
+	}
 	const cookie = request.headers.get("cookie") ?? "";
+	// Spread body first, then pin organizationId so the path param always wins.
 	const res = await cinaauthFetch(`/organization/invite-member`, {
 		method: "POST",
-		body: { organizationId: id, ...body },
+		body: { ...body, organizationId: id },
 		cookie,
 	});
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });

@@ -20,10 +20,27 @@ export async function POST(request: NextRequest) {
 	} catch (e) {
 		return e as Response;
 	}
-	const body = await request.json();
+	let body: { sessionId?: unknown; userId?: unknown };
+	try {
+		body = await request.json();
+	} catch {
+		return NextResponse.json(
+			{ ok: false, error: { code: "BAD_BODY", message: "Invalid JSON" } },
+			{ status: 400 },
+		);
+	}
+	if (typeof body.userId !== "string" && typeof body.sessionId !== "string") {
+		return NextResponse.json(
+			{
+				ok: false,
+				error: { code: "BAD_BODY", message: "sessionId or userId required" },
+			},
+			{ status: 400 },
+		);
+	}
 	const cookie = request.headers.get("cookie") ?? "";
 
-	const path = body.userId
+	const path = typeof body.userId === "string"
 		? "/admin/revoke-user-sessions"
 		: "/admin/revoke-user-session";
 	const res = await cinaauthFetch(path, { method: "POST", body, cookie });

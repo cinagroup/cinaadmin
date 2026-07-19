@@ -64,9 +64,13 @@ export async function GET(request: NextRequest) {
 		const res = await cinaauthFetch<string>(`/audit/export?${searchParams}`, {
 			cookie,
 		});
-		const rawCsv = typeof res.data === "string" ? res.data : "";
+		// Fail loudly: a silent empty CSV reads as "no audit rows", which is a
+		// dangerous conclusion to hand an auditor when the upstream call failed.
+		if (!res.ok || typeof res.data !== "string") {
+			return new Response("upstream error", { status: 502 });
+		}
 		// Mask IP addresses in the exported CSV for privacy.
-		const csv = maskIpsInCsv(rawCsv);
+		const csv = maskIpsInCsv(res.data);
 		return new Response(csv, {
 			headers: {
 				"content-type": "text/csv; charset=utf-8",

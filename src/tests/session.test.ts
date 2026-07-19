@@ -55,6 +55,25 @@ describe("resolveAdminSession", () => {
 		fetchMock.mockRestore();
 	});
 
+	it("reads impersonatedBy from the SESSION record (Better Auth admin plugin)", async () => {
+		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+			new Response(
+				JSON.stringify({
+					session: { userId: "u2", impersonatedBy: "admin-1" },
+					user: { id: "u2", role: "user", email: "t@b.c" },
+				}),
+				{ status: 200 },
+			),
+		);
+		const req = new Request("https://admin.test/api/x", {
+			headers: { cookie: "s=1" },
+		});
+		const session = await resolveAdminSession(req);
+		expect(session?.impersonatedBy).toBe("admin-1");
+		expect(session?.role).toBe("user");
+		fetchMock.mockRestore();
+	});
+
 	it("returns null when fetch throws (cinaauth unreachable)", async () => {
 		const fetchMock = vi
 			.spyOn(globalThis, "fetch")

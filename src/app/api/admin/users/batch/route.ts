@@ -16,19 +16,45 @@ export async function POST(request: NextRequest) {
 		return NextResponse.json({ ok: false }, { status: 403 });
 	}
 
-	const body = (await request.json()) as {
-		action: "ban" | "delete";
-		userIds: string[];
-	};
+	let body: { action?: string; userIds?: unknown };
+	try {
+		body = await request.json();
+	} catch {
+		return NextResponse.json(
+			{ ok: false, error: "Invalid JSON body" },
+			{ status: 400 },
+		);
+	}
 
-	if (!body.userIds?.length) {
+	if (body.action !== "ban" && body.action !== "delete") {
+		return NextResponse.json(
+			{ ok: false, error: `Unknown action: ${String(body.action)}` },
+			{ status: 400 },
+		);
+	}
+	const userIds = Array.isArray(body.userIds)
+		? body.userIds.filter((u): u is string => typeof u === "string" && u !== "")
+		: [];
+	if (!userIds.length) {
 		return NextResponse.json({ ok: false, error: "No userIds provided" }, { status: 400 });
+	}
+	if (userIds.length > 100) {
+		return NextResponse.json(
+			{ ok: false, error: "Too many userIds (max 100 per batch)" },
+			{ status: 400 },
+		);
 	}
 
 	const cookie = request.headers.get("cookie") ?? "";
 	const results: { userId: string; ok: boolean; error?: string }[] = [];
 
-	for (const userId of body.userIds) {
+	for (const userId of userIds) {
+		// Never ban/delete the acting admin — a self-inflicted lockout inside
+		// a batch would also abort recovery for the remaining entries.
+		if (userId === session.userId) {
+			results.push({ userId, ok: false, error: "Cannot target own account" });
+			continue;
+		}
 		try {
 			if (body.action === "ban") {
 				const res = await cinaauthFetch(`/admin/ban-user`, {

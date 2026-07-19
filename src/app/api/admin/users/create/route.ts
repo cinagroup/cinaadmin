@@ -11,7 +11,15 @@ export async function POST(request: NextRequest) {
 	} catch (e) {
 		return e as Response;
 	}
-	const body = await request.json();
+	let body: unknown;
+	try {
+		body = await request.json();
+	} catch {
+		return NextResponse.json(
+			{ ok: false, error: { code: "BAD_BODY", message: "Invalid JSON" } },
+			{ status: 400 },
+		);
+	}
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch("/admin/create-user", {
 		method: "POST",

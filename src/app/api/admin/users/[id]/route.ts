@@ -7,6 +7,9 @@ import {
 } from "@/lib/auth-guard";
 import { cinaauthFetch } from "@/lib/cinaauth/client";
 
+/** Role values the console may assign (mirrors the role selector UI). */
+const VALID_ROLES = ["user", "security_admin", "super_admin"];
+
 /** GET /api/admin/users/[id] — fetch a single user's profile. */
 export async function GET(
 	request: NextRequest,
@@ -36,6 +39,18 @@ export async function DELETE(
 		requireRole(session, SUPER_ADMIN_ONLY);
 	} catch (e) {
 		return e as Response;
+	}
+	if (id === session.userId) {
+		return NextResponse.json(
+			{
+				ok: false,
+				error: {
+					code: "SELF_TARGET",
+					message: "Cannot delete your own account",
+				},
+			},
+			{ status: 400 },
+		);
 	}
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch("/admin/remove-user", {
@@ -105,7 +120,29 @@ export async function PATCH(
 		}
 	}
 	if (typeof body.email === "string") data.email = body.email;
-	if (typeof body.role === "string") data.role = body.role;
+	if (typeof body.role === "string") {
+		// Lockout protection: changing your own role can strip console access
+		// with no one left to restore it.
+		if (id === session.userId) {
+			return NextResponse.json(
+				{
+					ok: false,
+					error: { code: "SELF_TARGET", message: "Cannot change your own role" },
+				},
+				{ status: 400 },
+			);
+		}
+		if (!VALID_ROLES.includes(body.role)) {
+			return NextResponse.json(
+				{
+					ok: false,
+					error: { code: "BAD_ROLE", message: `Unknown role: ${body.role}` },
+				},
+				{ status: 400 },
+			);
+		}
+		data.role = body.role;
+	}
 
 	if (Object.keys(data).length === 0) {
 		return NextResponse.json(

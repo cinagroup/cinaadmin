@@ -29,7 +29,15 @@ export async function POST(request: NextRequest) {
 	if (!session || !hasAdminRole(session.role) || session.role !== "super_admin") {
 		return NextResponse.json({ ok: false }, { status: 403 });
 	}
-	const body = await request.json();
+	let body: unknown;
+	try {
+		body = await request.json();
+	} catch {
+		return NextResponse.json(
+			{ ok: false, error: { code: "BAD_BODY", message: "Invalid JSON" } },
+			{ status: 400 },
+		);
+	}
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch("/organization/create", {
 		method: "POST",

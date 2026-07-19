@@ -21,21 +21,26 @@ export async function POST(
 	const { id } = await params;
 	const cookie = request.headers.get("cookie") ?? "";
 
-	// Delete the old key first (ignore errors if already gone).
+	// Create the replacement FIRST — if creation fails we must not have
+	// destroyed the old key, or the caller is left with no working key at all.
+	const newKey = await cinaauthFetch<{ key: string }>(`/api-key/create`, {
+		method: "POST",
+		body: { name: `rotated-${Date.now()}` },
+		cookie,
+	});
+	if (!newKey.ok) {
+		return NextResponse.json(newKey, { status: 502 });
+	}
+
+	// Then retire the old key (ignore errors if already gone — the new key is
+	// live either way and its plaintext must reach the caller).
 	await cinaauthFetch(`/api-key/delete`, {
 		method: "POST",
 		body: { keyId: id },
 		cookie,
 	});
 
-	// Create a new key.
-	const newKey = await cinaauthFetch<{ key: string }>(`/api-key/create`, {
-		method: "POST",
-		body: { name: `rotated-${Date.now()}` },
-		cookie,
-	});
-
-	return NextResponse.json(newKey, { status: newKey.ok ? 200 : 502 });
+	return NextResponse.json(newKey, { status: 200 });
 }
 
 // Required by Cloudflare Pages (@cloudflare/next-on-pages).

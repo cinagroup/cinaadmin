@@ -21,11 +21,13 @@ export async function resolveAdminSession(
 	if (!rawCookie) return null;
 
 	// Fastest path: decode session_data cookie directly (no network call).
-	// This avoids the D1 500 bug entirely.
+	// This avoids the D1 500 bug entirely. Impersonated sessions present the
+	// TARGET user's (non-admin) role but must still resolve, or the
+	// impersonation banner / stop flow breaks whenever the network path is down.
 	const sessionData = extractCookie(rawCookie, "__Secure-cinaauth.session_data");
 	if (sessionData) {
 		const parsed = decodeSessionData(sessionData);
-		if (parsed && hasAdminRole(parsed.role)) {
+		if (parsed && (hasAdminRole(parsed.role) || parsed.impersonatedBy)) {
 			return parsed;
 		}
 	}
@@ -70,7 +72,10 @@ function decodeSessionData(raw: string): AdminSession | null {
 		const padded = raw + "=".repeat((4 - (raw.length % 4)) % 4);
 		const decoded = atob(padded);
 		const data = JSON.parse(decoded) as {
-			session?: { user?: SessionUser; session?: { userId?: string } };
+			session?: {
+				user?: SessionUser;
+				session?: { userId?: string; impersonatedBy?: string | null };
+			};
 			user?: SessionUser;
 			expiresAt?: number;
 		};
@@ -89,7 +94,10 @@ function decodeSessionData(raw: string): AdminSession | null {
 			role: user.role ?? "user",
 			email: user.email,
 			name: user.name,
-			impersonatedBy: user.impersonatedBy ?? null,
+			// Better Auth's admin plugin stores impersonatedBy on the SESSION
+			// record (the user object never carries it).
+			impersonatedBy:
+				data.session?.session?.impersonatedBy ?? user.impersonatedBy ?? null,
 		};
 	} catch {
 		return null;
@@ -102,7 +110,9 @@ function toAdminSession(data: SessionResponse): AdminSession {
 		role: data.user!.role ?? "user",
 		email: data.user!.email,
 		name: data.user!.name,
-		impersonatedBy: data.user!.impersonatedBy ?? null,
+		// See decodeSessionData: impersonatedBy lives on the session record.
+		impersonatedBy:
+			data.session?.impersonatedBy ?? data.user!.impersonatedBy ?? null,
 	};
 }
 
@@ -115,7 +125,7 @@ interface SessionUser {
 }
 
 interface SessionResponse {
-	session?: { userId: string } | null;
+	session?: { userId: string; impersonatedBy?: string | null } | null;
 	user?: SessionUser | null;
 }
 
