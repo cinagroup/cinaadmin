@@ -131,7 +131,7 @@ async function run() {
 			try {
 				// Direct navigation (more reliable than SPA click under high latency)
 				await page.goto(`${BASE}${nav.href}`, { waitUntil: "commit", timeout: 30000 });
-				await page.waitForTimeout(3000);
+				await page.waitForTimeout(1500);
 				const ok = page.url().includes(nav.href);
 				log(`导航: ${nav.href}`, ok, ok ? "✓" : `url=${page.url().slice(0, 50)}`);
 			} catch (e) {
