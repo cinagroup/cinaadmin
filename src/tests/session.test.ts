@@ -66,11 +66,32 @@ describe("resolveAdminSession", () => {
 			),
 		);
 		const req = new Request("https://admin.test/api/x", {
-			headers: { cookie: "s=1" },
+			headers: { cookie: "__Secure-cinaauth.session_token=test-token" },
 		});
 		const session = await resolveAdminSession(req);
 		expect(session?.impersonatedBy).toBe("admin-1");
 		expect(session?.role).toBe("user");
+		fetchMock.mockRestore();
+	});
+
+	it("resolves an impersonated session from the session_data cookie without a network call", async () => {
+		const fetchMock = vi.spyOn(globalThis, "fetch");
+		const blob = btoa(
+			JSON.stringify({
+				session: {
+					session: { userId: "u2", impersonatedBy: "admin-1" },
+					user: { id: "u2", role: "user", email: "t@b.c" },
+				},
+				expiresAt: Date.now() + 60_000,
+			}),
+		);
+		const req = new Request("https://admin.test/api/x", {
+			headers: { cookie: `__Secure-cinaauth.session_data=${blob}` },
+		});
+		const session = await resolveAdminSession(req);
+		expect(session?.impersonatedBy).toBe("admin-1");
+		expect(session?.role).toBe("user");
+		expect(fetchMock).not.toHaveBeenCalled();
 		fetchMock.mockRestore();
 	});
 
