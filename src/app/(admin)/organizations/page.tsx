@@ -7,7 +7,6 @@ import {
 	useReactTable,
 	type ColumnDef,
 } from "@tanstack/react-table";
-import Link from "next/link";
 import { DataTable } from "@/components/data-table/data-table";
 import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -57,9 +56,7 @@ export default function OrganizationsPage() {
 				accessorKey: "name",
 				header: t("organizations.col.name"),
 				cell: ({ row }) => (
-					<Link href={`/organizations/${row.original.id}`} className="font-medium text-ink hover:underline">
-						{row.original.name}
-					</Link>
+					<span className="font-medium text-ink">{row.original.name}</span>
 				),
 			},
 			{ accessorKey: "slug", header: t("organizations.col.slug") },

@@ -74,47 +74,37 @@ async function run() {
 		const redirectedToLogin = url1.includes("/login");
 		log("未登录重定向到内嵌登录页", redirectedToLogin, url1.slice(0, 80));
 
-		// Login via the same-origin proxy (avoids CORS).
-		const loginResult = await page.evaluate(async ({ email, password, callbackURL }) => {
-			const resp = await fetch("/api/auth/sign-in", {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ email, password, callbackURL }),
-			});
-			return { ok: resp.ok, status: resp.status };
-		}, { email: EMAIL, password: PASSWORD, callbackURL: `${BASE}/dashboard` });
-		log("API 登录 (browser fetch)", loginResult.ok, `${loginResult.status}`);
+		// Login via page.request.post — extracts Set-Cookie and adds to context.
+		const proxyResp = await page.request.post(`${BASE}/api/auth/sign-in`, {
+			data: { email: EMAIL, password: PASSWORD, callbackURL: `${BASE}/dashboard` },
+			headers: { "content-type": "application/json" },
+			maxRedirects: 0,
+		});
+		log("API 登录", proxyResp.ok(), `${proxyResp.status()}`);
 
-		// Navigate to admin — session cookie was set by the browser
+		// Extract session cookies from Set-Cookie header.
+		const setCookie = proxyResp.headers()["set-cookie"] || "";
+		const tokenMatch = setCookie.match(/__Secure-cinaauth\.session_token=([^;]+)/);
+		const dataMatch = setCookie.match(/__Secure-cinaauth\.session_data=([^;]+)/);
+		if (tokenMatch) {
+			await context.addCookies([{
+				name: "__Secure-cinaauth.session_token",
+				value: tokenMatch[1],
+				domain: ".cinagroup.com", path: "/",
+				secure: true, httpOnly: true, sameSite: "Lax",
+			}]);
+		}
+		if (dataMatch) {
+			await context.addCookies([{
+				name: "__Secure-cinaauth.session_data",
+				value: dataMatch[1],
+				domain: ".cinagroup.com", path: "/",
+				secure: true, httpOnly: true, sameSite: "Lax",
+			}]);
+		}
+
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 45000 });
 		await page.waitForTimeout(5000);
-		// If redirected back to login, extract cookie from the proxy response
-		// and add it to the browser context manually.
-		if (page.url().includes("/login")) {
-			// Call the proxy via page.request (same-origin, gets Set-Cookie in context)
-			const proxyResp = await page.request.post(`${BASE}/api/auth/sign-in`, {
-				data: { email: EMAIL, password: PASSWORD, callbackURL: `${BASE}/dashboard` },
-				headers: { "content-type": "application/json" },
-				maxRedirects: 0,
-			});
-			// Extract Set-Cookie from the response headers
-			const setCookie = proxyResp.headers()["set-cookie"] || "";
-			// Parse the session token cookie
-			const tokenMatch = setCookie.match(/__Secure-cinaauth\.session_token=([^;]+)/);
-			if (tokenMatch) {
-				await context.addCookies([{
-					name: "__Secure-cinaauth.session_token",
-					value: tokenMatch[1],
-					domain: ".cinagroup.com",
-					path: "/",
-					secure: true,
-					httpOnly: true,
-					sameSite: "Lax",
-				}]);
-			}
-			await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 45000 });
-			await page.waitForTimeout(5000);
-		}
 		const loggedIn = page.url().includes("admin.cinagroup.com") && !page.url().includes("/login");
 		log("登录成功跳转到 admin", loggedIn, page.url().slice(0, 60));
 
@@ -152,14 +142,12 @@ async function run() {
 		// ── 3. Users table row click ──
 		console.log("\n【3. 用户列表行点击】");
 		await page.goto(`${BASE}/users`, { waitUntil: "commit", timeout: 45000 });
-		// Wait for client-side data fetch to complete. The users API takes
-		// ~2-5s (cinaauth round-trip), so poll for table rows or empty state.
+		// Wait longer for client-side data fetch — cinaauth round-trip can be slow.
 		let dataReady = false;
-		for (let i = 0; i < 20; i++) {
+		for (let i = 0; i < 30; i++) {
 			await page.waitForTimeout(1000);
 			const rows = await page.locator("table tbody tr").count();
-			const emptyText = await page.locator("text=暂无用户, text=No users").count();
-			if (rows > 0 || emptyText > 0) { dataReady = true; break; }
+			if (rows > 0) { dataReady = true; break; }
 		}
 		const rowCount = await page.locator("table tbody tr").count();
 		if (rowCount > 0) {
