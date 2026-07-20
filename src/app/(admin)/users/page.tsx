@@ -139,6 +139,7 @@ export default function UsersPage() {
 					{ label: t("users.col.name"), value: "name" },
 					{ label: t("users.col.wallet"), value: "wallet" },
 				]}
+				searchLabel={t("common.search")}
 				onChange={(f) => {
 					setFilter(f);
 					setOffset(0);

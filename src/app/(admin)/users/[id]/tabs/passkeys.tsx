@@ -48,7 +48,12 @@ export function PasskeysTab({ userId }: { userId: string }) {
 	const passkeys = data ?? [];
 
 	const revoke = async (id: string) => {
-		await fetch(`/api/admin/users/${userId}/passkeys/${id}`, { method: "DELETE" });
+		const r = await fetch(`/api/admin/users/${userId}/passkeys/${id}`, { method: "DELETE" });
+		if (r.ok) {
+			toast.success(t("passkeys.revoked"));
+		} else {
+			toast.error(t("toast.deleteFailed"));
+		}
 		await qc.invalidateQueries({ queryKey: ["user", userId, "passkeys"] });
 	};
 
@@ -63,6 +68,8 @@ export function PasskeysTab({ userId }: { userId: string }) {
 			toast.success(t("common.saved"));
 			setRenameId(null);
 			await qc.invalidateQueries({ queryKey: ["user", userId, "passkeys"] });
+		} else {
+			toast.error(t("toast.saveFailed"));
 		}
 	};
 

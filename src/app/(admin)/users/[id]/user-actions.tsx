@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -29,7 +30,16 @@ export function UserActions({
 	twoFactorEnabled?: boolean;
 }) {
 	const { t } = useI18n();
+	const qc = useQueryClient();
 	const [newPassword, setNewPassword] = useState("");
+
+	// Refresh this user's detail query (and the list) so status badges and
+	// the actions row reflect the change without a jarring full-page reload.
+	const refreshUser = () =>
+		Promise.all([
+			qc.invalidateQueries({ queryKey: ["user", userId] }),
+			qc.invalidateQueries({ queryKey: ["users"] }),
+		]);
 
 	const resetPassword = async () => {
 		const r = await fetch(`/api/admin/users/${userId}/reset-password`, {
@@ -67,7 +77,7 @@ export function UserActions({
 							});
 							if (r.ok) {
 								toast.success(t("toast.unbanned"));
-								window.location.reload();
+								await refreshUser();
 							} else {
 								toast.error(t("toast.actionFailed"));
 							}
@@ -121,7 +131,7 @@ export function UserActions({
 							});
 							if (r.ok) {
 								toast.success(t("toast.reset2fa"));
-								window.location.reload();
+								await refreshUser();
 							} else {
 								toast.error(t("toast.saveFailed"));
 							}

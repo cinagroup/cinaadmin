@@ -91,6 +91,8 @@ export default function OrganizationDetailPage() {
 		if (r.ok) {
 			toast.success(t("toast.roleChanged"));
 			await qc.invalidateQueries({ queryKey: ["organization-members", orgId] });
+		} else {
+			toast.error(t("toast.actionFailed"));
 		}
 	};
 
@@ -104,6 +106,9 @@ export default function OrganizationDetailPage() {
 			toast.success(t("toast.orgUpdated"));
 			setEditOpen(false);
 			await qc.invalidateQueries({ queryKey: ["organization", orgId] });
+		} else {
+			// Keep the dialog open so the admin can correct and retry.
+			toast.error(t("toast.saveFailed"));
 		}
 	};
 
@@ -114,13 +119,15 @@ export default function OrganizationDetailPage() {
 		if (r.ok) {
 			toast.success(t("toast.orgDeleted"));
 			router.push("/organizations");
+		} else {
+			toast.error(t("toast.deleteFailed"));
 		}
 	};
 
 	const memberColumns: ColumnDef<MemberDTO>[] = [
 		{
 			accessorKey: "user.email",
-			header: "Email",
+			header: t("users.col.email"),
 			cell: ({ row }) => (
 				<span className="font-medium text-ink">
 					{row.original.user?.email ?? row.original.userId}
@@ -129,12 +136,12 @@ export default function OrganizationDetailPage() {
 		},
 		{
 			accessorKey: "user.name",
-			header: "Name",
+			header: t("users.col.name"),
 			cell: ({ row }) => row.original.user?.name ?? "—",
 		},
 		{
 			accessorKey: "role",
-			header: "Role",
+			header: t("users.col.role"),
 			cell: ({ row }) => {
 				const role = row.original.role;
 				if (role === "owner") {
@@ -212,8 +219,8 @@ export default function OrganizationDetailPage() {
 				</RoleGuard>
 			</PageHeader>
 			<div className="mb-4 flex items-center gap-4 text-sm text-ink-light">
-				<span>Slug: {org?.slug ?? "—"}</span>
-				<span>Members: {members.length}</span>
+				<span>{t("organizations.slug")}: {org?.slug ?? "—"}</span>
+				<span>{t("organizations.membersLabel")}: {members.length}</span>
 			</div>
 			<DataTable
 				table={table}
@@ -245,10 +252,15 @@ export default function OrganizationDetailPage() {
 										}
 										title={t("organizations.cancelInvite")}
 										onConfirm={async () => {
-											await fetch(`/api/admin/organizations/${orgId}/invitations/${inv.id}`, {
+											const r = await fetch(`/api/admin/organizations/${orgId}/invitations/${inv.id}`, {
 												method: "DELETE",
 											});
-											toast.success(t("organizations.cancelInvite"));
+											// Don't claim the invite was cancelled unless it was.
+											if (r.ok) {
+												toast.success(t("organizations.cancelInvite"));
+											} else {
+												toast.error(t("toast.actionFailed"));
+											}
 											await qc.invalidateQueries({ queryKey: ["organization", orgId] });
 										}}
 									/>
@@ -327,6 +339,8 @@ function TeamsSection({ orgId }: { orgId: string }) {
 			toast.success(t("toast.teamCreated"));
 			setNewTeamName("");
 			await qc.invalidateQueries({ queryKey: ["org-teams", orgId] });
+		} else {
+			toast.error(t("toast.createFailed"));
 		}
 	};
 
@@ -335,6 +349,8 @@ function TeamsSection({ orgId }: { orgId: string }) {
 		if (r.ok) {
 			toast.success(t("toast.teamDeleted"));
 			await qc.invalidateQueries({ queryKey: ["org-teams", orgId] });
+		} else {
+			toast.error(t("toast.deleteFailed"));
 		}
 	};
 
@@ -386,10 +402,12 @@ function TeamCard({ orgId, team, onDelete }: { orgId: string; team: { id: string
 			body: JSON.stringify({ userId: addUserId }),
 		});
 		if (r.ok) { toast.success(t("toast.memberAdded")); setAddUserId(""); await qc.invalidateQueries({ queryKey: ["team-members", team.id] }); }
+		else { toast.error(t("toast.actionFailed")); }
 	};
 	const removeMember = async (memberId: string) => {
 		const r = await fetch(`/api/admin/organizations/${orgId}/teams/${team.id}/members/${memberId}`, { method: "DELETE" });
 		if (r.ok) { toast.success(t("toast.memberRemoved")); await qc.invalidateQueries({ queryKey: ["team-members", team.id] }); }
+		else { toast.error(t("toast.deleteFailed")); }
 	};
 
 	return (

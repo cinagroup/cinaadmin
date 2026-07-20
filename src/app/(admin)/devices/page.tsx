@@ -13,13 +13,16 @@ export default function DevicesPage() {
 	const [userCode, setUserCode] = useState("");
 	const [device, setDevice] = useState<Record<string, unknown> | null>(null);
 	const lookup = async () => {
+		if (!userCode.trim()) return;
 		const r = await fetch(`/api/admin/device/approve`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ userCode, action: "lookup" }) });
 		const d = await r.json().catch(() => null);
 		setDevice(d?.ok ? d.data : null);
+		if (!d?.ok || !d.data) toast.error(t("devices.notFound"));
 	};
 	const act = async (action: "approve" | "deny") => {
 		const r = await fetch(`/api/admin/device/${action}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ userCode }) });
-		if (r.ok) { toast.success(action === "approve" ? t("devices.approve") : t("devices.deny")); setDevice(null); setUserCode(""); }
+		if (r.ok) { toast.success(action === "approve" ? t("devices.approved") : t("devices.denied")); setDevice(null); setUserCode(""); }
+		else { toast.error(t("toast.actionFailed")); }
 	};
 	return (
 		<div className="max-w-md">
@@ -27,7 +30,7 @@ export default function DevicesPage() {
 			<div className="space-y-4">
 				<div className="space-y-1.5">
 					<Label>{t("devices.userCode")}</Label>
-					<div className="flex gap-2"><Input value={userCode} onChange={(e) => setUserCode(e.target.value)} className="font-mono" /><Button variant="secondary" size="sm" onClick={lookup}>Lookup</Button></div>
+					<div className="flex gap-2"><Input value={userCode} onChange={(e) => setUserCode(e.target.value)} className="font-mono" /><Button variant="secondary" size="sm" onClick={lookup}>{t("devices.lookup")}</Button></div>
 				</div>
 				{device && (
 					<div className="rounded-[var(--radius-md)] border border-hairline bg-canvas p-4">

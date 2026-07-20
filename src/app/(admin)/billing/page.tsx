@@ -19,7 +19,8 @@ export default function BillingPage() {
 	const subs: Sub[] = data ?? [];
 	const cancel = async (id: string) => {
 		const r = await fetch("/api/admin/subscriptions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "cancel", subscriptionId: id }) });
-		if (r.ok) { toast.success(t("billing.cancel")); await qc.invalidateQueries({ queryKey: ["subscriptions"] }); }
+		if (r.ok) { toast.success(t("billing.canceled")); await qc.invalidateQueries({ queryKey: ["subscriptions"] }); }
+		else { toast.error(t("toast.actionFailed")); }
 	};
 	const columns: ColumnDef<Sub>[] = [
 		{ accessorKey: "plan", header: t("billing.plan"), cell: ({ row }) => row.original.plan ?? "—" },

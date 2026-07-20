@@ -76,9 +76,13 @@ export default function NewUserPage() {
 								id="password"
 								type="password"
 								required
+								minLength={8}
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
 							/>
+							<p className="text-[12px] leading-4 text-mute">
+								{t("users.create.passwordHint")}
+							</p>
 						</div>
 						<div className="space-y-1.5">
 							<Label>{t("userDetail.profile.role")}</Label>

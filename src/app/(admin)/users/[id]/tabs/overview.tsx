@@ -59,7 +59,14 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 		setSaving(false);
 		if (r.ok) {
 			toast.success(t("toast.saved"));
-			await qc.invalidateQueries({ queryKey: ["users"] });
+			setSaved(true);
+			// Refresh both the list and THIS user's detail query so the
+			// read-only card + header reflect the new name/email/role without
+			// a full reload.
+			await Promise.all([
+				qc.invalidateQueries({ queryKey: ["users"] }),
+				qc.invalidateQueries({ queryKey: ["user", user.id] }),
+			]);
 		} else {
 			const d = (await r.json().catch(() => null)) as {
 				error?: { message?: string };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
 	Select,
 	SelectContent,
@@ -32,10 +32,22 @@ export function FilterBar({
 	const [field, setField] = useState(fields[0]?.value ?? "email");
 	const [value, setValue] = useState("");
 
+	// Keep the latest onChange in a ref so the debounce effect depends only on
+	// [field, value]. Parents pass an inline arrow (new identity every render);
+	// depending on it directly would reset the timer each render and fire
+	// onChange perpetually, re-rendering the list every 350ms.
+	const onChangeRef = useRef(onChange);
 	useEffect(() => {
-		const t = setTimeout(() => onChange({ searchField: field, searchValue: value }), 350);
-		return () => clearTimeout(t);
-	}, [field, value, onChange]);
+		onChangeRef.current = onChange;
+	});
+
+	useEffect(() => {
+		const id = setTimeout(
+			() => onChangeRef.current({ searchField: field, searchValue: value }),
+			350,
+		);
+		return () => clearTimeout(id);
+	}, [field, value]);
 
 	return (
 		<div className="mb-4 flex gap-2">

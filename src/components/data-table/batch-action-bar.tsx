@@ -37,10 +37,18 @@ export function BatchActionBar({
 			data?: { succeeded: number; failed: number };
 		};
 		if (d.ok) {
-			toast.success(`${d.data?.succeeded ?? 0} ${action === "ban" ? "banned" : "deleted"}`);
+			const count = d.data?.succeeded ?? 0;
+			toast.success(
+				action === "ban"
+					? t("batch.result.banned", { count })
+					: t("batch.result.deleted", { count }),
+			);
 		} else if (d.data && d.data.failed > 0) {
 			toast.warning(
-				`${d.data.succeeded} ok, ${d.data.failed} failed`,
+				t("batch.result.partial", {
+					ok: d.data.succeeded,
+					failed: d.data.failed,
+				}),
 			);
 		} else {
 			toast.error(t("toast.saveFailed"));
@@ -52,7 +60,7 @@ export function BatchActionBar({
 	return (
 		<div className="sticky bottom-4 z-20 flex items-center gap-3 rounded-[var(--radius)] border border-hairline bg-canvas px-4 py-2.5 shadow-lg">
 			<span className="text-sm font-medium text-ink">
-				{selectedIds.length} selected
+				{t("batch.selected", { count: selectedIds.length })}
 			</span>
 			<div className="h-4 w-px bg-hairline" />
 			<ConfirmDialog
@@ -61,8 +69,8 @@ export function BatchActionBar({
 						{t("userDetail.actions.ban")}
 					</Button>
 				}
-				title="Batch ban"
-				description={`Ban ${selectedIds.length} users?`}
+				title={t("batch.ban.title")}
+				description={t("batch.ban.confirm", { count: selectedIds.length })}
 				onConfirm={() => runBatch("ban")}
 			/>
 			<ConfirmDialog
@@ -71,8 +79,8 @@ export function BatchActionBar({
 						{t("common.delete")}
 					</Button>
 				}
-				title="Batch delete"
-				description={`Delete ${selectedIds.length} users? This cannot be undone.`}
+				title={t("batch.delete.title")}
+				description={t("batch.delete.confirm", { count: selectedIds.length })}
 				danger
 				onConfirm={() => runBatch("delete")}
 			/>

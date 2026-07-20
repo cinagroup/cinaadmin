@@ -25,13 +25,20 @@ export default function SsoPage() {
 	});
 	const providers: SsoProvider[] = data ?? [];
 	const create = async () => {
+		if (!name.trim()) { toast.error(t("toast.actionFailed")); return; }
 		const r = await fetch("/api/admin/sso/providers", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, domain, entityId }) });
 		if (r.ok) { toast.success(t("common.saved")); setName(""); setDomain(""); setEntityId(""); await qc.invalidateQueries({ queryKey: ["sso-providers"] }); }
+		else { toast.error(t("toast.saveFailed")); }
 	};
-	const del = async (id: string) => { await fetch(`/api/admin/sso/providers/${id}`, { method: "DELETE" }); await qc.invalidateQueries({ queryKey: ["sso-providers"] }); };
+	const del = async (id: string) => {
+		const r = await fetch(`/api/admin/sso/providers/${id}`, { method: "DELETE" });
+		if (!r.ok) toast.error(t("toast.deleteFailed"));
+		await qc.invalidateQueries({ queryKey: ["sso-providers"] });
+	};
 	const verifyDomain = async (p: SsoProvider) => {
 		const r = await fetch("/api/admin/sso/domain-verification", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "verify", domain: p.domain, providerId: p.id }) });
 		if (r.ok) { toast.success(t("sso.verified")); await qc.invalidateQueries({ queryKey: ["sso-providers"] }); }
+		else { toast.error(t("toast.actionFailed")); }
 	};
 	const ssoSpMetadataLabel = t("sso.spMetadata") || "SP Metadata";
 	const columns: ColumnDef<SsoProvider>[] = [
@@ -66,8 +73,9 @@ export default function SsoPage() {
 					size="sm"
 					onClick={async () => {
 						const r = await fetch("/api/admin/sso/metadata");
-						const d = await r.json();
+						const d = await r.json().catch(() => ({}));
 						if (d.ok && d.data?.url) window.open(d.data.url, "_blank");
+						else toast.error(t("toast.actionFailed"));
 					}}
 				>
 					{ssoSpMetadataLabel}

@@ -16,8 +16,17 @@ export default function ScimPage() {
 		queryFn: async () => { const r = await fetch("/api/admin/scim/tokens"); const d = await r.json(); return d.ok ? d.data?.connections ?? [] : []; },
 	});
 	const conns: ScimConn[] = data ?? [];
-	const gen = async () => { const r = await fetch("/api/admin/scim/tokens", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}) }); const d = await r.json(); if (d.ok && d.data?.token) { navigator.clipboard?.writeText(d.data.token); toast.success(t("scim.generateToken")); await qc.invalidateQueries({ queryKey: ["scim-tokens"] }); } };
-	const del = async (id: string) => { await fetch(`/api/admin/scim/tokens/${id}`, { method: "DELETE" }); await qc.invalidateQueries({ queryKey: ["scim-tokens"] }); };
+	const gen = async () => {
+		const r = await fetch("/api/admin/scim/tokens", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}) });
+		const d = await r.json().catch(() => ({}));
+		if (d.ok && d.data?.token) { navigator.clipboard?.writeText(d.data.token); toast.success(t("scim.tokenCopied")); await qc.invalidateQueries({ queryKey: ["scim-tokens"] }); }
+		else { toast.error(t("toast.actionFailed")); }
+	};
+	const del = async (id: string) => {
+		const r = await fetch(`/api/admin/scim/tokens/${id}`, { method: "DELETE" });
+		if (!r.ok) toast.error(t("toast.deleteFailed"));
+		await qc.invalidateQueries({ queryKey: ["scim-tokens"] });
+	};
 	const columns: ColumnDef<ScimConn>[] = [
 		{ accessorKey: "provider", header: t("scim.provider"), cell: ({ row }) => row.original.provider ?? "—" },
 		{ accessorKey: "id", header: "ID", cell: ({ row }) => <span className="font-mono text-xs">{row.original.id.slice(0, 16)}…</span> },

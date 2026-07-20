@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
@@ -15,9 +16,10 @@ import { Input } from "@/components/ui/input";
 import { useI18n } from "@/lib/i18n/i18n-context";
 
 /** Ban dialog with duration (7d/30d/permanent) + reason. On confirm, POSTs
- *  /api/admin/users/[id]/ban then reloads. */
+ *  /api/admin/users/[id]/ban then refreshes the user's detail + list queries. */
 export function BanDialog({ userId }: { userId: string }) {
 	const { t } = useI18n();
+	const qc = useQueryClient();
 	const [duration, setDuration] = useState("permanent");
 	const [reason, setReason] = useState("");
 
@@ -38,7 +40,11 @@ export function BanDialog({ userId }: { userId: string }) {
 		});
 		if (r.ok) {
 			toast.success(t("toast.banned"));
-			window.location.reload();
+			setReason("");
+			await Promise.all([
+				qc.invalidateQueries({ queryKey: ["user", userId] }),
+				qc.invalidateQueries({ queryKey: ["users"] }),
+			]);
 		} else {
 			const d = (await r.json().catch(() => null)) as {
 				error?: { message?: string };
