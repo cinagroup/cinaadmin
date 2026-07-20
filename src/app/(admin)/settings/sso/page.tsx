@@ -19,7 +19,7 @@ export default function SsoPage() {
 	const [name, setName] = useState("");
 	const [domain, setDomain] = useState("");
 	const [entityId, setEntityId] = useState("");
-	const { data } = useQuery({
+	const { data, isFetching } = useQuery({
 		queryKey: ["sso-providers"],
 		queryFn: async () => { const r = await fetch("/api/admin/sso/providers"); const d = await r.json(); return d.ok ? d.data?.providers ?? [] : []; },
 	});
@@ -65,7 +65,7 @@ export default function SsoPage() {
 				</div>
 				<Button variant="primary" size="sm" onClick={create}>{t("sso.addProvider")}</Button>
 			</div>
-			<DataTable table={table} emptyLabel={t("sso.empty")} />
+			<DataTable table={table} emptyLabel={isFetching ? t("common.loading") : t("sso.empty")} />
 			{/* SP Metadata download link */}
 			<div className="mt-4">
 				<Button

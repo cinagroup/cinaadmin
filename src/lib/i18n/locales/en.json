@@ -181,6 +181,7 @@
 	"loginTrail.deviceLabel": "Device:",
 	"loginTrail.ipLabel": "IP:",
 	"error.generic.title": "Something went wrong",
+	"error.generic.message": "An unexpected error occurred.",
 	"error.retry": "Retry",
 	"toast.saved": "Saved",
 	"toast.saveFailed": "Save failed",

@@ -25,7 +25,7 @@ export default function AdminError({
 					{t("error.generic.title")}
 				</h2>
 				<p className="mt-2 max-w-md text-[14px] leading-5 text-body">
-					{error.message || "Something went wrong."}
+					{error.message || t("error.generic.message")}
 				</p>
 			</div>
 			<Button variant="secondary" size="sm" onClick={reset}>

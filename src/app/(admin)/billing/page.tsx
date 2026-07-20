@@ -12,7 +12,7 @@ interface Sub { id: string; plan?: string; status?: string; }
 export default function BillingPage() {
 	const { t } = useI18n();
 	const qc = useQueryClient();
-	const { data } = useQuery({
+	const { data, isFetching } = useQuery({
 		queryKey: ["subscriptions"],
 		queryFn: async () => { const r = await fetch("/api/admin/subscriptions"); const d = await r.json(); return d.ok ? d.data?.subscriptions ?? [] : []; },
 	});
@@ -29,6 +29,6 @@ export default function BillingPage() {
 	];
 	const table = useReactTable({ data: subs, columns, getCoreRowModel: getCoreRowModel() });
 	return (
-		<div><PageHeader title={t("billing.title")} /><DataTable table={table} emptyLabel={t("billing.empty")} /></div>
+		<div><PageHeader title={t("billing.title")} /><DataTable table={table} emptyLabel={isFetching ? t("common.loading") : t("billing.empty")} /></div>
 	);
 }

@@ -11,7 +11,7 @@ interface ScimConn { id: string; provider?: string; token?: string; }
 export default function ScimPage() {
 	const { t } = useI18n();
 	const qc = useQueryClient();
-	const { data } = useQuery({
+	const { data, isFetching } = useQuery({
 		queryKey: ["scim-tokens"],
 		queryFn: async () => { const r = await fetch("/api/admin/scim/tokens"); const d = await r.json(); return d.ok ? d.data?.connections ?? [] : []; },
 	});
@@ -36,7 +36,7 @@ export default function ScimPage() {
 	return (
 		<div className="max-w-3xl">
 			<PageHeader title={t("scim.title")}><Button variant="primary" size="sm" onClick={gen}>{t("scim.generateToken")}</Button></PageHeader>
-			<DataTable table={table} emptyLabel={t("scim.empty")} />
+			<DataTable table={table} emptyLabel={isFetching ? t("common.loading") : t("scim.empty")} />
 		</div>
 	);
 }
