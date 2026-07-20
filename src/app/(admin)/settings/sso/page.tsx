@@ -34,7 +34,6 @@ export default function SsoPage() {
 		if (r.ok) { toast.success(t("sso.verified")); await qc.invalidateQueries({ queryKey: ["sso-providers"] }); }
 	};
 	const ssoSpMetadataLabel = t("sso.spMetadata") || "SP Metadata";
-	};
 	const columns: ColumnDef<SsoProvider>[] = [
 		{ accessorKey: "name", header: t("sso.providerName") },
 		{ accessorKey: "domain", header: t("sso.domain"), cell: ({ row }) => row.original.domain ?? "—" },
