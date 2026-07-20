@@ -68,7 +68,7 @@ export default function UsersPage() {
 						onCheckedChange={(value) =>
 							table.toggleAllPageRowsSelected(!!value)
 						}
-						aria-label="Select all"
+						aria-label={t("table.selectAll")}
 					/>
 				),
 				cell: ({ row }) => (
@@ -76,7 +76,7 @@ export default function UsersPage() {
 						checked={row.getIsSelected()}
 						onCheckedChange={(value) => row.toggleSelected(!!value)}
 						onClick={(e) => e.stopPropagation()}
-						aria-label="Select row"
+						aria-label={t("table.selectRow")}
 					/>
 				),
 				enableSorting: false,

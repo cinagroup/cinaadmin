@@ -79,7 +79,7 @@ export function LoginTrailTab({ userId }: { userId: string }) {
 							<div className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-[13px] leading-5 text-body">
 								{row.actorIp && (
 									<span>
-										<span className="text-mute">IP：</span>
+										<span className="text-mute">{t("loginTrail.ipLabel")}</span>
 										{row.actorIp}
 									</span>
 								)}

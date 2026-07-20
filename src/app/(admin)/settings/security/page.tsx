@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,7 +30,6 @@ export default function SecurityPolicyPage() {
 	});
 
 	const [policy, setPolicy] = useState<SecurityPolicy | null>(null);
-	const [originInput, setOriginInput] = useState("");
 
 	useEffect(() => {
 		if (data) setPolicy(data);
@@ -46,46 +44,22 @@ export default function SecurityPolicyPage() {
 		);
 	}
 
-	const addOrigin = () => {
-		if (!originInput) return;
-		setPolicy({
-			...policy,
-			trustedOrigins: [...policy.trustedOrigins, originInput],
-		});
-		setOriginInput("");
-	};
-
 	return (
 		<div className="max-w-2xl">
 			<PageHeader title={t("security.title")}><Badge variant="muted">{t("security.readOnly")}</Badge></PageHeader>
+			{/* Read-only until Phase 2 wires up a persistence endpoint. The
+			    controls below are disabled so the UI never implies an edit will
+			    save when there is nowhere to save it. */}
 			<Card>
 				<CardContent className="space-y-5">
 					<Row label={t("security.otpExpiry")}>
-						<Input
-							value={policy.otpTtl}
-							onChange={(e) => setPolicy({ ...policy, otpTtl: e.target.value })}
-							className="w-40"
-						/>
+						<Input value={policy.otpTtl} readOnly disabled className="w-40" />
 					</Row>
 					<Row label={t("security.otpDailyLimit")}>
-						<Input
-							type="number"
-							value={policy.otpDailyMax}
-							onChange={(e) =>
-								setPolicy({ ...policy, otpDailyMax: Number(e.target.value) })
-							}
-							className="w-40"
-						/>
+						<Input type="number" value={policy.otpDailyMax} readOnly disabled className="w-40" />
 					</Row>
 					<Row label={t("security.passwordLockout")}>
-						<Input
-							type="number"
-							value={policy.lockoutThreshold}
-							onChange={(e) =>
-								setPolicy({ ...policy, lockoutThreshold: Number(e.target.value) })
-							}
-							className="w-40"
-						/>
+						<Input type="number" value={policy.lockoutThreshold} readOnly disabled className="w-40" />
 					</Row>
 					<Row label={t("security.force2fa")}>
 						<div className="flex gap-4">
@@ -94,18 +68,7 @@ export default function SecurityPolicyPage() {
 									key={site}
 									className="flex items-center gap-2 text-[14px] leading-5 text-body"
 								>
-									<Checkbox
-										checked={policy.force2fa[site]}
-										onCheckedChange={(v) =>
-											setPolicy({
-												...policy,
-												force2fa: {
-													...policy.force2fa,
-													[site]: v === true,
-												},
-											})
-										}
-									/>
+									<Checkbox checked={policy.force2fa[site]} disabled />
 									{site}
 								</label>
 							))}
@@ -113,32 +76,20 @@ export default function SecurityPolicyPage() {
 					</Row>
 					<div>
 						<div className="mb-1 text-[14px] leading-5 text-body">{t("security.trustedDomains")}</div>
-						<div className="mb-2 flex gap-2">
-							<Input
-								value={originInput}
-								onChange={(e) => setOriginInput(e.target.value)}
-								placeholder="https://cinacoin.cinagroup.com"
-								className="flex-1"
-							/>
-							<Button
-								type="button"
-								variant="secondary"
-								size="sm"
-								onClick={addOrigin}
-							>
-								{t("common.add")}
-							</Button>
-						</div>
-						<ul className="space-y-1">
-							{policy.trustedOrigins.map((o, i) => (
-								<li
-									key={`${o}-${i}`}
-									className="font-mono text-[12px] leading-4 text-mute"
-								>
-									{o}
-								</li>
-							))}
-						</ul>
+						{policy.trustedOrigins.length > 0 ? (
+							<ul className="space-y-1">
+								{policy.trustedOrigins.map((o, i) => (
+									<li
+										key={`${o}-${i}`}
+										className="font-mono text-[12px] leading-4 text-mute"
+									>
+										{o}
+									</li>
+								))}
+							</ul>
+						) : (
+							<p className="text-[12px] leading-4 text-mute">{t("common.noData")}</p>
+						)}
 					</div>
 				</CardContent>
 			</Card>
