@@ -333,6 +333,9 @@ export default function ApiKeysPage() {
 									toast.success(t("toast.saved"));
 									setEditKeyId(null);
 									await qc.invalidateQueries({ queryKey: ["api-keys"] });
+								} else {
+									// Keep the dialog open with the entered values for retry.
+									toast.error(t("toast.saveFailed"));
 								}
 							}}>
 								{t("common.save")}

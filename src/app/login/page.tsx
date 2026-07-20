@@ -25,10 +25,34 @@ export default function LoginPage() {
 	);
 }
 
+/**
+ * Post-login destinations must stay on this origin: allow a relative path
+ * ("/x" but not "//host" or "/\host"), or an absolute URL on the current
+ * origin (reduced to its path). Anything else — including attacker-supplied
+ * ?callbackURL=https://evil.example — falls back to /dashboard. Without this,
+ * a crafted login link becomes an open redirect that lands a just-signed-in
+ * admin on a phishing page.
+ */
+export function safeCallbackURL(raw: string | null): string {
+	if (!raw) return "/dashboard";
+	if (raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\")) {
+		return raw;
+	}
+	try {
+		const u = new URL(raw);
+		if (u.origin === window.location.origin) {
+			return u.pathname + u.search + u.hash;
+		}
+	} catch {
+		/* not an absolute URL either — fall through */
+	}
+	return "/dashboard";
+}
+
 function LoginForm() {
 	const { t } = useI18n();
 	const searchParams = useSearchParams();
-	const callbackURL = searchParams.get("callbackURL") ?? "/dashboard";
+	const rawCallback = searchParams.get("callbackURL");
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -39,6 +63,8 @@ function LoginForm() {
 		e.preventDefault();
 		setError(null);
 		setLoading(true);
+		// Sanitize at submit time (window is guaranteed in the event handler).
+		const callbackURL = safeCallbackURL(rawCallback);
 		try {
 			// Call the same-origin proxy (avoids CORS with auth.cinagroup.com).
 			const resp = await fetch("/api/auth/sign-in", {
@@ -46,17 +72,17 @@ function LoginForm() {
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({ email, password, callbackURL }),
 			});
-			const data = await resp.json();
+			const data = await resp.json().catch(() => null);
 			if (resp.ok) {
 				// Cookie is set by Set-Cookie header in the proxy response.
 				// Use hard navigation (not router.push) to ensure cookies are
 				// persisted by the browser before the new page loads.
 				window.location.href = callbackURL;
 			} else {
-				setError(data?.message ?? data?.error?.message ?? "Login failed");
+				setError(data?.message ?? data?.error?.message ?? t("login.failed"));
 			}
 		} catch {
-			setError("Network error");
+			setError(t("login.networkError"));
 		} finally {
 			setLoading(false);
 		}

@@ -40,8 +40,12 @@ export default function AuditPage() {
 	const [dateRange, setDateRange] = useState("all");
 	const [search, setSearch] = useState("");
 
+	// Only the server-side facets belong in the query key. `search` is a
+	// purely client-side filter over the already-fetched page, so keeping it
+	// out of the key means typing filters instantly without re-hitting the API
+	// on every keystroke.
 	const { data, isFetching } = useQuery({
-		queryKey: ["audit", category, result, dateRange, search],
+		queryKey: ["audit", category, result, dateRange],
 		queryFn: async () => {
 			const now = new Date();
 			const qs = new URLSearchParams({
@@ -60,23 +64,23 @@ export default function AuditPage() {
 				ok: boolean;
 				data?: { rows: AuditLogDTO[] };
 			};
-			let rows = d.ok ? d.data?.rows ?? [] : [];
-			// Client-side search filter (IP, actor, action, target)
-			if (search.trim()) {
-				const q = search.toLowerCase();
-				rows = rows.filter(r =>
-					(r.actorIp ?? "").toLowerCase().includes(q) ||
-					(r.actorId ?? "").toLowerCase().includes(q) ||
-					(r.action ?? "").toLowerCase().includes(q) ||
-					(r.targetId ?? "").toLowerCase().includes(q) ||
-					(r.category ?? "").toLowerCase().includes(q)
-				);
-			}
-			return rows;
+			return d.ok ? d.data?.rows ?? [] : [];
 		},
 	});
 
-	const rows = data ?? [];
+	// Client-side search filter (IP, actor, action, target, category).
+	const rows = useMemo(() => {
+		const all = data ?? [];
+		const q = search.trim().toLowerCase();
+		if (!q) return all;
+		return all.filter((r) =>
+			(r.actorIp ?? "").toLowerCase().includes(q) ||
+			(r.actorId ?? "").toLowerCase().includes(q) ||
+			(r.action ?? "").toLowerCase().includes(q) ||
+			(r.targetId ?? "").toLowerCase().includes(q) ||
+			(r.category ?? "").toLowerCase().includes(q),
+		);
+	}, [data, search]);
 
 	const columns = useMemo<ColumnDef<AuditLogDTO>[]>(
 		() => [

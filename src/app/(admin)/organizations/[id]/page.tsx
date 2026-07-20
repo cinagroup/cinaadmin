@@ -257,7 +257,7 @@ export default function OrganizationDetailPage() {
 											});
 											// Don't claim the invite was cancelled unless it was.
 											if (r.ok) {
-												toast.success(t("organizations.cancelInvite"));
+												toast.success(t("organizations.inviteCanceled"));
 											} else {
 												toast.error(t("toast.actionFailed"));
 											}

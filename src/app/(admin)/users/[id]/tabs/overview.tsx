@@ -124,6 +124,8 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 												if (r.ok) {
 													toast.success(t("userDetail.profile.verified"));
 													await qc.invalidateQueries({ queryKey: ["user", user.id] });
+												} else {
+													toast.error(t("toast.saveFailed"));
 												}
 											}}
 										>

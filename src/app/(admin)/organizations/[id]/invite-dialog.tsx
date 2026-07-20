@@ -38,7 +38,13 @@ export function InviteDialog({ orgId }: { orgId: string }) {
 		} else {
 			toast.error(t("toast.actionFailed"));
 		}
-		await qc.invalidateQueries({ queryKey: ["organization-members", orgId] });
+		// A new invite lands in the org's pending-invitations list (fed by the
+		// ['organization'] query), not the accepted-members list, so refresh
+		// both — otherwise the invite the admin just sent doesn't appear.
+		await Promise.all([
+			qc.invalidateQueries({ queryKey: ["organization", orgId] }),
+			qc.invalidateQueries({ queryKey: ["organization-members", orgId] }),
+		]);
 	};
 
 	return (

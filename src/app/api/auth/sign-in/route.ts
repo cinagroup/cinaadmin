@@ -15,7 +15,17 @@ import { cinaauthConfig } from "@/lib/cinaauth/config";
  * each cookie individually.
  */
 export async function POST(request: NextRequest) {
-	const body = await request.json();
+	// This route is unauthenticated (under the public /api/auth prefix), so
+	// guard the body parse — a malformed POST must yield 400, not a 500.
+	let body: unknown;
+	try {
+		body = await request.json();
+	} catch {
+		return NextResponse.json(
+			{ ok: false, error: { code: "BAD_BODY", message: "Invalid JSON" } },
+			{ status: 400 },
+		);
+	}
 	const origin = request.headers.get("origin") ?? "https://admin.cinagroup.com";
 
 	const resp = await fetch(
