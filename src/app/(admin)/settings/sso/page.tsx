@@ -33,6 +33,8 @@ export default function SsoPage() {
 		const r = await fetch("/api/admin/sso/domain-verification", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "verify", domain: p.domain, providerId: p.id }) });
 		if (r.ok) { toast.success(t("sso.verified")); await qc.invalidateQueries({ queryKey: ["sso-providers"] }); }
 	};
+	const ssoSpMetadataLabel = t("sso.spMetadata") || "SP Metadata";
+	};
 	const columns: ColumnDef<SsoProvider>[] = [
 		{ accessorKey: "name", header: t("sso.providerName") },
 		{ accessorKey: "domain", header: t("sso.domain"), cell: ({ row }) => row.original.domain ?? "—" },
@@ -58,6 +60,20 @@ export default function SsoPage() {
 				<Button variant="primary" size="sm" onClick={create}>{t("sso.addProvider")}</Button>
 			</div>
 			<DataTable table={table} emptyLabel={t("sso.empty")} />
+			{/* SP Metadata download link */}
+			<div className="mt-4">
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={async () => {
+						const r = await fetch("/api/admin/sso/metadata");
+						const d = await r.json();
+						if (d.ok && d.data?.url) window.open(d.data.url, "_blank");
+					}}
+				>
+					{ssoSpMetadataLabel}
+				</Button>
+			</div>
 		</div>
 	);
 }

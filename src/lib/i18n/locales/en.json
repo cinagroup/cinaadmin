@@ -323,5 +323,6 @@
 	"billing.empty": "No subscriptions",
 	"billing.plan": "Plan",
 	"billing.status": "Status",
-	"billing.cancel": "Cancel"
+	"billing.cancel": "Cancel",
+	"sso.spMetadata": "Download SP Metadata"
 }

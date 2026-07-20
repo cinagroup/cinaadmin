@@ -323,5 +323,6 @@
 	"billing.empty": "无订阅",
 	"billing.plan": "方案",
 	"billing.status": "状态",
-	"billing.cancel": "取消订阅"
+	"billing.cancel": "取消订阅",
+	"sso.spMetadata": "SP 元数据下载"
 }
