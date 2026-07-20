@@ -118,6 +118,10 @@ export default function OrganizationDetailPage() {
 		});
 		if (r.ok) {
 			toast.success(t("toast.orgDeleted"));
+			// router.push is a soft navigation, so the cached ['organizations']
+			// list survives; invalidate it or the deleted org lingers in the
+			// list for up to the 30s staleTime.
+			await qc.invalidateQueries({ queryKey: ["organizations"] });
 			router.push("/organizations");
 		} else {
 			toast.error(t("toast.deleteFailed"));

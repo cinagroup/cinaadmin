@@ -35,6 +35,12 @@ export default function LoginPage() {
  */
 export function safeCallbackURL(raw: string | null): string {
 	if (!raw) return "/dashboard";
+	// Reject any control character (tab, CR, LF, etc.). Browsers strip these
+	// out of a URL before navigating, so "/\t/evil.com" would collapse to the
+	// protocol-relative "//evil.com" AFTER the prefix checks below pass — a
+	// cross-origin redirect that slips through position-based validation.
+	// eslint-disable-next-line no-control-regex
+	if (/[\u0000-\u001f\u007f]/.test(raw)) return "/dashboard";
 	if (raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\")) {
 		return raw;
 	}

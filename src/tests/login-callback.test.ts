@@ -22,6 +22,16 @@ describe("safeCallbackURL (open-redirect guard)", () => {
 		expect(safeCallbackURL("/\\evil.example")).toBe("/dashboard");
 	});
 
+	it("rejects control-character smuggling that browsers strip into //host", () => {
+		// A browser removes tab/LF/CR from the URL before navigating, so
+		// "/\t/evil.com" would collapse to "//evil.com" — must be rejected.
+		expect(safeCallbackURL("/\t/evil.com")).toBe("/dashboard");
+		expect(safeCallbackURL("/\n/evil.com")).toBe("/dashboard");
+		expect(safeCallbackURL("/\r/evil.com")).toBe("/dashboard");
+		expect(safeCallbackURL("/\t\\evil.com")).toBe("/dashboard");
+		expect(safeCallbackURL("//evil.com")).toBe("/dashboard");
+	});
+
 	it("rejects absolute URLs on another origin", () => {
 		expect(safeCallbackURL("https://evil.example/phish")).toBe("/dashboard");
 		expect(safeCallbackURL("http://evil.example")).toBe("/dashboard");
