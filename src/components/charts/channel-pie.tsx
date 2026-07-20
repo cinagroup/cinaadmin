@@ -2,6 +2,7 @@
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { useThemeTokens } from "@/hooks/use-theme-tokens";
+import { useI18n } from "@/lib/i18n/i18n-context";
 
 /**
  * Login-channel distribution pie (email/password, github, siwe). Colors read
@@ -13,6 +14,7 @@ export function ChannelPie({
 }: {
 	channels: Record<string, number>;
 }) {
+	const { t } = useI18n();
 	const { v, themeKey } = useThemeTokens();
 	const data = [
 		{ name: "Email", value: channels.emailPassword ?? 0 },
@@ -27,7 +29,7 @@ export function ChannelPie({
 	];
 
 	if (data.length === 0) {
-		return <div className="text-[14px] leading-5 text-mute">No data</div>;
+		return <div className="text-[14px] leading-5 text-mute">{t("common.noData")}</div>;
 	}
 
 	return (
