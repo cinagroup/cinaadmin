@@ -1,29 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n/i18n-context";
-import type { AdminSession } from "@/lib/cinaauth/types";
+import { useAdminSession } from "@/hooks/use-admin-session";
 
 /**
  * Persistent, non-dismissible banner shown while an admin is impersonating a
  * user. Stop button calls /api/admin/users/impersonate/stop then reloads.
+ *
+ * Reads the session via the shared React Query hook (deduped with Topbar /
+ * RoleGuard — one request per load, not one per consumer).
  */
 export function ImpersonateBanner() {
 	const { t } = useI18n();
-	const [acting, setActing] = useState<string | null>(null);
-
-	useEffect(() => {
-		fetch("/api/admin/session")
-			.then((r) => r.json())
-			.then((d: { ok?: boolean; data?: AdminSession }) => {
-				if (d.ok && d.data?.impersonatedBy) {
-					setActing(d.data.email ?? d.data.userId);
-				}
-			})
-			.catch(() => {
-				/* ignore */
-			});
-	}, []);
+	const { data: session } = useAdminSession();
+	const acting = session?.impersonatedBy
+		? session.email ?? session.userId
+		: null;
 
 	if (!acting) return null;
 	return (

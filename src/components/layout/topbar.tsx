@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { useAdminSession } from "@/hooks/use-admin-session";
 import { LogOut, Monitor, Moon, Sun, User } from "lucide-react";
-import type { AdminSession } from "@/lib/cinaauth/types";
 import {
 	Select,
 	SelectContent,
@@ -25,18 +24,9 @@ import { Button } from "@/components/ui/button";
 export function Topbar() {
 	const { t, lang, setLang } = useI18n();
 	const { theme, setTheme } = useTheme();
-	const [session, setSession] = useState<AdminSession | null>(null);
-
-	useEffect(() => {
-		fetch("/api/admin/session")
-			.then((r) => r.json())
-			.then((d: { ok?: boolean; data?: AdminSession }) => {
-				if (d.ok && d.data) setSession(d.data);
-			})
-			.catch(() => {
-				/* ignore — handled by middleware redirect */
-			});
-	}, []);
+	// Shared React Query hook — dedupes with RoleGuard / ImpersonateBanner so
+	// the console makes a single /api/admin/session request per load, not three.
+	const { data: session } = useAdminSession();
 
 	const initials = (session?.email ?? "?")
 		.split("@")[0]
