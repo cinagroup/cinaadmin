@@ -22,9 +22,21 @@ export async function POST(request: NextRequest) {
 	const { action } = body as { action?: string };
 	const cookie = request.headers.get("cookie") ?? "";
 
-	let endpoint = "/subscription/cancel";
-	if (action === "upgrade") endpoint = "/subscription/upgrade";
-	else if (action === "portal") endpoint = "/subscription/billing-portal";
+	// Explicit allow-list. Never fall through to the destructive "cancel" for an
+	// unknown or missing action — a malformed request must not silently cancel
+	// a subscription.
+	const endpoints: Record<string, string> = {
+		cancel: "/subscription/cancel",
+		upgrade: "/subscription/upgrade",
+		portal: "/subscription/billing-portal",
+	};
+	const endpoint = action ? endpoints[action] : undefined;
+	if (!endpoint) {
+		return NextResponse.json(
+			{ ok: false, error: { code: "BAD_REQUEST", message: `Unknown action: ${String(action)}` } },
+			{ status: 400 },
+		);
+	}
 
 	const res = await cinaauthFetch(endpoint, { method: "POST", body, cookie });
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });

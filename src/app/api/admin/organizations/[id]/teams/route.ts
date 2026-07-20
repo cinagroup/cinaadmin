@@ -20,7 +20,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 	const { id } = await params;
 	const body = await request.json().catch(() => ({}));
 	const cookie = request.headers.get("cookie") ?? "";
-	const res = await cinaauthFetch("/organization/create-team", { method: "POST", body: { organizationId: id, ...body }, cookie });
+	// Pin organizationId after the spread so the path param always wins.
+	const res = await cinaauthFetch("/organization/create-team", { method: "POST", body: { ...body, organizationId: id }, cookie });
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
 

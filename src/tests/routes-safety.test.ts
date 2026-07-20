@@ -283,3 +283,39 @@ describe("GET /api/admin/export (audit)", () => {
 		expect(res.status).toBe(502);
 	});
 });
+
+describe("POST /api/admin/subscriptions", () => {
+	it("rejects an unknown action instead of defaulting to cancel", async () => {
+		const { POST } = await import("@/app/api/admin/subscriptions/route");
+		const res = await POST(postReq("/api/admin/subscriptions", { action: "nope", subscriptionId: "s1" }));
+		expect(res.status).toBe(400);
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
+
+	it("rejects a missing action (no silent cancel)", async () => {
+		const { POST } = await import("@/app/api/admin/subscriptions/route");
+		const res = await POST(postReq("/api/admin/subscriptions", { subscriptionId: "s1" }));
+		expect(res.status).toBe(400);
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
+
+	it("routes an explicit cancel to the cancel endpoint", async () => {
+		const { POST } = await import("@/app/api/admin/subscriptions/route");
+		await POST(postReq("/api/admin/subscriptions", { action: "cancel", subscriptionId: "s1" }));
+		expect(mockFetch).toHaveBeenCalledWith("/subscription/cancel", expect.anything());
+	});
+});
+
+describe("POST /api/admin/organizations/[id]/update (target pinning)", () => {
+	it("pins the path-param organizationId over a crafted body value", async () => {
+		const { POST } = await import("@/app/api/admin/organizations/[id]/update/route");
+		await POST(
+			postReq("/api/admin/organizations/orgA/update", { name: "x", organizationId: "orgB" }),
+			params({ id: "orgA" }),
+		);
+		expect(mockFetch).toHaveBeenCalledWith(
+			"/organization/update",
+			expect.objectContaining({ body: expect.objectContaining({ organizationId: "orgA" }) }),
+		);
+	});
+});

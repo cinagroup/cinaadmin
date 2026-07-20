@@ -14,9 +14,10 @@ export async function POST(
 	const { id } = await params;
 	const body = await request.json().catch(() => ({}));
 	const cookie = request.headers.get("cookie") ?? "";
+	// Spread body first, then pin organizationId so the path param always wins.
 	const res = await cinaauthFetch("/organization/update", {
 		method: "POST",
-		body: { organizationId: id, ...body },
+		body: { ...body, organizationId: id },
 		cookie,
 	});
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
