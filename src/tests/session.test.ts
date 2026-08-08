@@ -29,7 +29,7 @@ describe("resolveAdminSession", () => {
 			.spyOn(globalThis, "fetch")
 			.mockResolvedValue(new Response("{}", { status: 401 }));
 		const req = new Request("https://admin.test/api/x", {
-			headers: { cookie: "s=1" },
+			headers: { cookie: "__Secure-cinaauth.session_token=invalid" },
 		});
 		expect(await resolveAdminSession(req)).toBeNull();
 		fetchMock.mockRestore();
@@ -74,8 +74,16 @@ describe("resolveAdminSession", () => {
 		fetchMock.mockRestore();
 	});
 
-	it("resolves an impersonated session from the session_data cookie without a network call", async () => {
-		const fetchMock = vi.spyOn(globalThis, "fetch");
+	it("delegates session_data signature verification to cinaauth", async () => {
+		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+			new Response(
+				JSON.stringify({
+					session: { userId: "u2", impersonatedBy: "admin-1" },
+					user: { id: "u2", role: "user", email: "t@b.c" },
+				}),
+				{ status: 200 },
+			),
+		);
 		const blob = btoa(
 			JSON.stringify({
 				session: {
@@ -91,7 +99,30 @@ describe("resolveAdminSession", () => {
 		const session = await resolveAdminSession(req);
 		expect(session?.impersonatedBy).toBe("admin-1");
 		expect(session?.role).toBe("user");
-		expect(fetchMock).not.toHaveBeenCalled();
+		expect(fetchMock).toHaveBeenCalledOnce();
+		expect(fetchMock).toHaveBeenCalledWith(
+			expect.stringMatching(/\/api\/auth\/get-session$/),
+			expect.objectContaining({
+				headers: { cookie: `__Secure-cinaauth.session_data=${blob}` },
+			}),
+		);
+		fetchMock.mockRestore();
+	});
+
+	it("rejects a locally forged session_data payload", async () => {
+		const fetchMock = vi
+			.spyOn(globalThis, "fetch")
+			.mockResolvedValue(new Response("{}", { status: 401 }));
+		const blob = btoa(
+			JSON.stringify({
+				user: { id: "attacker", role: "super_admin" },
+				expiresAt: Date.now() + 60_000,
+			}),
+		);
+		const req = new Request("https://admin.test/api/x", {
+			headers: { cookie: `__Secure-cinaauth.session_data=${blob}` },
+		});
+		expect(await resolveAdminSession(req)).toBeNull();
 		fetchMock.mockRestore();
 	});
 
@@ -100,7 +131,7 @@ describe("resolveAdminSession", () => {
 			.spyOn(globalThis, "fetch")
 			.mockRejectedValue(new Error("network"));
 		const req = new Request("https://admin.test/api/x", {
-			headers: { cookie: "s=1" },
+			headers: { cookie: "__Secure-cinaauth.session_token=test-token" },
 		});
 		expect(await resolveAdminSession(req)).toBeNull();
 		fetchMock.mockRestore();
