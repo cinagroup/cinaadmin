@@ -84,12 +84,7 @@ export function Topbar({
 						<PanelLeftClose size={17} />
 					)}
 				</Button>
-				<div className="hidden sm:block">
-					<CommandMenu />
-				</div>
-				<div className="sm:hidden">
-					<CommandMenu compact />
-				</div>
+				<CommandMenu />
 			</div>
 
 			<div className="flex shrink-0 items-center gap-1.5 sm:gap-2">

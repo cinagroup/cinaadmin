@@ -12,7 +12,7 @@ import {
 import { useI18n } from "@/lib/i18n/i18n-context";
 import { NAV } from "./sidebar";
 
-export function CommandMenu({ compact = false }: { compact?: boolean }) {
+export function CommandMenu() {
 	const { t } = useI18n();
 	const router = useRouter();
 	const [open, setOpen] = useState(false);
@@ -60,24 +60,18 @@ export function CommandMenu({ compact = false }: { compact?: boolean }) {
 			<button
 				type="button"
 				onClick={() => setOpen(true)}
-				className={`flex h-9 items-center border border-hairline bg-canvas text-body transition-colors hover:bg-canvas-soft-2 hover:text-ink ${
-					compact
-						? "w-9 justify-center rounded-[var(--radius-sm)]"
-						: "w-[min(24rem,32vw)] justify-between rounded-[var(--radius-sm)] px-3"
-				}`}
+				className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border border-hairline bg-canvas text-body transition-colors hover:bg-canvas-soft-2 hover:text-ink sm:w-[min(24rem,32vw)] sm:justify-between sm:px-3"
 				aria-label={t("command.open")}
 			>
 				<span className="flex min-w-0 items-center gap-2">
 					<Search size={15} />
-					{!compact && (
-						<span className="truncate text-[13px]">{t("command.open")}</span>
-					)}
+					<span className="hidden truncate text-[13px] sm:inline">
+						{t("command.open")}
+					</span>
 				</span>
-				{!compact && (
-					<kbd className="hidden rounded-[4px] border border-hairline bg-canvas-soft px-1.5 py-0.5 font-mono text-[10px] text-mute md:inline-flex">
-						Ctrl K
-					</kbd>
-				)}
+				<kbd className="hidden rounded-[4px] border border-hairline bg-canvas-soft px-1.5 py-0.5 font-mono text-[10px] text-mute md:inline-flex">
+					Ctrl K
+				</kbd>
 			</button>
 
 			<Dialog open={open} onOpenChange={setOpen}>
