@@ -10,9 +10,13 @@ function required(name: string, fallback?: string): string {
 	return v;
 }
 
+const adminOrigin = required("CINAADMIN_ORIGIN", "http://localhost:3000");
+
 export const cinaauthConfig = {
 	/** Canonical same-origin URL for browser-facing admin requests. */
-	adminOrigin: required("CINAADMIN_ORIGIN", "http://localhost:3000"),
+	adminOrigin,
+	/** Origin cinaauth currently trusts for server-to-server proxy requests. */
+	requestOrigin: required("CINAUTH_REQUEST_ORIGIN", adminOrigin),
 	/** API host (auth.cinagroup.com) — session check + admin API calls. */
 	baseUrl: required("CINAUTH_BASE_URL", "http://localhost:2025"),
 	/** Frontend host (demo-auth.cinagroup.com) — login/sign-out page redirects. */

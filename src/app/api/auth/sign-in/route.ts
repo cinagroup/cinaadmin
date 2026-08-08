@@ -4,6 +4,7 @@ import {
 	splitSetCookieHeader,
 	toHostOnlyCookie,
 } from "@/lib/cinaauth/proxy-cookie";
+import { isAllowedProxyOrigin } from "@/lib/cinaauth/proxy-origin";
 
 /**
  * POST /api/auth/sign-in — same-origin proxy for cinaauth's sign-in API.
@@ -19,6 +20,18 @@ import {
  * each cookie individually.
  */
 export async function POST(request: NextRequest) {
+	if (
+		!isAllowedProxyOrigin(
+			request.headers.get("origin"),
+			cinaauthConfig.adminOrigin,
+		)
+	) {
+		return NextResponse.json(
+			{ ok: false, error: { code: "FORBIDDEN", message: "Invalid origin" } },
+			{ status: 403 },
+		);
+	}
+
 	// This route is unauthenticated (under the public /api/auth prefix), so
 	// guard the body parse — a malformed POST must yield 400, not a 500.
 	let body: unknown;
@@ -36,7 +49,7 @@ export async function POST(request: NextRequest) {
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
-				origin: cinaauthConfig.adminOrigin,
+				origin: cinaauthConfig.requestOrigin,
 			},
 			body: JSON.stringify(body),
 		},

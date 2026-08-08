@@ -61,7 +61,7 @@ async function run() {
 		// Login via page.request (same-origin, Set-Cookie stored in context).
 		const proxyResp = await page.request.post(`${BASE}/api/auth/sign-in`, {
 			data: { email: EMAIL, password: PASSWORD, callbackURL: `${BASE}/dashboard` },
-			headers: { "content-type": "application/json" },
+			headers: { "content-type": "application/json", origin: BASE },
 			maxRedirects: 0,
 		});
 		log("API 登录", proxyResp.ok(), `${proxyResp.status()}`);

@@ -6,7 +6,6 @@
 const pw = require("/home/cina/.npm/_npx/705bc6b22212b352/node_modules/playwright-core");
 
 const BASE = "https://admin.cinaseek.ai";
-const AUTH = "https://auth.cinagroup.com";
 const EMAIL = "admin@cinagroup.com";
 const PASSWORD = "CinaAdmin-2026!";
 const CHROMIUM =
@@ -56,23 +55,16 @@ async function run() {
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 30000 });
 		await page.waitForTimeout(2000);
 
-		const loginResult = await page.evaluate(async ({ authUrl, email, password }) => {
-			const resp = await fetch(`${authUrl}/api/auth/sign-in/email`, {
+		const loginResult = await page.evaluate(async ({ email, password }) => {
+			const resp = await fetch("/api/auth/sign-in", {
 				method: "POST",
 				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ email, password }),
+				body: JSON.stringify({ email, password, callbackURL: "/dashboard" }),
 				credentials: "include",
 			});
 			return { ok: resp.ok, status: resp.status };
-		}, { authUrl: AUTH, email: EMAIL, password: PASSWORD });
+		}, { email: EMAIL, password: PASSWORD });
 		log("登录", loginResult.ok, `HTTP ${loginResult.status}`);
-
-		// Add session cookies for admin domain
-		const cookies = await context.cookies(AUTH);
-		const sessionCookies = cookies
-			.filter((c) => c.name.includes("session_token") || c.name.includes("cinaauth"))
-			.map((c) => ({ ...c, domain: "admin.cinaseek.ai" }));
-		if (sessionCookies.length > 0) await context.addCookies(sessionCookies);
 
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 45000 });
 		await page.waitForTimeout(5000);
