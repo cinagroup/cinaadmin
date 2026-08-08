@@ -12,9 +12,6 @@ export const metadata: Metadata = {
 	description: "CinaGroup user & audit management console",
 };
 
-const esbuildNameHelper =
-	'globalThis.__name ||= ((target, value) => Object.defineProperty(target, "name", { value, configurable: true }));';
-
 export default function RootLayout({
 	children,
 }: {
@@ -26,9 +23,6 @@ export default function RootLayout({
 			className={`${GeistSans.variable} ${GeistMono.variable}`}
 			suppressHydrationWarning
 		>
-			<head>
-				<script dangerouslySetInnerHTML={{ __html: esbuildNameHelper }} />
-			</head>
 			<body>
 				<ThemeProvider>
 					<I18nProvider>
