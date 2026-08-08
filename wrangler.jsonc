@@ -5,6 +5,12 @@
 	"compatibility_date": "2026-07-29",
 	"compatibility_flags": ["nodejs_compat"],
 	"workers_dev": true,
+	"routes": [
+		{
+			"pattern": "admin.cinagroup.com/*",
+			"zone_name": "cinagroup.com"
+		}
+	],
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
