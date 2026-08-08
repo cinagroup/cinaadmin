@@ -12,5 +12,3 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 	const res = await cinaauthFetch("/organization/remove-team-member", { method: "POST", body: { teamId, memberId }, cookie });
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
-
-export const runtime = "edge";

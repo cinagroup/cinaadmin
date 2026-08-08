@@ -1,9 +1,20 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import {
+	Check,
+	LogOut,
+	Menu,
+	Monitor,
+	Moon,
+	PanelLeftClose,
+	PanelLeftOpen,
+	Shield,
+	Sun,
+	User,
+} from "lucide-react";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import { useAdminSession } from "@/hooks/use-admin-session";
-import { LogOut, Monitor, Moon, Sun, User } from "lucide-react";
 import {
 	Select,
 	SelectContent,
@@ -20,12 +31,19 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { CommandMenu } from "@/components/layout/command-menu";
 
-export function Topbar() {
+export function Topbar({
+	sidebarCollapsed,
+	onOpenNavigation,
+	onToggleSidebar,
+}: {
+	sidebarCollapsed: boolean;
+	onOpenNavigation: () => void;
+	onToggleSidebar: () => void;
+}) {
 	const { t, lang, setLang } = useI18n();
 	const { theme, setTheme } = useTheme();
-	// Shared React Query hook — dedupes with RoleGuard / ImpersonateBanner so
-	// the console makes a single /api/admin/session request per load, not three.
 	const { data: session } = useAdminSession();
 
 	const initials = (session?.email ?? "?")
@@ -34,32 +52,82 @@ export function Topbar() {
 		.toUpperCase();
 
 	return (
-		<header className="flex h-16 items-center justify-between border-b border-hairline bg-canvas px-6">
-			<div className="text-[14px] leading-5 text-body">
-				{/* Breadcrumb-style context: subtle, fills the left space. */}
+		<header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-hairline bg-canvas px-3 sm:px-4">
+			<div className="flex min-w-0 items-center gap-2">
+				<Button
+					variant="ghost"
+					size="icon"
+					onClick={onOpenNavigation}
+					aria-label={t("nav.menu")}
+					className="lg:hidden"
+				>
+					<Menu size={17} />
+				</Button>
+				<div className="mr-1 flex min-w-0 items-center gap-2 lg:hidden">
+					<span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-ink text-canvas-soft">
+						<Shield size={15} />
+					</span>
+					<span className="hidden truncate text-[13px] font-semibold text-ink min-[360px]:inline">
+						CinaAdmin
+					</span>
+				</div>
+				<Button
+					variant="ghost"
+					size="icon"
+					onClick={onToggleSidebar}
+					aria-label={t("nav.collapse")}
+					className="hidden lg:inline-flex"
+				>
+					{sidebarCollapsed ? (
+						<PanelLeftOpen size={17} />
+					) : (
+						<PanelLeftClose size={17} />
+					)}
+				</Button>
+				<div className="hidden sm:block">
+					<CommandMenu />
+				</div>
+				<div className="sm:hidden">
+					<CommandMenu compact />
+				</div>
 			</div>
-			<div className="flex items-center gap-2">
-				{/* Theme switcher */}
+
+			<div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button variant="ghost" size="icon" aria-label={t("theme.toggle")}>
-							<Sun size={16} className="scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-							<Moon size={16} className="absolute scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+						<Button
+							variant="ghost"
+							size="icon"
+							aria-label={t("theme.toggle")}
+							className="relative hidden sm:inline-flex"
+						>
+							<Sun
+								size={16}
+								className="scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
+							/>
+							<Moon
+								size={16}
+								className="absolute scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
+							/>
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						<DropdownMenuItem onClick={() => setTheme("light")}>
 							<Sun size={14} /> {t("theme.light")}
-							{theme === "light" && <span className="ml-auto text-link">✓</span>}
+							{theme === "light" && (
+								<Check size={14} className="ml-auto text-link" />
+							)}
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={() => setTheme("dark")}>
 							<Moon size={14} /> {t("theme.dark")}
-							{theme === "dark" && <span className="ml-auto text-link">✓</span>}
+							{theme === "dark" && (
+								<Check size={14} className="ml-auto text-link" />
+							)}
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={() => setTheme("system")}>
 							<Monitor size={14} /> {t("theme.system")}
 							{theme === "system" && (
-								<span className="ml-auto text-link">✓</span>
+								<Check size={14} className="ml-auto text-link" />
 							)}
 						</DropdownMenuItem>
 					</DropdownMenuContent>
@@ -67,9 +135,9 @@ export function Topbar() {
 
 				<Select
 					value={lang}
-					onValueChange={(v) => setLang(v as "zh" | "en")}
+					onValueChange={(value) => setLang(value as "zh" | "en")}
 				>
-					<SelectTrigger className="h-8 w-[88px] text-[14px]">
+					<SelectTrigger className="h-8 w-[76px] text-[13px] sm:w-[88px]">
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
@@ -78,17 +146,16 @@ export function Topbar() {
 					</SelectContent>
 				</Select>
 
-				{/* Account menu — avatar + email + sign out (BAC pattern). */}
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<button
 							type="button"
-							className="flex items-center gap-2 rounded-[var(--radius-pill)] py-1 pl-1 pr-2 transition-colors hover:bg-canvas-soft"
+							className="flex h-9 items-center gap-2 rounded-[var(--radius-pill)] py-1 pl-1 pr-1 transition-colors hover:bg-canvas-soft sm:pr-2"
 						>
 							<span className="flex h-7 w-7 items-center justify-center rounded-full bg-canvas-soft-2 text-[12px] font-semibold text-ink">
 								{initials}
 							</span>
-							<span className="hidden text-[13px] leading-4 text-body sm:inline">
+							<span className="hidden max-w-[180px] truncate text-[13px] leading-4 text-body xl:inline">
 								{session?.email ?? ""}
 							</span>
 						</button>
@@ -101,7 +168,10 @@ export function Topbar() {
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							onClick={() => {
-								window.location.href = `${process.env.NEXT_PUBLIC_CINAUTH_AUTH_URL ?? ""}/sign-out`;
+								const authUrl =
+									process.env.NEXT_PUBLIC_CINAUTH_AUTH_URL ??
+									"https://demo-auth.cinagroup.com";
+								window.location.href = `${authUrl}/sign-out`;
 							}}
 							className="text-error"
 						>

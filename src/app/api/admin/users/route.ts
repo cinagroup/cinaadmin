@@ -13,6 +13,3 @@ export async function GET(request: NextRequest) {
 	const res = await cinaauthFetch(`/admin/list-users?${qs}`, { cookie });
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
-
-// Required by Cloudflare Pages (@cloudflare/next-on-pages).
-export const runtime = "edge";

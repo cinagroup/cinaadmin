@@ -6,7 +6,7 @@ export default function ForbiddenPage() {
 	const { t } = useI18n();
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-center gap-2 bg-canvas-soft">
-			<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
+			<h1 className="text-[24px] font-semibold leading-8 text-ink">
 				{t("error.403.title")}
 			</h1>
 			<p className="text-[16px] leading-6 text-body">

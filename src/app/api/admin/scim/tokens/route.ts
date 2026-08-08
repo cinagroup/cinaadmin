@@ -21,5 +21,3 @@ export async function POST(request: NextRequest) {
 	const res = await cinaauthFetch("/scim/generate-token", { method: "POST", body, cookie });
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
-
-export const runtime = "edge";

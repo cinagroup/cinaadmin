@@ -26,6 +26,3 @@ export async function GET(
 	}
 	return NextResponse.json({ ok: true, data: res.data });
 }
-
-// Required by Cloudflare Pages (@cloudflare/next-on-pages).
-export const runtime = "edge";

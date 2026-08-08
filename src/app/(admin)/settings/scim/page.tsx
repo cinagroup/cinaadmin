@@ -8,17 +8,24 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
 interface ScimConn { id: string; provider?: string; token?: string; }
+interface ScimResponse {
+	ok?: boolean;
+	data?: {
+		connections?: ScimConn[];
+		token?: string;
+	};
+}
 export default function ScimPage() {
 	const { t } = useI18n();
 	const qc = useQueryClient();
 	const { data, isFetching } = useQuery({
 		queryKey: ["scim-tokens"],
-		queryFn: async () => { const r = await fetch("/api/admin/scim/tokens"); const d = await r.json(); return d.ok ? d.data?.connections ?? [] : []; },
+		queryFn: async () => { const r = await fetch("/api/admin/scim/tokens"); const d = (await r.json()) as ScimResponse; return d.ok ? d.data?.connections ?? [] : []; },
 	});
 	const conns: ScimConn[] = data ?? [];
 	const gen = async () => {
 		const r = await fetch("/api/admin/scim/tokens", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}) });
-		const d = await r.json().catch(() => ({}));
+		const d = (await r.json().catch(() => ({}))) as ScimResponse;
 		if (d.ok && d.data?.token) { navigator.clipboard?.writeText(d.data.token); toast.success(t("scim.tokenCopied")); await qc.invalidateQueries({ queryKey: ["scim-tokens"] }); }
 		else { toast.error(t("toast.actionFailed")); }
 	};

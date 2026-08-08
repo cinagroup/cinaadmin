@@ -91,6 +91,3 @@ export async function POST(request: NextRequest) {
 		},
 	});
 }
-
-// Required by Cloudflare Pages (@cloudflare/next-on-pages).
-export const runtime = "edge";

@@ -12,7 +12,7 @@ export async function POST(
 		return NextResponse.json({ ok: false }, { status: 403 });
 	}
 	const { id } = await params;
-	const body = await request.json().catch(() => ({}));
+	const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 	const cookie = request.headers.get("cookie") ?? "";
 	// Spread body first, then pin organizationId so the path param always wins.
 	const res = await cinaauthFetch("/organization/update", {
@@ -22,5 +22,3 @@ export async function POST(
 	});
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
-
-export const runtime = "edge";

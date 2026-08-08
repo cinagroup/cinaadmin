@@ -37,16 +37,18 @@ export function PageHeader({
 					{backLabel ?? "Back"}
 				</Link>
 			)}
-			<div className="flex items-end justify-between gap-4">
-				<div>
-					<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
+			<div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+				<div className="min-w-0">
+					<h1 className="text-[26px] font-semibold leading-8 text-ink">
 						{title}
 					</h1>
 					{description && (
 						<p className="mt-1 text-[14px] leading-5 text-body">{description}</p>
 					)}
 				</div>
-				{children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
+				{children && (
+					<div className="flex max-w-full flex-wrap items-center gap-2">{children}</div>
+				)}
 			</div>
 		</div>
 	);

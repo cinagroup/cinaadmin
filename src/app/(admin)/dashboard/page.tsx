@@ -7,7 +7,6 @@ import { CohortBars } from "@/components/charts/cohort-bars";
 import { SignupLine } from "@/components/charts/signup-line";
 import { ActiveUsersChart } from "@/components/charts/active-users-chart";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/layout/page-header";
 import { Section } from "@/components/layout/section";
@@ -17,6 +16,16 @@ import type {
 	StatsOverviewDTO,
 	SecurityTodayDTO,
 } from "@/lib/cinaauth/dto";
+import {
+	Building2,
+	KeyRound,
+	MonitorSmartphone,
+	ShieldAlert,
+	ShieldCheck,
+	UserPlus,
+	UserRoundX,
+	Users,
+} from "lucide-react";
 
 /** Sum counts in `series` whose date falls within the last `days` days. */
 function sumLastDays(series: SignupPointDTO[], days: number): number {
@@ -130,10 +139,10 @@ export default function DashboardPage() {
 	);
 
 	return (
-		<div className="space-y-8">
+		<div className="space-y-6">
 			<PageHeader
 				title={t("dashboard.title")}
-				description={`${t("dashboard.snapshot")} · ${todayLabel()}`}
+				description={`${t("dashboard.subtitle")} · ${todayLabel()}`}
 			/>
 
 			{/* Users section */}
@@ -146,6 +155,7 @@ export default function DashboardPage() {
 							label={t("dashboard.totalUsers")}
 							value={ov.totalUsers}
 							spark={sparkSignups}
+							icon={Users}
 						/>
 					)}
 					{ovLoading ? (
@@ -155,6 +165,7 @@ export default function DashboardPage() {
 							label={t("dashboard.activeUsers")}
 							value={ov.activeSessions}
 							deltaLabel={`on ${todayLabel()}`}
+							icon={MonitorSmartphone}
 						/>
 					)}
 					{ovLoading ? (
@@ -166,12 +177,19 @@ export default function DashboardPage() {
 							delta={signupsDelta ?? undefined}
 							deltaLabel={t("dashboard.vsLastWeek")}
 							spark={sparkSignups}
+							icon={UserPlus}
+							tone="info"
 						/>
 					)}
 					{ovLoading ? (
 						<StatSkeleton />
 					) : (
-						<StatCard label={t("dashboard.bannedCount")} value={ov.bannedCount} />
+						<StatCard
+							label={t("dashboard.bannedCount")}
+							value={ov.bannedCount}
+							icon={UserRoundX}
+							tone="danger"
+						/>
 					)}
 				</div>
 			</Section>
@@ -218,19 +236,29 @@ export default function DashboardPage() {
 		{/* Organizations + security section */}
 		<Section label={t("dashboard.section.orgSecurity")}>
 			<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-				<StatCard label={t("dashboard.orgCount")} value={ov.organizationCount} />
+				<StatCard
+					label={t("dashboard.orgCount")}
+					value={ov.organizationCount}
+					icon={Building2}
+				/>
 				<StatCard
 					label={t("dashboard.no2fa")}
 					value={ov.usersWithout2FA}
 					hint={t("dashboard.no2fa.hint")}
+					icon={ShieldCheck}
+					tone="warning"
 				/>
 				<StatCard
 					label={t("dashboard.failedLogins")}
 					value={sec.failedLoginsToday}
+					icon={ShieldAlert}
+					tone="danger"
 				/>
 				<StatCard
 					label={t("dashboard.otpRequests")}
 					value={sec.otpRequestsToday}
+					icon={KeyRound}
+					tone="info"
 				/>
 			</div>
 		</Section>
@@ -283,15 +311,6 @@ export default function DashboardPage() {
 				</Section>
 			)}
 
-			{/* Retention placeholder — requires a backend cohort endpoint. */}
-			<EmptyState>
-				<div className="font-mono text-[12px] uppercase tracking-wide text-mute">
-					{t("dashboard.retention.title")}
-				</div>
-				<div className="text-[14px] leading-5 text-body">
-					{t("dashboard.retention.hint")}
-				</div>
-			</EmptyState>
 		</div>
 	);
 }

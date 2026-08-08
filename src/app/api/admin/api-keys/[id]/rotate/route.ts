@@ -42,6 +42,3 @@ export async function POST(
 
 	return NextResponse.json(newKey, { status: 200 });
 }
-
-// Required by Cloudflare Pages (@cloudflare/next-on-pages).
-export const runtime = "edge";

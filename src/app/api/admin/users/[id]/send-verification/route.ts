@@ -75,5 +75,3 @@ export async function POST(
 	}
 	return NextResponse.json({ ok: true, data: { sent: true } });
 }
-
-export const runtime = "edge";

@@ -18,11 +18,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 	const session = await resolveAdminSession(request);
 	if (!session || !hasAdminRole(session.role) || session.role !== "super_admin") return NextResponse.json({ ok: false }, { status: 403 });
 	const { teamId } = await params;
-	const body = await request.json().catch(() => ({}));
+	const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 	const cookie = request.headers.get("cookie") ?? "";
 	// Pin teamId after the spread so the path param always wins.
 	const res = await cinaauthFetch("/organization/add-team-member", { method: "POST", body: { ...body, teamId }, cookie });
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
-
-export const runtime = "edge";

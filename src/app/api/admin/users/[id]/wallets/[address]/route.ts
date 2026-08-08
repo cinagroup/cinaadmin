@@ -19,7 +19,10 @@ export async function DELETE(
 	} catch (e) {
 		return e as Response;
 	}
-	const { chainId } = await request.json().catch(() => ({ chainId: 1 }));
+	const body = (await request.json().catch(() => ({}))) as {
+		chainId?: number;
+	};
+	const chainId = body.chainId ?? 1;
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch("/admin/unbind-wallet", {
 		method: "POST",
@@ -28,6 +31,3 @@ export async function DELETE(
 	});
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
-
-// Required by Cloudflare Pages (@cloudflare/next-on-pages).
-export const runtime = "edge";

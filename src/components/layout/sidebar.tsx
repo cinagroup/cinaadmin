@@ -2,34 +2,36 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useI18n } from "@/lib/i18n/i18n-context";
 import {
-	LayoutDashboard,
-	Users,
-	MonitorSmartphone,
+	BookOpen,
 	Building2,
+	CreditCard,
+	Key,
 	KeyRound,
-	ShieldCheck,
+	LayoutDashboard,
+	MonitorSmartphone,
 	ScrollText,
 	Shield,
-	BookOpen,
+	ShieldCheck,
 	Smartphone,
-	Key,
-	CreditCard,
+	Users,
 	type LucideIcon,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n/i18n-context";
+import { cn } from "@/lib/cn";
 
-interface NavItem {
+export interface NavItem {
 	href: string;
 	key: string;
 	icon: LucideIcon;
 }
-interface NavSection {
+
+export interface NavSection {
 	groupKey: string | null;
 	items: NavItem[];
 }
 
-const NAV: NavSection[] = [
+export const NAV: NavSection[] = [
 	{
 		groupKey: null,
 		items: [{ href: "/dashboard", key: "nav.overview", icon: LayoutDashboard }],
@@ -47,7 +49,11 @@ const NAV: NavSection[] = [
 		groupKey: "nav.compliance",
 		items: [
 			{ href: "/audit", key: "nav.auditLog", icon: ScrollText },
-			{ href: "/settings/security", key: "nav.securityPolicy", icon: ShieldCheck },
+			{
+				href: "/settings/security",
+				key: "nav.securityPolicy",
+				icon: ShieldCheck,
+			},
 		],
 	},
 	{
@@ -61,35 +67,56 @@ const NAV: NavSection[] = [
 	},
 	{
 		groupKey: "nav.developer",
-		items: [
-			{ href: "/api-docs", key: "nav.apiDocs", icon: BookOpen },
-		],
+		items: [{ href: "/api-docs", key: "nav.apiDocs", icon: BookOpen }],
 	},
 ];
 
-export function Sidebar() {
+export function Sidebar({
+	collapsed = false,
+	className,
+	onNavigate,
+}: {
+	collapsed?: boolean;
+	className?: string;
+	onNavigate?: () => void;
+}) {
 	const { t } = useI18n();
 	const pathname = usePathname();
+
 	return (
-		<aside className="flex w-60 shrink-0 flex-col border-r border-hairline bg-sidebar">
-			<div className="flex items-center gap-2 border-b border-hairline px-4 py-5">
-				<div className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] bg-ink text-canvas-soft">
+		<aside
+			className={cn(
+				"flex shrink-0 flex-col border-r border-hairline bg-sidebar transition-[width] duration-200",
+				collapsed ? "w-[72px]" : "w-60",
+				className,
+			)}
+		>
+			<div
+				className={cn(
+					"flex h-14 items-center border-b border-hairline",
+					collapsed ? "justify-center px-2" : "gap-2 px-4",
+				)}
+			>
+				<div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-ink text-canvas-soft">
 					<Shield size={16} strokeWidth={2.25} />
 				</div>
-				<div className="flex flex-col leading-tight">
-					<span className="text-[15px] font-semibold tracking-[-0.2px] text-ink">
-						CinaGroup
-					</span>
-					<span className="text-[11px] leading-3 text-mute">
-						{t("instance.production")}
-					</span>
-				</div>
+				{!collapsed && (
+					<div className="flex min-w-0 flex-col leading-tight">
+						<span className="truncate text-[14px] font-semibold text-ink">
+							CinaGroup Admin
+						</span>
+						<span className="text-[11px] leading-3 text-mute">
+							Identity operations
+						</span>
+					</div>
+				)}
 			</div>
-			<nav className="flex-1 space-y-4 px-2 py-3">
+
+			<nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-2 py-3">
 				{NAV.map((section) => (
 					<div key={section.groupKey ?? "top"}>
-						{section.groupKey && (
-							<div className="mb-1 px-2 font-mono text-[11px] uppercase tracking-wide text-mute">
+						{section.groupKey && !collapsed && (
+							<div className="mb-1 px-2 text-[11px] font-medium text-mute">
 								{t(section.groupKey)}
 							</div>
 						)}
@@ -102,24 +129,44 @@ export function Sidebar() {
 								<Link
 									key={item.href}
 									href={item.href}
-									className={`flex items-center gap-2.5 rounded-[var(--radius-sm)] px-3 py-2 text-[14px] leading-5 transition-colors ${
+									onClick={onNavigate}
+									title={collapsed ? t(item.key) : undefined}
+									aria-label={collapsed ? t(item.key) : undefined}
+									className={cn(
+										"flex h-9 items-center rounded-[var(--radius-sm)] text-[13px] leading-5 transition-colors",
+										collapsed ? "justify-center px-2" : "gap-2.5 px-3",
 										active
 											? "bg-canvas-soft-2 font-medium text-ink"
-											: "text-body hover:bg-canvas-soft hover:text-ink"
-									}`}
+											: "text-body hover:bg-canvas-soft-2 hover:text-ink",
+									)}
 								>
 									<Icon
 										size={16}
 										strokeWidth={active ? 2.25 : 2}
 										className={active ? "text-ink" : "text-mute"}
 									/>
-									{t(item.key)}
+									{!collapsed && <span className="truncate">{t(item.key)}</span>}
 								</Link>
 							);
 						})}
 					</div>
 				))}
 			</nav>
+
+			<div className="border-t border-hairline p-2">
+				<div
+					className={cn(
+						"flex h-9 items-center rounded-[var(--radius-sm)] border border-hairline bg-canvas px-3 text-[12px] text-body",
+						collapsed ? "justify-center" : "gap-2",
+					)}
+					title={collapsed ? t("instance.production") : undefined}
+				>
+					<span className="h-2 w-2 shrink-0 rounded-full bg-success" />
+					{!collapsed && (
+						<span className="truncate">{t("instance.production")}</span>
+					)}
+				</div>
+			</div>
 		</aside>
 	);
 }

@@ -13,5 +13,3 @@ export async function GET(request: NextRequest) {
 	const res = await cinaauthFetch(`/admin/stats/signups?${qs}`, { cookie });
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
-
-export const runtime = "edge";

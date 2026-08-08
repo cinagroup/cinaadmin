@@ -9,7 +9,11 @@
  *  - `deltaLabel`: the comparison context ("vs last week", "on Jul 9", …).
  *  - `spark`: a short numeric series rendered as an inline sparkline.
  */
-import { TrendingDown, TrendingUp } from "lucide-react";
+import {
+	TrendingDown,
+	TrendingUp,
+	type LucideIcon,
+} from "lucide-react";
 
 export function StatCard({
 	label,
@@ -18,6 +22,8 @@ export function StatCard({
 	delta,
 	deltaLabel,
 	spark,
+	icon: Icon,
+	tone = "default",
 }: {
 	label: string;
 	value: number | string;
@@ -25,17 +31,26 @@ export function StatCard({
 	delta?: number;
 	deltaLabel?: string;
 	spark?: number[];
+	icon?: LucideIcon;
+	tone?: "default" | "info" | "success" | "warning" | "danger";
 }) {
 	const hasDelta = typeof delta === "number" && Number.isFinite(delta);
 	const up = (delta ?? 0) >= 0;
+	const toneClass = {
+		default: "text-mute",
+		info: "text-link",
+		success: "text-success",
+		warning: "text-warning",
+		danger: "text-error",
+	}[tone];
 
 	return (
-		<div className="flex items-start justify-between gap-3 rounded-[var(--radius-lg)] border border-hairline bg-canvas p-5 shadow-card">
+		<div className="flex min-h-[108px] items-start justify-between gap-3 rounded-[var(--radius-lg)] border border-hairline bg-canvas p-4 shadow-card sm:p-5">
 			<div className="min-w-0">
-				<div className="font-mono text-[12px] uppercase tracking-wide text-mute">
+				<div className="text-[13px] leading-5 text-body">
 					{label}
 				</div>
-				<div className="mt-2 text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
+				<div className="mt-2 text-[26px] font-semibold leading-8 text-ink">
 					{value}
 				</div>
 				{hasDelta && (
@@ -54,9 +69,14 @@ export function StatCard({
 					<div className="mt-1 text-[12px] leading-4 text-mute">{hint}</div>
 				)}
 			</div>
-			{spark && spark.length > 1 && (
-				<Sparkline data={spark} />
-			)}
+			<div className="flex shrink-0 items-start gap-2">
+				{spark && spark.length > 1 && (
+					<div className="hidden xl:block">
+						<Sparkline data={spark} />
+					</div>
+				)}
+				{Icon && <Icon size={18} strokeWidth={2} className={toneClass} />}
+			</div>
 		</div>
 	);
 }

@@ -32,5 +32,3 @@ export async function POST(
 	});
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
-
-export const runtime = "edge";

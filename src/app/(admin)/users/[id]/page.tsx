@@ -94,6 +94,3 @@ export default function UserDetailPage({
 		</div>
 	);
 }
-
-// Required by Cloudflare Pages (@cloudflare/next-on-pages).
-export const runtime = "edge";

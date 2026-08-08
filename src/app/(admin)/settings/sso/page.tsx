@@ -13,6 +13,13 @@ import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
 
 interface SsoProvider { id: string; name: string; domain?: string; entityId?: string; verified?: boolean; }
+interface SsoResponse {
+	ok?: boolean;
+	data?: {
+		providers?: SsoProvider[];
+		url?: string;
+	};
+}
 export default function SsoPage() {
 	const { t } = useI18n();
 	const qc = useQueryClient();
@@ -21,7 +28,7 @@ export default function SsoPage() {
 	const [entityId, setEntityId] = useState("");
 	const { data, isFetching } = useQuery({
 		queryKey: ["sso-providers"],
-		queryFn: async () => { const r = await fetch("/api/admin/sso/providers"); const d = await r.json(); return d.ok ? d.data?.providers ?? [] : []; },
+		queryFn: async () => { const r = await fetch("/api/admin/sso/providers"); const d = (await r.json()) as SsoResponse; return d.ok ? d.data?.providers ?? [] : []; },
 	});
 	const providers: SsoProvider[] = data ?? [];
 	const create = async () => {
@@ -73,7 +80,7 @@ export default function SsoPage() {
 					size="sm"
 					onClick={async () => {
 						const r = await fetch("/api/admin/sso/metadata");
-						const d = await r.json().catch(() => ({}));
+						const d = (await r.json().catch(() => ({}))) as SsoResponse;
 						if (d.ok && d.data?.url) window.open(d.data.url, "_blank");
 						else toast.error(t("toast.actionFailed"));
 					}}

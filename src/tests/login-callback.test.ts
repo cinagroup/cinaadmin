@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { safeCallbackURL } from "@/app/login/page";
+import { safeCallbackURL } from "@/lib/safe-callback-url";
 
 // jsdom's default origin is http://localhost:3000 (see vitest environment).
 const ORIGIN = "http://localhost:3000";

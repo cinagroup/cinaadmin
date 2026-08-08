@@ -20,6 +20,3 @@ export async function GET(request: NextRequest) {
 	}
 	return NextResponse.json(res, { status: 200 });
 }
-
-// Required by Cloudflare Pages (@cloudflare/next-on-pages).
-export const runtime = "edge";

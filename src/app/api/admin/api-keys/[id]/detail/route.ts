@@ -12,5 +12,3 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 	if (!res.ok) return NextResponse.json({ ok: false, data: null }, { status: 404 });
 	return NextResponse.json(res, { status: 200 });
 }
-
-export const runtime = "edge";

@@ -1,6 +1,6 @@
 /**
  * Runtime config for the cinaauth integration. Values come from environment
- * (Cloudflare Pages secrets in prod, .env.local in dev).
+ * (Cloudflare Workers secrets in prod, .env.local in dev).
  */
 function required(name: string, fallback?: string): string {
 	const v = process.env[name] ?? fallback;

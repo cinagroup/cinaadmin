@@ -7,6 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
+
+interface DeviceLookupResponse {
+	ok?: boolean;
+	data?: Record<string, unknown>;
+}
+
 export default function DevicesPage() {
 	const { t } = useI18n();
 	const qc = useQueryClient();
@@ -15,8 +21,8 @@ export default function DevicesPage() {
 	const lookup = async () => {
 		if (!userCode.trim()) return;
 		const r = await fetch(`/api/admin/device/approve`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ userCode, action: "lookup" }) });
-		const d = await r.json().catch(() => null);
-		setDevice(d?.ok ? d.data : null);
+		const d = (await r.json().catch(() => null)) as DeviceLookupResponse | null;
+		setDevice(d?.ok && d.data ? d.data : null);
 		if (!d?.ok || !d.data) toast.error(t("devices.notFound"));
 	};
 	const act = async (action: "approve" | "deny") => {

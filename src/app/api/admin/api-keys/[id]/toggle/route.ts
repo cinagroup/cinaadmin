@@ -16,7 +16,7 @@ export async function POST(
 		return NextResponse.json({ ok: false }, { status: 403 });
 	}
 	const { id } = await params;
-	const body = await request.json().catch(() => ({}));
+	const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 	// Validate: enabled must be a boolean, reject all other fields.
 	if (typeof body.enabled !== "boolean") {
 		return NextResponse.json(
@@ -32,6 +32,3 @@ export async function POST(
 	});
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
-
-// Required by Cloudflare Pages (@cloudflare/next-on-pages).
-export const runtime = "edge";

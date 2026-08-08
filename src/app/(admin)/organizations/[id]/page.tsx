@@ -1,6 +1,5 @@
 "use client";
 
-export const runtime = "edge";
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -44,6 +43,17 @@ interface MemberDTO {
 	user?: { name?: string; email?: string; image?: string | null };
 }
 
+interface OrganizationDTO {
+	name?: string;
+	slug?: string;
+	invitations?: Record<string, unknown>[];
+}
+
+interface ApiResponse<T> {
+	ok?: boolean;
+	data?: T;
+}
+
 export default function OrganizationDetailPage() {
 	const { t } = useI18n();
 	const params = useParams<{ id: string }>();
@@ -58,7 +68,7 @@ export default function OrganizationDetailPage() {
 		queryKey: ["organization", orgId],
 		queryFn: async () => {
 			const r = await fetch(`/api/admin/organizations/${orgId}`);
-			const d = await r.json();
+			const d = (await r.json()) as ApiResponse<OrganizationDTO>;
 			return d.ok ? d.data : null;
 		},
 	});
@@ -67,7 +77,7 @@ export default function OrganizationDetailPage() {
 		queryKey: ["organization-members", orgId],
 		queryFn: async () => {
 			const r = await fetch(`/api/admin/organizations/${orgId}/members`);
-			const d = await r.json();
+			const d = (await r.json()) as ApiResponse<{ members?: MemberDTO[] }>;
 			return d.ok ? (d.data?.members ?? []) : [];
 		},
 	});
@@ -326,7 +336,9 @@ function TeamsSection({ orgId }: { orgId: string }) {
 		queryKey: ["org-teams", orgId],
 		queryFn: async () => {
 			const r = await fetch(`/api/admin/organizations/${orgId}/teams`);
-			const d = await r.json();
+			const d = (await r.json()) as ApiResponse<{
+				teams?: Array<{ id: string; name: string }>;
+			}>;
 			return d.ok ? d.data?.teams ?? [] : [];
 		},
 	});
@@ -393,7 +405,13 @@ function TeamCard({ orgId, team, onDelete }: { orgId: string; team: { id: string
 		queryKey: ["team-members", team.id],
 		queryFn: async () => {
 			const r = await fetch(`/api/admin/organizations/${orgId}/teams/${team.id}/members`);
-			const d = await r.json();
+			const d = (await r.json()) as ApiResponse<{
+				members?: Array<{
+					id: string;
+					userId: string;
+					user?: { email?: string };
+				}>;
+			}>;
 			return d.ok ? d.data?.members ?? [] : [];
 		},
 	});

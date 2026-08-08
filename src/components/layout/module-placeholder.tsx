@@ -10,7 +10,7 @@ export function ModulePlaceholder({ label }: { label: string }) {
 	const { t } = useI18n();
 	return (
 		<div>
-			<h1 className="text-[24px] font-semibold leading-8 tracking-[-0.96px] text-ink">
+			<h1 className="text-[24px] font-semibold leading-8 text-ink">
 				{label}
 			</h1>
 			<p className="mt-2 text-[14px] leading-5 text-body">

@@ -14,5 +14,3 @@ export async function GET(request: NextRequest) {
 		data: { url: `${cinaauthConfig.baseUrl}/api/auth/sso/saml2/sp/metadata` },
 	});
 }
-
-export const runtime = "edge";
