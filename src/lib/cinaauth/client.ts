@@ -27,7 +27,7 @@ export async function cinaauthFetch<T>(
 	// Forward the admin console's origin so cinaauth's CSRF check passes.
 	// Without this, POST/PUT/DELETE requests return MISSING_OR_NULL_ORIGIN.
 	if (opts.method && opts.method !== "GET") {
-		headers.origin = "https://admin.cinagroup.com";
+		headers.origin = cinaauthConfig.adminOrigin;
 	}
 	if (opts.headers) Object.assign(headers, opts.headers);
 

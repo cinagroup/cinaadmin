@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 			trustedOrigins: [
 				"https://auth.cinagroup.com",
 				"https://demo-auth.cinagroup.com",
-				"https://admin.cinagroup.com",
+				"https://admin.cinaseek.ai",
 			],
 		},
 	});

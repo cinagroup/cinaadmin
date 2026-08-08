@@ -27,13 +27,11 @@ export async function POST(
 	// No validation needed: this is an action-only route (no body expected).
 	await request.json().catch(() => ({}));
 	const cookie = request.headers.get("cookie") ?? "";
-	const origin = request.headers.get("origin") ?? "https://admin.cinagroup.com";
 	// The one-time-token plugin's generate endpoint creates a token for the
 	// current session user. We call it with the admin's session (acting as
 	// the user via impersonation context if available), then return the token.
 	const res = await cinaauthFetch("/one-time-token/generate", {
 		cookie,
-		headers: { origin },
 	});
 	if (!res.ok) {
 		return NextResponse.json({ ok: false, error: res.error }, { status: 502 });

@@ -40,12 +40,10 @@ export async function POST(
 	}
 
 	const cookie = request.headers.get("cookie") ?? "";
-	const origin = request.headers.get("origin") ?? "https://admin.cinagroup.com";
 	const res = await cinaauthFetch("/admin/set-user-password", {
 		method: "POST",
 		body: { userId: id, newPassword },
 		cookie,
-		headers: { origin },
 	});
 	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }

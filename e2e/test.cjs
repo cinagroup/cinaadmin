@@ -6,7 +6,7 @@
  */
 const pw = require("/home/cina/.npm/_npx/705bc6b22212b352/node_modules/playwright-core");
 
-const BASE = "https://admin.cinagroup.com";
+const BASE = "https://admin.cinaseek.ai";
 const EMAIL = "admin@cinagroup.com";
 const PASSWORD = "CinaAdmin-2026!";
 
@@ -90,7 +90,7 @@ async function run() {
 			await context.addCookies([{
 				name: "__Secure-cinaauth.session_token",
 				value: tokenMatch[1],
-				domain: ".cinagroup.com", path: "/",
+				domain: "admin.cinaseek.ai", path: "/",
 				secure: true, httpOnly: true, sameSite: "Lax",
 			}]);
 		}
@@ -98,14 +98,14 @@ async function run() {
 			await context.addCookies([{
 				name: "__Secure-cinaauth.session_data",
 				value: dataMatch[1],
-				domain: ".cinagroup.com", path: "/",
+				domain: "admin.cinaseek.ai", path: "/",
 				secure: true, httpOnly: true, sameSite: "Lax",
 			}]);
 		}
 
 		await page.goto(`${BASE}/dashboard`, { waitUntil: "commit", timeout: 45000 });
 		await page.waitForTimeout(5000);
-		const loggedIn = page.url().includes("admin.cinagroup.com") && !page.url().includes("/login");
+		const loggedIn = page.url().includes("admin.cinaseek.ai") && !page.url().includes("/login");
 		log("登录成功跳转到 admin", loggedIn, page.url().slice(0, 60));
 
 		if (!loggedIn) throw new Error("Login failed");

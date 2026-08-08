@@ -2,13 +2,13 @@
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "cinaadmin",
 	"main": "custom-worker.ts",
-	"compatibility_date": "2026-07-29",
+	"compatibility_date": "2026-08-08",
 	"compatibility_flags": ["nodejs_compat"],
-	"workers_dev": true,
+	"workers_dev": false,
 	"routes": [
 		{
-			"pattern": "admin.cinagroup.com/*",
-			"zone_name": "cinagroup.com"
+			"pattern": "admin.cinaseek.ai",
+			"custom_domain": true
 		}
 	],
 	"assets": {
@@ -20,6 +20,7 @@
 	},
 	"vars": {
 		"NEXT_PUBLIC_APP_NAME": "CinaGroup Admin",
+		"CINAADMIN_ORIGIN": "https://admin.cinaseek.ai",
 		"NEXT_PUBLIC_CINAUTH_BASE_URL": "https://auth.cinagroup.com",
 		"CINAUTH_BASE_URL": "https://auth.cinagroup.com",
 		"NEXT_PUBLIC_CINAUTH_AUTH_URL": "https://demo-auth.cinagroup.com",

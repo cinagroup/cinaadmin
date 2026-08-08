@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { cinaauthConfig } from "@/lib/cinaauth/config";
+import {
+	splitSetCookieHeader,
+	toHostOnlyCookie,
+} from "@/lib/cinaauth/proxy-cookie";
 
 /**
  * POST /api/auth/sign-in — same-origin proxy for cinaauth's sign-in API.
@@ -26,15 +30,13 @@ export async function POST(request: NextRequest) {
 			{ status: 400 },
 		);
 	}
-	const origin = request.headers.get("origin") ?? "https://admin.cinagroup.com";
-
 	const resp = await fetch(
 		`${cinaauthConfig.baseUrl}/api/auth/sign-in/email`,
 		{
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
-				origin,
+				origin: cinaauthConfig.adminOrigin,
 			},
 			body: JSON.stringify(body),
 		},
@@ -48,23 +50,16 @@ export async function POST(request: NextRequest) {
 	// Forward ALL Set-Cookie headers individually.
 	// getSetCookie() returns an array of individual Set-Cookie strings
 	// (available in Node 18+ and Cloudflare Workers runtime).
-	const setCookies = resp.headers.getSetCookie?.() ?? [];
-	if (setCookies.length > 0) {
-		for (const cookie of setCookies) {
-			response.headers.append("set-cookie", cookie);
-		}
-	} else {
+	let setCookies = resp.headers.getSetCookie?.() ?? [];
+	if (setCookies.length === 0) {
 		// Fallback: try getSetCookie via raw headers
 		const raw = resp.headers.get("set-cookie");
 		if (raw) {
-			// Split by comma+space but only between different cookies
-			// (cookie values may contain commas)
-			// Better approach: split by known cookie names
-			const cookies = raw.split(/,(?=__Secure-|cinaauth\.)/);
-			for (const cookie of cookies) {
-				response.headers.append("set-cookie", cookie.trim());
-			}
+			setCookies = splitSetCookieHeader(raw);
 		}
+	}
+	for (const cookie of setCookies) {
+		response.headers.append("set-cookie", toHostOnlyCookie(cookie));
 	}
 
 	return response;

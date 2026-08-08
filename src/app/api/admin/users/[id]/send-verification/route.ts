@@ -28,7 +28,6 @@ export async function POST(
 	const body = await request.json().catch(() => ({}));
 	const { type } = body as { type?: string };
 	const cookie = request.headers.get("cookie") ?? "";
-	const origin = request.headers.get("origin") ?? "https://admin.cinagroup.com";
 
 	// First get the user's email
 	const userRes = await cinaauthFetch<{ email?: string }>(
@@ -68,7 +67,6 @@ export async function POST(
 		method: "POST",
 		body: reqBody,
 		cookie,
-		headers: { origin },
 	});
 	if (!res.ok) {
 		return NextResponse.json({ ok: false, error: res.error }, { status: 502 });
