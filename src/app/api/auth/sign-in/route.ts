@@ -9,7 +9,7 @@ import { isAllowedProxyOrigin } from "@/lib/cinaauth/proxy-origin";
 /**
  * POST /api/auth/sign-in — same-origin proxy for cinaauth's sign-in API.
  *
- * The embedded /login page can't call auth.cinagroup.com directly because
+ * The embedded /login page can't call auth.cinaseek.ai directly because
  * of CORS. This route proxies the request server-side (no CORS) and passes
  * the Set-Cookie headers back to the browser.
  *

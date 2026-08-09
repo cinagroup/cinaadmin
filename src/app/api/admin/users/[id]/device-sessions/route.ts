@@ -26,8 +26,5 @@ export async function GET(
 		body: { userId: id },
 		cookie,
 	});
-	if (!res.ok) {
-		return NextResponse.json({ ok: true, data: { sessions: [] } });
-	}
-	return NextResponse.json(res, { status: 200 });
+	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }

@@ -17,9 +17,5 @@ export async function GET(request: NextRequest) {
 	const qs = new URL(request.url).searchParams.toString();
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch(`/audit/alerts?${qs}`, { cookie });
-	// Degrade gracefully if the endpoint is unavailable.
-	if (!res.ok) {
-		return NextResponse.json({ ok: true, data: { alerts: [] } });
-	}
-	return NextResponse.json(res, { status: 200 });
+	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }

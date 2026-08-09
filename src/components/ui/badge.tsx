@@ -10,7 +10,7 @@ const badgeVariants = cva(
 					// canvas-soft + body text — the default metadata pill.
 					default: "bg-canvas-soft text-body",
 					outline: "border border-hairline text-body",
-					success: "bg-success-soft text-link-deep",
+					success: "bg-success-soft text-success",
 					warning: "bg-warning-soft text-warning",
 					danger: "bg-error-soft text-error",
 					muted: "bg-canvas-soft-2 text-mute",

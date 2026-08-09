@@ -17,9 +17,5 @@ export async function GET(
 		`/admin/list-user-wallets?userId=${encodeURIComponent(id)}`,
 		{ cookie },
 	);
-	if (!res.ok) {
-		// Degrade gracefully — wallets endpoint may 403/404.
-		return NextResponse.json({ ok: true, data: { wallets: [] } });
-	}
-	return NextResponse.json(res, { status: 200 });
+	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }

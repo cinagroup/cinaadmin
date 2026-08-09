@@ -21,6 +21,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { fetchAdminJson } from "@/lib/client-api";
 
 interface PasskeyDTO {
 	id: string;
@@ -36,12 +37,13 @@ export function PasskeysTab({ userId }: { userId: string }) {
 	const [renameId, setRenameId] = useState<string | null>(null);
 	const [renameValue, setRenameValue] = useState("");
 
-	const { data, isFetching } = useQuery({
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["user", userId, "passkeys"],
 		queryFn: async () => {
-			const r = await fetch(`/api/admin/users/${userId}/passkeys`);
-			const d = (await r.json()) as { ok: boolean; data?: { passkeys?: PasskeyDTO[] } };
-			return d.ok ? d.data?.passkeys ?? [] : [];
+			const d = await fetchAdminJson<{ ok: boolean; data?: { passkeys?: PasskeyDTO[] } }>(
+				`/api/admin/users/${userId}/passkeys`,
+			);
+			return d.data?.passkeys ?? [];
 		},
 	});
 
@@ -51,10 +53,12 @@ export function PasskeysTab({ userId }: { userId: string }) {
 		const r = await fetch(`/api/admin/users/${userId}/passkeys/${id}`, { method: "DELETE" });
 		if (r.ok) {
 			toast.success(t("passkeys.revoked"));
+			await qc.invalidateQueries({ queryKey: ["user", userId, "passkeys"] });
+			return true;
 		} else {
 			toast.error(t("toast.deleteFailed"));
+			return false;
 		}
-		await qc.invalidateQueries({ queryKey: ["user", userId, "passkeys"] });
 	};
 
 	const doRename = async () => {
@@ -113,9 +117,9 @@ export function PasskeysTab({ userId }: { userId: string }) {
 					<RoleGuard allow={["super_admin", "security_admin"]}>
 						<ConfirmDialog
 							trigger={
-								<span className="cursor-pointer text-xs text-danger">
+								<Button variant="ghost" size="sm" className="text-error">
 									{t("passkeys.revoke")}
-								</span>
+								</Button>
 							}
 							title={t("passkeys.revoke")}
 							danger
@@ -138,7 +142,10 @@ export function PasskeysTab({ userId }: { userId: string }) {
 		<div>
 			<DataTable
 				table={table}
-				emptyLabel={isFetching ? t("common.loading") : t("passkeys.empty")}
+				emptyLabel={t("passkeys.empty")}
+				isLoading={isFetching && !data}
+				isError={isError}
+				onRetry={() => void refetch()}
 			/>
 			{/* Rename dialog */}
 			{renameId && (

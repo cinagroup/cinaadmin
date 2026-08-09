@@ -8,6 +8,7 @@ import {
 	type ColumnDef,
 } from "@tanstack/react-table";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 import { DataTable } from "@/components/data-table/data-table";
 import { RoleGuard } from "@/components/role-guard";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -15,20 +16,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { fetchAdminJson } from "@/lib/client-api";
 import type { OrgDTO } from "@/lib/cinaauth/dto";
 
 export default function OrganizationsPage() {
 	const { t } = useI18n();
 	const qc = useQueryClient();
-	const { data, isFetching } = useQuery({
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["organizations"],
 		queryFn: async () => {
-			const r = await fetch("/api/admin/organizations");
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok: boolean;
 				data?: { organizations: OrgDTO[] };
-			};
-			return d.ok ? d.data?.organizations ?? [] : [];
+			}>("/api/admin/organizations");
+			return d.data?.organizations ?? [];
 		},
 	});
 
@@ -39,21 +40,28 @@ export default function OrganizationsPage() {
 	const [creating, setCreating] = useState(false);
 
 	const create = async () => {
+		if (!name.trim() || !slug.trim()) {
+			toast.error(t("toast.actionFailed"));
+			return false;
+		}
 		setCreating(true);
-		const r = await fetch("/api/admin/organizations", {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ name, slug }),
-		});
-		setCreating(false);
-		if (r.ok) {
+		try {
+			const r = await fetch("/api/admin/organizations", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ name, slug }),
+			});
+			if (!r.ok) {
+				toast.error(t("toast.createFailed"));
+				return false;
+			}
 			setName("");
 			setSlug("");
-		} else {
-			// Keep the form values so the admin can retry.
-			toast.error(t("toast.createFailed"));
+			await qc.invalidateQueries({ queryKey: ["organizations"] });
+			return true;
+		} finally {
+			setCreating(false);
 		}
-		await qc.invalidateQueries({ queryKey: ["organizations"] });
 	};
 
 	const columns = useMemo<ColumnDef<OrgDTO>[]>(
@@ -93,6 +101,7 @@ export default function OrganizationsPage() {
 					<ConfirmDialog
 						trigger={
 							<Button variant="primary" size="sm">
+								<Plus size={15} />
 								{t("organizations.create")}
 							</Button>
 						}
@@ -101,11 +110,13 @@ export default function OrganizationsPage() {
 						onConfirm={create}
 					>
 						<Input
+							required
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 							placeholder={t("organizations.name")}
 						/>
 						<Input
+							required
 							value={slug}
 							onChange={(e) => setSlug(e.target.value)}
 							placeholder={t("organizations.slug")}
@@ -115,7 +126,10 @@ export default function OrganizationsPage() {
 			</PageHeader>
 			<DataTable
 				table={table}
-				emptyLabel={isFetching ? t("common.loading") : t("organizations.empty")}
+				emptyLabel={t("organizations.empty")}
+				isLoading={isFetching && !data}
+				isError={isError}
+				onRetry={() => void refetch()}
 			/>
 		</div>
 	);

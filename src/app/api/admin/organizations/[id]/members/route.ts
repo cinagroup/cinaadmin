@@ -22,7 +22,7 @@ export async function GET(
 		cookie,
 	});
 	if (!res.ok) {
-		return NextResponse.json({ ok: true, data: { members: [] } });
+		return NextResponse.json(res, { status: 502 });
 	}
 	return NextResponse.json({ ok: true, data: res.data });
 }

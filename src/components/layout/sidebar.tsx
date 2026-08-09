@@ -133,10 +133,10 @@ export function Sidebar({
 									title={collapsed ? t(item.key) : undefined}
 									aria-label={collapsed ? t(item.key) : undefined}
 									className={cn(
-										"flex h-9 items-center rounded-[var(--radius-sm)] text-[13px] leading-5 transition-colors",
+										"relative flex h-9 items-center rounded-[var(--radius-sm)] text-[13px] leading-5 transition-colors before:absolute before:left-0 before:top-2 before:h-5 before:w-0.5 before:rounded-full before:bg-transparent",
 										collapsed ? "justify-center px-2" : "gap-2.5 px-3",
 										active
-											? "bg-canvas-soft-2 font-medium text-ink"
+											? "bg-canvas-soft-2 font-medium text-ink before:bg-link"
 											: "text-body hover:bg-canvas-soft-2 hover:text-ink",
 									)}
 								>

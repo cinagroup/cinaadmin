@@ -10,6 +10,7 @@ import {
 	YAxis,
 } from "recharts";
 import { useThemeTokens } from "@/hooks/use-theme-tokens";
+import { ChartState } from "@/components/charts/chart-state";
 
 /**
  * Daily signup trend line chart. Colors read from CSS custom properties so
@@ -23,6 +24,7 @@ export function SignupLine({
 	data: { date: string; count: number }[];
 }) {
 	const { v, themeKey } = useThemeTokens();
+	if (data.length === 0) return <ChartState status="empty" />;
 
 	return (
 		<ResponsiveContainer width="100%" height={240}>
@@ -57,7 +59,7 @@ export function SignupLine({
 				<Line
 					type="monotone"
 					dataKey="count"
-					stroke={v("--chart-1", "#4f39f6")}
+					stroke={v("--chart-1", "#0070f3")}
 					strokeWidth={2}
 					dot={false}
 				/>

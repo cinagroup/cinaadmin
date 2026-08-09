@@ -45,11 +45,13 @@ export function BanDialog({ userId }: { userId: string }) {
 				qc.invalidateQueries({ queryKey: ["user", userId] }),
 				qc.invalidateQueries({ queryKey: ["users"] }),
 			]);
+			return true;
 		} else {
 			const d = (await r.json().catch(() => null)) as {
 				error?: { message?: string };
 			} | null;
 			toast.error(d?.error?.message ?? t("toast.actionFailed"));
+			return false;
 		}
 	};
 

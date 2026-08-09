@@ -26,43 +26,51 @@ export function BatchActionBar({
 
 	const runBatch = async (action: "ban" | "delete") => {
 		setLoading(true);
-		const r = await fetch("/api/admin/users/batch", {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ action, userIds: selectedIds }),
-		});
-		setLoading(false);
-		const d = (await r.json().catch(() => ({}))) as {
-			ok?: boolean;
-			data?: { succeeded: number; failed: number };
-		};
-		if (d.ok) {
-			const count = d.data?.succeeded ?? 0;
-			toast.success(
-				action === "ban"
-					? t("batch.result.banned", { count })
-					: t("batch.result.deleted", { count }),
-			);
-		} else if (d.data && d.data.failed > 0) {
-			toast.warning(
-				t("batch.result.partial", {
-					ok: d.data.succeeded,
-					failed: d.data.failed,
-				}),
-			);
-		} else {
+		try {
+			const r = await fetch("/api/admin/users/batch", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ action, userIds: selectedIds }),
+			});
+			const d = (await r.json().catch(() => ({}))) as {
+				ok?: boolean;
+				data?: { succeeded: number; failed: number };
+			};
+			if (r.ok && d.ok) {
+				const count = d.data?.succeeded ?? 0;
+				toast.success(
+					action === "ban"
+						? t("batch.result.banned", { count })
+						: t("batch.result.deleted", { count }),
+				);
+			} else if (r.ok && d.data && d.data.failed > 0) {
+				toast.warning(
+					t("batch.result.partial", {
+						ok: d.data.succeeded,
+						failed: d.data.failed,
+					}),
+				);
+			} else {
+				toast.error(t("toast.saveFailed"));
+				return false;
+			}
+			onClear();
+			await qc.invalidateQueries({ queryKey: ["users"] });
+			return true;
+		} catch {
 			toast.error(t("toast.saveFailed"));
+			return false;
+		} finally {
+			setLoading(false);
 		}
-		onClear();
-		await qc.invalidateQueries({ queryKey: ["users"] });
 	};
 
 	return (
-		<div className="sticky bottom-4 z-20 flex items-center gap-3 rounded-[var(--radius)] border border-hairline bg-canvas px-4 py-2.5 shadow-lg">
+		<div className="sticky bottom-4 z-20 flex flex-wrap items-center gap-2 rounded-[var(--radius-md)] border border-hairline bg-canvas px-3 py-2.5 shadow-modal sm:gap-3 sm:px-4">
 			<span className="text-sm font-medium text-ink">
 				{t("batch.selected", { count: selectedIds.length })}
 			</span>
-			<div className="h-4 w-px bg-hairline" />
+			<div className="hidden h-4 w-px bg-hairline sm:block" />
 			<ConfirmDialog
 				trigger={
 					<Button variant="secondary" size="sm" disabled={loading}>

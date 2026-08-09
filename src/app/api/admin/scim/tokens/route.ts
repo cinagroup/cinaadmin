@@ -8,8 +8,7 @@ export async function GET(request: NextRequest) {
 	if (!session || !hasAdminRole(session.role)) return NextResponse.json({ ok: false }, { status: 403 });
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch("/scim/list-provider-connections", { cookie });
-	if (!res.ok) return NextResponse.json({ ok: true, data: { connections: [] } });
-	return NextResponse.json(res, { status: 200 });
+	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
 
 /** POST /api/admin/scim/tokens — generate a SCIM token. */

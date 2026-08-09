@@ -1,18 +1,32 @@
 "use client";
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	getCoreRowModel,
+	type ColumnDef,
+	useReactTable,
+} from "@tanstack/react-table";
+import { Download, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { DataTable } from "@/components/data-table/data-table";
-import { getCoreRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
+import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ConfirmDialog } from "@/components/confirm-dialog";
-import { PageHeader } from "@/components/layout/page-header";
+import { fetchAdminJson, openExternal } from "@/lib/client-api";
 import { useI18n } from "@/lib/i18n/i18n-context";
 
-interface SsoProvider { id: string; name: string; domain?: string; entityId?: string; verified?: boolean; }
+interface SsoProvider {
+	id: string;
+	name: string;
+	domain?: string;
+	entityId?: string;
+	verified?: boolean;
+}
+
 interface SsoResponse {
 	ok?: boolean;
 	data?: {
@@ -20,74 +34,220 @@ interface SsoResponse {
 		url?: string;
 	};
 }
+
 export default function SsoPage() {
 	const { t } = useI18n();
-	const qc = useQueryClient();
+	const queryClient = useQueryClient();
 	const [name, setName] = useState("");
 	const [domain, setDomain] = useState("");
 	const [entityId, setEntityId] = useState("");
-	const { data, isFetching } = useQuery({
+	const [creating, setCreating] = useState(false);
+	const [loadingMetadata, setLoadingMetadata] = useState(false);
+
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["sso-providers"],
-		queryFn: async () => { const r = await fetch("/api/admin/sso/providers"); const d = (await r.json()) as SsoResponse; return d.ok ? d.data?.providers ?? [] : []; },
+		queryFn: async () => {
+			const payload = await fetchAdminJson<SsoResponse>(
+				"/api/admin/sso/providers",
+			);
+			return payload.data?.providers ?? [];
+		},
 	});
-	const providers: SsoProvider[] = data ?? [];
-	const create = async () => {
-		if (!name.trim()) { toast.error(t("toast.actionFailed")); return; }
-		const r = await fetch("/api/admin/sso/providers", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, domain, entityId }) });
-		if (r.ok) { toast.success(t("common.saved")); setName(""); setDomain(""); setEntityId(""); await qc.invalidateQueries({ queryKey: ["sso-providers"] }); }
-		else { toast.error(t("toast.saveFailed")); }
+	const providers = data ?? [];
+
+	const create = async (event: React.FormEvent) => {
+		event.preventDefault();
+		if (!name.trim()) return;
+		setCreating(true);
+		try {
+			await fetchAdminJson<SsoResponse>("/api/admin/sso/providers", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					name: name.trim(),
+					domain: domain.trim(),
+					entityId: entityId.trim(),
+				}),
+			});
+			toast.success(t("common.saved"));
+			setName("");
+			setDomain("");
+			setEntityId("");
+			await queryClient.invalidateQueries({ queryKey: ["sso-providers"] });
+		} catch {
+			toast.error(t("toast.saveFailed"));
+		} finally {
+			setCreating(false);
+		}
 	};
-	const del = async (id: string) => {
-		const r = await fetch(`/api/admin/sso/providers/${id}`, { method: "DELETE" });
-		if (!r.ok) toast.error(t("toast.deleteFailed"));
-		await qc.invalidateQueries({ queryKey: ["sso-providers"] });
+
+	const remove = async (id: string) => {
+		try {
+			await fetchAdminJson(`/api/admin/sso/providers/${id}`, {
+				method: "DELETE",
+			});
+			await queryClient.invalidateQueries({ queryKey: ["sso-providers"] });
+			return true;
+		} catch {
+			toast.error(t("toast.deleteFailed"));
+			return false;
+		}
 	};
-	const verifyDomain = async (p: SsoProvider) => {
-		const r = await fetch("/api/admin/sso/domain-verification", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "verify", domain: p.domain, providerId: p.id }) });
-		if (r.ok) { toast.success(t("sso.verified")); await qc.invalidateQueries({ queryKey: ["sso-providers"] }); }
-		else { toast.error(t("toast.actionFailed")); }
+
+	const verifyDomain = async (provider: SsoProvider) => {
+		try {
+			await fetchAdminJson("/api/admin/sso/domain-verification", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					action: "verify",
+					domain: provider.domain,
+					providerId: provider.id,
+				}),
+			});
+			toast.success(t("sso.verified"));
+			await queryClient.invalidateQueries({ queryKey: ["sso-providers"] });
+		} catch {
+			toast.error(t("toast.actionFailed"));
+		}
 	};
-	const ssoSpMetadataLabel = t("sso.spMetadata") || "SP Metadata";
+
+	const downloadMetadata = async () => {
+		setLoadingMetadata(true);
+		try {
+			const payload = await fetchAdminJson<SsoResponse>("/api/admin/sso/metadata");
+			if (!payload.data?.url || !openExternal(payload.data.url)) {
+				throw new Error("Missing metadata URL");
+			}
+		} catch {
+			toast.error(t("toast.actionFailed"));
+		} finally {
+			setLoadingMetadata(false);
+		}
+	};
+
 	const columns: ColumnDef<SsoProvider>[] = [
 		{ accessorKey: "name", header: t("sso.providerName") },
-		{ accessorKey: "domain", header: t("sso.domain"), cell: ({ row }) => row.original.domain ?? "—" },
-		{ accessorKey: "entityId", header: t("sso.entityId"), cell: ({ row }) => row.original.entityId ?? "—" },
-		{ header: t("sso.status"), cell: ({ row }) => row.original.verified ? <Badge variant="success">{t("sso.verified")}</Badge> : <Badge variant="warning">{t("sso.pending")}</Badge> },
-		{ id: "actions", header: "", cell: ({ row }) => (
-			<div className="flex gap-1">
-				{!row.original.verified && row.original.domain && <Button variant="ghost" size="sm" onClick={() => verifyDomain(row.original)}>{t("sso.verifyDomain")}</Button>}
-				<ConfirmDialog trigger={<Button variant="ghost" size="sm" className="text-danger">{t("common.delete")}</Button>} title={t("common.delete")} danger confirmText={t("common.delete")} onConfirm={() => del(row.original.id)} />
-			</div>
-		) },
-	];
-	const table = useReactTable({ data: providers, columns, getCoreRowModel: getCoreRowModel() });
-	return (
-		<div className="max-w-3xl">
-			<PageHeader title={t("sso.title")} />
-			<div className="mb-4 space-y-3 rounded-[var(--radius-lg)] border border-hairline bg-canvas p-4">
-				<div className="grid grid-cols-3 gap-3">
-					<div><Label>{t("sso.providerName")}</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-					<div><Label>{t("sso.domain")}</Label><Input value={domain} onChange={(e) => setDomain(e.target.value)} /></div>
-					<div><Label>{t("sso.entityId")}</Label><Input value={entityId} onChange={(e) => setEntityId(e.target.value)} /></div>
+		{
+			accessorKey: "domain",
+			header: t("sso.domain"),
+			cell: ({ row }) => row.original.domain ?? "—",
+		},
+		{
+			accessorKey: "entityId",
+			header: t("sso.entityId"),
+			cell: ({ row }) => row.original.entityId ?? "—",
+		},
+		{
+			header: t("sso.status"),
+			cell: ({ row }) =>
+				row.original.verified ? (
+					<Badge variant="success">{t("sso.verified")}</Badge>
+				) : (
+					<Badge variant="warning">{t("sso.pending")}</Badge>
+				),
+		},
+		{
+			id: "actions",
+			header: "",
+			cell: ({ row }) => (
+				<div className="flex items-center justify-end gap-1">
+					{!row.original.verified && row.original.domain && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => verifyDomain(row.original)}
+						>
+							<ShieldCheck size={15} />
+							{t("sso.verifyDomain")}
+						</Button>
+					)}
+					<ConfirmDialog
+						trigger={
+							<Button variant="ghost" size="sm" className="text-error">
+								<Trash2 size={15} />
+								{t("common.delete")}
+							</Button>
+						}
+						title={t("common.delete")}
+						danger
+						confirmText={t("common.delete")}
+						onConfirm={() => remove(row.original.id)}
+					/>
 				</div>
-				<Button variant="primary" size="sm" onClick={create}>{t("sso.addProvider")}</Button>
-			</div>
-			<DataTable table={table} emptyLabel={isFetching ? t("common.loading") : t("sso.empty")} />
-			{/* SP Metadata download link */}
-			<div className="mt-4">
+			),
+		},
+	];
+	const table = useReactTable({
+		data: providers,
+		columns,
+		getCoreRowModel: getCoreRowModel(),
+	});
+
+	return (
+		<div className="max-w-5xl">
+			<PageHeader title={t("sso.title")}>
 				<Button
-					variant="ghost"
+					variant="secondary"
 					size="sm"
-					onClick={async () => {
-						const r = await fetch("/api/admin/sso/metadata");
-						const d = (await r.json().catch(() => ({}))) as SsoResponse;
-						if (d.ok && d.data?.url) window.open(d.data.url, "_blank");
-						else toast.error(t("toast.actionFailed"));
-					}}
+					disabled={loadingMetadata}
+					onClick={downloadMetadata}
 				>
-					{ssoSpMetadataLabel}
+					<Download size={15} />
+					{t("sso.spMetadata")}
 				</Button>
-			</div>
+			</PageHeader>
+
+			<form
+				onSubmit={create}
+				className="mb-4 rounded-[var(--radius-md)] border border-hairline bg-canvas p-4 shadow-card"
+			>
+				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+					<div className="space-y-1.5">
+						<Label htmlFor="sso-name">{t("sso.providerName")}</Label>
+						<Input
+							id="sso-name"
+							required
+							value={name}
+							onChange={(event) => setName(event.target.value)}
+						/>
+					</div>
+					<div className="space-y-1.5">
+						<Label htmlFor="sso-domain">{t("sso.domain")}</Label>
+						<Input
+							id="sso-domain"
+							value={domain}
+							onChange={(event) => setDomain(event.target.value)}
+						/>
+					</div>
+					<div className="space-y-1.5 sm:col-span-2 xl:col-span-1">
+						<Label htmlFor="sso-entity-id">{t("sso.entityId")}</Label>
+						<Input
+							id="sso-entity-id"
+							value={entityId}
+							onChange={(event) => setEntityId(event.target.value)}
+						/>
+					</div>
+				</div>
+				<Button
+					type="submit"
+					variant="primary"
+					size="sm"
+					className="mt-3"
+					disabled={creating || !name.trim()}
+				>
+					<Plus size={15} />
+					{t("sso.addProvider")}
+				</Button>
+			</form>
+
+			<DataTable
+				table={table}
+				emptyLabel={t("sso.empty")}
+				isLoading={isFetching && !data}
+				isError={isError}
+				onRetry={() => void refetch()}
+			/>
 		</div>
 	);
 }

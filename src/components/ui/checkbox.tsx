@@ -12,16 +12,18 @@ const Checkbox = React.forwardRef<
 	<CheckboxPrimitive.Root
 		ref={ref}
 		className={cn(
-			"peer h-4 w-4 shrink-0 rounded-[var(--radius-xs)] border border-hairline-strong bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-ink data-[state=checked]:bg-ink data-[state=checked]:text-canvas",
+			"peer group inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[var(--radius-xs)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 max-sm:h-11 max-sm:w-11 max-sm:rounded-[var(--radius-sm)]",
 			className,
 		)}
 		{...props}
 	>
-		<CheckboxPrimitive.Indicator
-			className={cn("flex items-center justify-center text-current")}
-		>
-			<Check size={12} strokeWidth={3} />
-		</CheckboxPrimitive.Indicator>
+		<span className="flex h-4 w-4 items-center justify-center rounded-[var(--radius-xs)] border border-hairline-strong bg-canvas group-data-[state=checked]:border-ink group-data-[state=checked]:bg-ink group-data-[state=checked]:text-canvas">
+			<CheckboxPrimitive.Indicator
+				className={cn("flex items-center justify-center text-current")}
+			>
+				<Check size={12} strokeWidth={3} />
+			</CheckboxPrimitive.Indicator>
+		</span>
 	</CheckboxPrimitive.Root>
 ));
 Checkbox.displayName = CheckboxPrimitive.Root.displayName;

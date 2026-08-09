@@ -36,6 +36,12 @@ function postReq(path: string, body?: unknown): NextRequest {
 	});
 }
 
+function getReq(path: string): NextRequest {
+	return new NextRequest(new URL(`https://admin.test${path}`), {
+		headers: { cookie: "s=1" },
+	});
+}
+
 function rawReq(path: string, method: string, raw: string): NextRequest {
 	return new NextRequest(new URL(`https://admin.test${path}`), {
 		method,
@@ -124,6 +130,80 @@ describe("POST /api/admin/users/[id]/ban", () => {
 			params({ id: "u2" }),
 		);
 		expect(res.status).toBe(400);
+	});
+});
+
+describe("user lookup response semantics", () => {
+	it("returns 502 when cinaauth is unavailable", async () => {
+		mockFetch.mockResolvedValue({
+			ok: false,
+			error: { code: "CINAUTH_503", message: "unavailable", status: 503 },
+		});
+		const { GET } = await import("@/app/api/admin/users/[id]/route");
+		const res = await GET(
+			getReq("/api/admin/users/u2"),
+			params({ id: "u2" }),
+		);
+		expect(res.status).toBe(502);
+	});
+
+	it("preserves a real upstream 404", async () => {
+		mockFetch.mockResolvedValue({
+			ok: false,
+			error: { code: "CINAUTH_404", message: "missing", status: 404 },
+		});
+		const { GET } = await import("@/app/api/admin/users/[id]/route");
+		const res = await GET(
+			getReq("/api/admin/users/missing"),
+			params({ id: "missing" }),
+		);
+		expect(res.status).toBe(404);
+	});
+});
+
+describe("POST /api/admin/users/[id]/send-verification", () => {
+	it("reads the nested get-user response before sending an OTP", async () => {
+		mockFetch
+			.mockResolvedValueOnce({
+				ok: true,
+				data: { user: { email: "user@example.com" } },
+			})
+			.mockResolvedValueOnce({ ok: true, data: {} });
+		const { POST } = await import(
+			"@/app/api/admin/users/[id]/send-verification/route"
+		);
+		const res = await POST(
+			postReq("/api/admin/users/u2/send-verification", {
+				type: "email-otp",
+			}),
+			params({ id: "u2" }),
+		);
+		expect(res.status).toBe(200);
+		expect(mockFetch).toHaveBeenNthCalledWith(
+			2,
+			"/email-otp/send-verification-otp",
+			expect.objectContaining({
+				method: "POST",
+				body: { email: "user@example.com" },
+			}),
+		);
+	});
+
+	it("returns 502 when the lookup service is unavailable", async () => {
+		mockFetch.mockResolvedValue({
+			ok: false,
+			error: { code: "CINAUTH_503", message: "unavailable", status: 503 },
+		});
+		const { POST } = await import(
+			"@/app/api/admin/users/[id]/send-verification/route"
+		);
+		const res = await POST(
+			postReq("/api/admin/users/u2/send-verification", {
+				type: "email-otp",
+			}),
+			params({ id: "u2" }),
+		);
+		expect(res.status).toBe(502);
 	});
 });
 
@@ -281,6 +361,91 @@ describe("GET /api/admin/export (audit)", () => {
 			}),
 		);
 		expect(res.status).toBe(502);
+	});
+});
+
+describe("admin list routes preserve upstream failures", () => {
+	const cases: Array<[string, () => Promise<Response>]> = [
+		[
+			"API keys",
+			async () => (await import("@/app/api/admin/api-keys/route")).GET(getReq("/api/admin/api-keys")),
+		],
+		[
+			"organizations",
+			async () => (await import("@/app/api/admin/organizations/route")).GET(getReq("/api/admin/organizations")),
+		],
+		[
+			"sessions",
+			async () => (await import("@/app/api/admin/sessions/route")).GET(getReq("/api/admin/sessions")),
+		],
+		[
+			"subscriptions",
+			async () => (await import("@/app/api/admin/subscriptions/route")).GET(getReq("/api/admin/subscriptions")),
+		],
+		[
+			"SSO providers",
+			async () => (await import("@/app/api/admin/sso/providers/route")).GET(getReq("/api/admin/sso/providers")),
+		],
+		[
+			"SCIM connections",
+			async () => (await import("@/app/api/admin/scim/tokens/route")).GET(getReq("/api/admin/scim/tokens")),
+		],
+		[
+			"audit alerts",
+			async () => (await import("@/app/api/admin/audit/alerts/route")).GET(getReq("/api/admin/audit/alerts")),
+		],
+		[
+			"user wallets",
+			async () => (await import("@/app/api/admin/users/[id]/wallets/route")).GET(
+				getReq("/api/admin/users/u2/wallets"),
+				params({ id: "u2" }),
+			),
+		],
+		[
+			"user sessions",
+			async () => (await import("@/app/api/admin/users/[id]/sessions/route")).GET(
+				getReq("/api/admin/users/u2/sessions"),
+				params({ id: "u2" }),
+			),
+		],
+		[
+			"user passkeys",
+			async () => (await import("@/app/api/admin/users/[id]/passkeys/route")).GET(
+				getReq("/api/admin/users/u2/passkeys"),
+				params({ id: "u2" }),
+			),
+		],
+		[
+			"organization members",
+			async () => (await import("@/app/api/admin/organizations/[id]/members/route")).GET(
+				getReq("/api/admin/organizations/o1/members"),
+				params({ id: "o1" }),
+			),
+		],
+		[
+			"organization teams",
+			async () => (await import("@/app/api/admin/organizations/[id]/teams/route")).GET(
+				getReq("/api/admin/organizations/o1/teams"),
+				params({ id: "o1" }),
+			),
+		],
+		[
+			"team members",
+			async () => (await import("@/app/api/admin/organizations/[id]/teams/[teamId]/members/route")).GET(
+				getReq("/api/admin/organizations/o1/teams/t1/members"),
+				params({ id: "o1", teamId: "t1" }),
+			),
+		],
+	];
+
+	it.each(cases)("returns 502 for %s instead of a silent empty result", async (_name, invoke) => {
+		mockFetch.mockResolvedValue({
+			ok: false,
+			error: { code: "UPSTREAM", message: "unavailable" },
+		});
+		const response = await invoke();
+		expect(response.status).toBe(502);
+		expect(await response.json()).toMatchObject({ ok: false });
 	});
 });
 

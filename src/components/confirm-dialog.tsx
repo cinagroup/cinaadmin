@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactElement, type ReactNode } from "react";
 import {
 	Dialog,
 	DialogClose,
@@ -11,7 +11,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/i18n-context";
 
@@ -20,8 +19,8 @@ import { useI18n } from "@/lib/i18n/i18n-context";
  * on confirm, `onConfirm` runs. The trigger is wrapped via `asChild` so the
  * caller's own element receives the click — preserving the original API.
  *
- * Radix Dialog manages open state internally and closes on ESC, overlay click,
- * or any `DialogClose`-wrapped control. Both buttons here close the dialog.
+ * The content is a real form so Enter submits consistently. Returning `false`
+ * from `onConfirm` keeps the dialog open with the entered values intact.
  */
 export function ConfirmDialog({
 	trigger,
@@ -33,55 +32,79 @@ export function ConfirmDialog({
 	danger,
 	onConfirm,
 }: {
-	trigger: ReactNode;
+	trigger: ReactElement;
 	title: string;
 	description?: string;
 	children?: ReactNode;
 	confirmText?: string;
 	cancelText?: string;
 	danger?: boolean;
-	onConfirm: () => void;
+	onConfirm: () => unknown | Promise<unknown>;
 }) {
 	const { t } = useI18n();
+	const [open, setOpen] = useState(false);
+	const [pending, setPending] = useState(false);
+	const [actionError, setActionError] = useState<string | null>(null);
 	const _confirmText = confirmText ?? t("common.confirm");
 	const _cancelText = cancelText ?? t("common.cancel");
+
+	const confirm = async () => {
+		setPending(true);
+		setActionError(null);
+		try {
+			const result = await onConfirm();
+			if (result !== false) setOpen(false);
+		} catch {
+			setActionError(t("toast.actionFailed"));
+		} finally {
+			setPending(false);
+		}
+	};
+
 	return (
-		<Dialog>
-			<DialogTrigger asChild>
-				<button type="button" className="inline-flex cursor-pointer items-center">
-					{trigger}
-				</button>
-			</DialogTrigger>
+		<Dialog
+			open={open}
+			onOpenChange={(nextOpen) => {
+				if (pending) return;
+				setOpen(nextOpen);
+				if (!nextOpen) setActionError(null);
+			}}
+		>
+			<DialogTrigger asChild>{trigger}</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
 					{description && <DialogDescription>{description}</DialogDescription>}
 				</DialogHeader>
-				{children && <div className="space-y-3">{children}</div>}
-				<DialogFooter>
-					<DialogClose asChild>
-						<Button type="button" variant="secondary" size="sm">
-							{_cancelText}
-						</Button>
-					</DialogClose>
-					<DialogClose asChild>
+				<form
+					className="space-y-4"
+					onSubmit={(event) => {
+						event.preventDefault();
+						void confirm();
+					}}
+				>
+					{children && <div className="space-y-3">{children}</div>}
+					{actionError && (
+						<p role="alert" className="text-[13px] leading-5 text-error">
+							{actionError}
+						</p>
+					)}
+					<DialogFooter>
+						<DialogClose asChild>
+							<Button type="button" variant="secondary" size="sm" disabled={pending}>
+								{_cancelText}
+							</Button>
+						</DialogClose>
 						<Button
-							type="button"
+							type="submit"
 							variant={danger ? "danger" : "primary"}
 							size="sm"
-							onClick={() => {
-								// Handlers are often async; a network-level failure rejects
-								// without ever reaching their r.ok branches. Surface it here
-								// so no confirmed action can fail with zero feedback.
-								void Promise.resolve(onConfirm()).catch(() =>
-									toast.error(t("toast.actionFailed")),
-								);
-							}}
+							disabled={pending}
 						>
 							{_confirmText}
 						</Button>
-					</DialogClose>
-				</DialogFooter>
+					</DialogFooter>
+				</form>
 			</DialogContent>
 		</Dialog>
 	);

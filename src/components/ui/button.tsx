@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/cn";
 
 const buttonVariants = cva(
-	"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none [&_svg]:pointer-events-none [&_svg]:shrink-0",
+	"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors max-sm:min-h-11 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none [&_svg]:pointer-events-none [&_svg]:shrink-0",
 	{
 		variants: {
 			variant: {
@@ -16,15 +16,14 @@ const buttonVariants = cva(
 				outline:
 					"bg-transparent text-ink border border-hairline hover:bg-canvas-soft",
 				ghost: "bg-transparent text-body hover:bg-canvas-soft-2 hover:text-ink",
-				danger:
-					"bg-error text-canvas hover:bg-error/90",
+				danger: "bg-error text-white hover:bg-error/90 active:bg-error",
 				link: "bg-transparent text-link underline-offset-4 hover:underline",
 			},
 			size: {
 				sm: "h-8 rounded-[var(--radius-sm)] px-3 text-[14px] leading-5",
 				md: "h-10 rounded-[var(--radius-sm)] px-4 text-[14px] leading-5",
 				lg: "h-12 rounded-[var(--radius-sm)] px-5 text-[16px] leading-6",
-				icon: "h-9 w-9 rounded-[var(--radius-sm)]",
+				icon: "h-9 w-9 rounded-[var(--radius-sm)] max-sm:h-11 max-sm:w-11",
 			},
 		},
 		defaultVariants: {

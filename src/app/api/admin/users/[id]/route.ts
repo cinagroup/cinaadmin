@@ -21,8 +21,8 @@ export async function GET(
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch(`/admin/get-user?id=${encodeURIComponent(id)}`, { cookie });
 	if (!res.ok) {
-		// Degrade gracefully — user may not exist or cinaauth may be unavailable.
-		return NextResponse.json({ ok: false, error: res.error }, { status: 404 });
+		const status = res.error?.status === 404 ? 404 : 502;
+		return NextResponse.json({ ok: false, error: res.error }, { status });
 	}
 	return NextResponse.json(res, { status: 200 });
 }

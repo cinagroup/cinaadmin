@@ -7,10 +7,11 @@ import {
 	useReactTable,
 	type ColumnDef,
 } from "@tanstack/react-table";
-import { Search } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { DataTable } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import {
@@ -21,6 +22,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import type { AuditLogDTO } from "@/lib/cinaauth/dto";
+import { fetchAdminJson } from "@/lib/client-api";
 
 const CATEGORIES = [
 	"user",
@@ -44,7 +46,7 @@ export default function AuditPage() {
 	// purely client-side filter over the already-fetched page, so keeping it
 	// out of the key means typing filters instantly without re-hitting the API
 	// on every keystroke.
-	const { data, isFetching } = useQuery({
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["audit", category, result, dateRange],
 		queryFn: async () => {
 			const now = new Date();
@@ -59,12 +61,11 @@ export default function AuditPage() {
 				start.setDate(start.getDate() - days);
 				qs.set("start", start.toISOString());
 			}
-			const r = await fetch(`/api/admin/audit?${qs}`);
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok: boolean;
 				data?: { rows: AuditLogDTO[] };
-			};
-			return d.ok ? d.data?.rows ?? [] : [];
+			}>(`/api/admin/audit?${qs}`);
+			return d.data?.rows ?? [];
 		},
 	});
 
@@ -134,12 +135,15 @@ export default function AuditPage() {
 		<div>
 			<PageHeader title={t("audit.title")}>
 				<Button asChild variant="secondary" size="sm">
-					<a href={exportHref}>{t("audit.export")}</a>
+					<a href={exportHref}>
+						<Download size={15} />
+						{t("audit.export")}
+					</a>
 				</Button>
 			</PageHeader>
-			<div className="mb-4 flex gap-2">
+			<div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[160px_160px_140px_minmax(220px,1fr)]">
 				<Select value={category} onValueChange={setCategory}>
-					<SelectTrigger className="h-10 w-[160px]">
+					<SelectTrigger className="h-10 w-full">
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
@@ -152,7 +156,7 @@ export default function AuditPage() {
 					</SelectContent>
 				</Select>
 				<Select value={result} onValueChange={setResult}>
-					<SelectTrigger className="h-10 w-[160px]">
+					<SelectTrigger className="h-10 w-full">
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
@@ -162,7 +166,7 @@ export default function AuditPage() {
 					</SelectContent>
 				</Select>
 				<Select value={dateRange} onValueChange={setDateRange}>
-					<SelectTrigger className="h-10 w-[140px]">
+					<SelectTrigger className="h-10 w-full">
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
@@ -174,12 +178,11 @@ export default function AuditPage() {
 				</Select>
 				<div className="relative flex-1">
 					<Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-mute" />
-					<input
-						type="text"
+					<Input
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
 						placeholder={t("common.search")}
-						className="h-10 w-full rounded-[var(--radius-sm)] border border-hairline bg-canvas pl-9 pr-3 text-[14px] text-ink placeholder:text-mute focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+						className="pl-9"
 					/>
 				</div>
 			</div>
@@ -188,7 +191,10 @@ export default function AuditPage() {
 				rowClassName={(r) =>
 					r.result === "failure" ? "bg-error-soft" : undefined
 				}
-				emptyLabel={isFetching ? t("common.loading") : t("audit.empty")}
+				emptyLabel={t("audit.empty")}
+				isLoading={isFetching && !data}
+				isError={isError}
+				onRetry={() => void refetch()}
 			/>
 		</div>
 	);

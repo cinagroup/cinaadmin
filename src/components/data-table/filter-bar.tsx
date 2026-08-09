@@ -50,9 +50,9 @@ export function FilterBar({
 	}, [field, value]);
 
 	return (
-		<div className="mb-4 flex gap-2">
+		<div className="mb-4 flex flex-col gap-2 sm:flex-row">
 			<Select value={field} onValueChange={setField}>
-				<SelectTrigger className="h-10 w-[140px]">
+				<SelectTrigger className="h-10 w-full sm:w-[140px]">
 					<SelectValue />
 				</SelectTrigger>
 				<SelectContent>
@@ -67,7 +67,7 @@ export function FilterBar({
 				value={value}
 				onChange={(e) => setValue(e.target.value)}
 				placeholder={searchLabel}
-				className="flex-1"
+				className="sm:flex-1"
 			/>
 		</div>
 	);

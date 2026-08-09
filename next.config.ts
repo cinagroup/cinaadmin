@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
 	env: {
 		NEXT_PUBLIC_CINAUTH_BASE_URL:
 			process.env.NEXT_PUBLIC_CINAUTH_BASE_URL ??
-			"https://auth.cinagroup.com",
+			"https://auth.cinaseek.ai",
 		NEXT_PUBLIC_CINAUTH_AUTH_URL:
 			process.env.NEXT_PUBLIC_CINAUTH_AUTH_URL ??
 			"https://demo-auth.cinagroup.com",

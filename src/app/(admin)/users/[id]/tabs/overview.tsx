@@ -112,9 +112,11 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 								<>
 									<Badge variant="muted">{t("userDetail.profile.unverified")}</Badge>
 									{isSuperAdmin && (
-										<button
-											type="button"
-											className="text-[12px] text-link underline-offset-4 hover:underline"
+									<Button
+										type="button"
+										variant="link"
+										size="sm"
+										className="h-auto p-0 text-[12px] max-sm:min-h-11"
 											onClick={async () => {
 												const r = await fetch(`/api/admin/users/${user.id}`, {
 													method: "PATCH",
@@ -130,7 +132,7 @@ export function OverviewTab({ user }: { user: UserDTO }) {
 											}}
 										>
 											{t("userDetail.profile.markVerified")}
-										</button>
+									</Button>
 									)}
 								</>
 							)}

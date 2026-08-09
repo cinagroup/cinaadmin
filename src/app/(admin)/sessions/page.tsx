@@ -10,19 +10,19 @@ import {
 import { DataTable } from "@/components/data-table/data-table";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { fetchAdminJson } from "@/lib/client-api";
 import type { SessionDTO } from "@/lib/cinaauth/dto";
 
 export default function SessionsPage() {
 	const { t } = useI18n();
-	const { data, isFetching } = useQuery({
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["sessions", "all"],
 		queryFn: async () => {
-			const r = await fetch("/api/admin/sessions?limit=100");
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok: boolean;
 				data?: { sessions: SessionDTO[] };
-			};
-			return d.ok ? d.data?.sessions ?? [] : [];
+			}>("/api/admin/sessions?limit=100");
+			return d.data?.sessions ?? [];
 		},
 	});
 
@@ -58,7 +58,10 @@ export default function SessionsPage() {
 			<PageHeader title={t("sessions.title")} />
 			<DataTable
 				table={table}
-				emptyLabel={isFetching ? t("common.loading") : t("sessions.empty")}
+				emptyLabel={t("sessions.empty")}
+				isLoading={isFetching && !data}
+				isError={isError}
+				onRetry={() => void refetch()}
 			/>
 		</div>
 	);

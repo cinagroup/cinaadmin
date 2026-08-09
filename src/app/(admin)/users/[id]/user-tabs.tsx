@@ -15,11 +15,9 @@ export function UserTabs({ user }: { user: UserDTO }) {
 	const TABS = [
 		{ value: "overview", label: t("userDetail.tab.overview") },
 		{ value: "wallets", label: t("userDetail.tab.wallets") },
-		{ value: "third-party", label: t("userDetail.tab.wallets") },
 		{ value: "sessions", label: t("userDetail.tab.sessions") },
 		{ value: "passkeys", label: t("userDetail.tab.passkeys") },
 		{ value: "login-trail", label: t("userDetail.tab.loginTrail") },
-		{ value: "security", label: t("userDetail.tab.security") },
 	] as const;
 
 	return (
@@ -37,9 +35,6 @@ export function UserTabs({ user }: { user: UserDTO }) {
 			<TabsContent value="wallets">
 				<WalletsTab userId={userId} />
 			</TabsContent>
-			<TabsContent value="third-party">
-				<p className="text-[14px] leading-5 text-body">{t("placeholder.phase2")}</p>
-			</TabsContent>
 			<TabsContent value="sessions">
 				<SessionsTab userId={userId} />
 			</TabsContent>
@@ -48,9 +43,6 @@ export function UserTabs({ user }: { user: UserDTO }) {
 			</TabsContent>
 			<TabsContent value="login-trail">
 				<LoginTrailTab userId={userId} />
-			</TabsContent>
-			<TabsContent value="security">
-				<p className="text-[14px] leading-5 text-body">{t("placeholder.phase2")}</p>
 			</TabsContent>
 		</Tabs>
 	);

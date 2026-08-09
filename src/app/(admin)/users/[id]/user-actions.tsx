@@ -15,6 +15,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { copyText } from "@/lib/client-api";
 import { BanDialog } from "./ban-dialog";
 
 /** Role-gated action buttons for a user (ban/delete/reset-2fa). */
@@ -42,6 +43,7 @@ export function UserActions({
 		]);
 
 	const resetPassword = async () => {
+		if (newPassword.length < 8) return false;
 		const r = await fetch(`/api/admin/users/${userId}/reset-password`, {
 			method: "POST",
 			headers: { "content-type": "application/json" },
@@ -50,8 +52,10 @@ export function UserActions({
 		if (r.ok) {
 			toast.success(t("toast.passwordReset"));
 			setNewPassword("");
+			return true;
 		} else {
 			toast.error(t("toast.saveFailed"));
+			return false;
 		}
 	};
 	const remove = async () => {
@@ -59,13 +63,15 @@ export function UserActions({
 		if (r.ok) {
 			toast.success(t("toast.deleted"));
 			window.location.href = "/users";
+			return true;
 		} else {
 			toast.error(t("toast.deleteFailed"));
+			return false;
 		}
 	};
 
 	return (
-		<div className="flex items-center gap-3">
+		<div className="flex flex-wrap items-center gap-2">
 			<RoleGuard allow={["super_admin", "security_admin"]}>
 				{banned ? (
 					<Button
@@ -106,6 +112,8 @@ export function UserActions({
 						<Input
 							id="new-password"
 							type="password"
+							required
+							minLength={8}
 							value={newPassword}
 							onChange={(e) => setNewPassword(e.target.value)}
 							placeholder={t("userDetail.resetPassword.placeholder")}
@@ -132,8 +140,10 @@ export function UserActions({
 							if (r.ok) {
 								toast.success(t("toast.reset2fa"));
 								await refreshUser();
+								return true;
 							} else {
 								toast.error(t("toast.saveFailed"));
+								return false;
 							}
 						}}
 					/>
@@ -161,8 +171,10 @@ export function UserActions({
 						if (r.ok) {
 							toast.success(t("toast.impersonating"));
 							window.location.reload();
+							return true;
 						} else {
 							toast.error(t("toast.actionFailed"));
+							return false;
 						}
 					}}
 				/>
@@ -241,8 +253,7 @@ export function UserActions({
 							ok?: boolean;
 							data?: { token?: string };
 						};
-						if (d.ok && d.data?.token) {
-							navigator.clipboard?.writeText(d.data.token);
+						if (d.ok && d.data?.token && (await copyText(d.data.token))) {
 							toast.success(t("toast.tokenGenerated"));
 						} else {
 							toast.error(t("toast.saveFailed"));

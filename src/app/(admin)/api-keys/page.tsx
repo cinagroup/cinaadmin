@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Copy, Plus } from "lucide-react";
 import {
 	getCoreRowModel,
 	useReactTable,
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { copyText, fetchAdminJson } from "@/lib/client-api";
 import type { ApiKeyDTO } from "@/lib/cinaauth/dto";
 import {
 	Select,
@@ -37,15 +39,14 @@ import {
 export default function ApiKeysPage() {
 	const { t } = useI18n();
 	const qc = useQueryClient();
-	const { data, isFetching } = useQuery({
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["api-keys"],
 		queryFn: async () => {
-			const r = await fetch("/api/admin/api-keys");
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok: boolean;
 				data?: { apiKeys: ApiKeyDTO[] } | ApiKeyDTO[];
-			};
-			if (!d.ok || !d.data) return [];
+			}>("/api/admin/api-keys");
+			if (!d.data) return [];
 			return Array.isArray(d.data) ? d.data : (d.data.apiKeys ?? []);
 		},
 	});
@@ -60,29 +61,33 @@ export default function ApiKeysPage() {
 	const [editExpiresAt, setEditExpiresAt] = useState("");
 
 	const create = async () => {
-		setCreating(true);
-		const r = await fetch("/api/admin/api-keys", {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ name, prefixes: [scope] }),
-		});
-		setCreating(false);
-		// Capture the generated key — it's only returned once at creation.
-		const d = (await r.json().catch(() => ({}))) as {
-			ok?: boolean;
-			data?: { key?: string; apiKeys?: Array<{ key?: string }> };
-		};
-		const key = d.data?.key ?? d.data?.apiKeys?.[0]?.key;
-		if (!r.ok || !d.ok) {
-			// Keep the typed name so the admin can retry.
-			toast.error(t("toast.createFailed"));
-		} else {
-			setName("");
-			if (key) {
-				setCreatedKey(key);
-			}
+		if (!name.trim()) {
+			toast.error(t("toast.actionFailed"));
+			return false;
 		}
-		await qc.invalidateQueries({ queryKey: ["api-keys"] });
+		setCreating(true);
+		try {
+			const r = await fetch("/api/admin/api-keys", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ name, prefixes: [scope] }),
+			});
+			const d = (await r.json().catch(() => ({}))) as {
+				ok?: boolean;
+				data?: { key?: string; apiKeys?: Array<{ key?: string }> };
+			};
+			const key = d.data?.key ?? d.data?.apiKeys?.[0]?.key;
+			if (!r.ok || !d.ok || !key) {
+				toast.error(t("toast.createFailed"));
+				return false;
+			}
+			setName("");
+			setCreatedKey(key);
+			await qc.invalidateQueries({ queryKey: ["api-keys"] });
+			return true;
+		} finally {
+			setCreating(false);
+		}
 	};
 
 	const toggleKey = async (id: string, enabled: boolean) => {
@@ -97,8 +102,12 @@ export default function ApiKeysPage() {
 
 	const deleteKey = async (id: string) => {
 		const r = await fetch(`/api/admin/api-keys/${id}`, { method: "DELETE" });
-		if (!r.ok) toast.error(t("toast.deleteFailed"));
+		if (!r.ok) {
+			toast.error(t("toast.deleteFailed"));
+			return false;
+		}
 		await qc.invalidateQueries({ queryKey: ["api-keys"] });
+		return true;
 	};
 
 	const rotateKey = async (id: string) => {
@@ -177,7 +186,6 @@ export default function ApiKeysPage() {
 											setEditKeyId(key.id);
 											setEditName(key.name);
 											setEditExpiresAt(key.expiresAt ? new Date(key.expiresAt).toISOString().slice(0, 10) : "");
-											setEditKeyId(key.id);
 										}}
 									>
 										{t("common.edit")}
@@ -198,7 +206,7 @@ export default function ApiKeysPage() {
 									</Button>
 									<ConfirmDialog
 										trigger={
-											<Button variant="ghost" size="sm" className="text-danger">
+											<Button variant="ghost" size="sm" className="text-error">
 												{t("common.delete")}
 											</Button>
 										}
@@ -227,6 +235,7 @@ export default function ApiKeysPage() {
 					<ConfirmDialog
 						trigger={
 							<Button variant="primary" size="sm">
+								<Plus size={15} />
 								{t("apiKeys.create")}
 							</Button>
 						}
@@ -235,6 +244,7 @@ export default function ApiKeysPage() {
 						onConfirm={create}
 					>
 						<Input
+							required
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 							placeholder={t("apiKeys.name")}
@@ -253,7 +263,10 @@ export default function ApiKeysPage() {
 			</PageHeader>
 			<DataTable
 				table={table}
-				emptyLabel={isFetching ? t("common.loading") : t("apiKeys.empty")}
+				emptyLabel={t("apiKeys.empty")}
+				isLoading={isFetching && !data}
+				isError={isError}
+				onRetry={() => void refetch()}
 			/>
 
 			{/* Key reveal dialog — shown only once after creation */}
@@ -271,11 +284,15 @@ export default function ApiKeysPage() {
 							<Button
 								variant="secondary"
 								size="sm"
-								onClick={() => {
-									navigator.clipboard?.writeText(createdKey);
-									toast.success(t("apiKeys.created.copied"));
+								onClick={async () => {
+									if (await copyText(createdKey)) {
+										toast.success(t("apiKeys.created.copied"));
+									} else {
+										toast.error(t("toast.actionFailed"));
+									}
 								}}
 							>
+								<Copy size={15} />
 								{t("apiKeys.created.copy")}
 							</Button>
 						</div>

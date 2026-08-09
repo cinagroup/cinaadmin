@@ -7,10 +7,12 @@ import { CohortBars } from "@/components/charts/cohort-bars";
 import { SignupLine } from "@/components/charts/signup-line";
 import { ActiveUsersChart } from "@/components/charts/active-users-chart";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/layout/page-header";
 import { Section } from "@/components/layout/section";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { fetchAdminJson } from "@/lib/client-api";
 import type {
 	SignupPointDTO,
 	StatsOverviewDTO,
@@ -18,6 +20,7 @@ import type {
 } from "@/lib/cinaauth/dto";
 import {
 	Building2,
+	AlertTriangle,
 	KeyRound,
 	MonitorSmartphone,
 	ShieldAlert,
@@ -25,6 +28,7 @@ import {
 	UserPlus,
 	UserRoundX,
 	Users,
+	RefreshCw,
 } from "lucide-react";
 
 /** Sum counts in `series` whose date falls within the last `days` days. */
@@ -43,10 +47,12 @@ function pctChange(cur: number, prev: number): number | null {
 	return ((cur - prev) / prev) * 100;
 }
 
-function todayLabel() {
+function todayLabel(lang: "zh" | "en") {
 	const d = new Date();
-	const m = d.toLocaleString("en-US", { month: "short" });
-	return `${m} ${d.getDate()}`;
+	return d.toLocaleDateString(lang === "zh" ? "zh-CN" : "en-US", {
+		month: "short",
+		day: "numeric",
+	});
 }
 
 const EMPTY_OVERVIEW: StatsOverviewDTO = {
@@ -65,62 +71,74 @@ const EMPTY_SECURITY: SecurityTodayDTO = {
 };
 
 export default function DashboardPage() {
-	const { t } = useI18n();
+	const { t, lang } = useI18n();
 	// Client-side data fetching — the shell renders instantly (no SSR await on
 	// cinaauth), so navigation to /dashboard is as fast as the other pages.
 	// Each query is independent and caches in React Query.
-	const { data: overview, isLoading: ovLoading } = useQuery({
+	const overviewQuery = useQuery({
 		queryKey: ["stats-overview"],
 		queryFn: async () => {
-			const r = await fetch("/api/admin/stats/overview");
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok?: boolean;
 				data?: StatsOverviewDTO;
-			};
-			return d.ok ? d.data ?? EMPTY_OVERVIEW : EMPTY_OVERVIEW;
+			}>("/api/admin/stats/overview");
+			return d.data ?? EMPTY_OVERVIEW;
 		},
 		staleTime: 60_000,
 	});
-	const { data: signups } = useQuery<SignupPointDTO[]>({
+	const signupsQuery = useQuery<SignupPointDTO[]>({
 		queryKey: ["stats-signups", "30d"],
 		queryFn: async () => {
-			const r = await fetch("/api/admin/stats/signups?range=30d");
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok?: boolean;
 				data?: { data?: SignupPointDTO[] };
-			};
-			return d.ok ? d.data?.data ?? [] : [];
+			}>("/api/admin/stats/signups?range=30d");
+			return d.data?.data ?? [];
 		},
 		staleTime: 60_000,
 	});
-	const { data: security } = useQuery({
+	const securityQuery = useQuery({
 		queryKey: ["stats-security"],
 		queryFn: async () => {
-			const r = await fetch("/api/admin/stats/security-today");
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok?: boolean;
 				data?: SecurityTodayDTO;
-			};
-			return d.ok ? d.data ?? EMPTY_SECURITY : EMPTY_SECURITY;
+			}>("/api/admin/stats/security-today");
+			return d.data ?? EMPTY_SECURITY;
 		},
 		staleTime: 60_000,
 	});
-	const { data: alerts } = useQuery({
+	const alertsQuery = useQuery({
 		queryKey: ["audit-alerts"],
 		queryFn: async () => {
-			const r = await fetch("/api/admin/audit/alerts?windowHours=24&failThreshold=5");
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok?: boolean;
 				data?: { alerts?: Array<{ actorId?: string; failureCount?: number; lastIp?: string }> };
-			};
-			return d.ok ? d.data?.alerts ?? [] : [];
+			}>("/api/admin/audit/alerts?windowHours=24&failThreshold=5");
+			return d.data?.alerts ?? [];
 		},
 		staleTime: 60_000,
 	});
 
-	const ov = overview ?? EMPTY_OVERVIEW;
-	const sec = security ?? EMPTY_SECURITY;
-	const signupSeries = signups ?? [];
+	const ov = overviewQuery.data ?? EMPTY_OVERVIEW;
+	const sec = securityQuery.data ?? EMPTY_SECURITY;
+	const signupSeries = signupsQuery.data ?? [];
+	const alerts = alertsQuery.data ?? [];
+	const ovLoading = overviewQuery.isLoading;
+	const today = todayLabel(lang);
+	const hasDataError =
+		overviewQuery.isError ||
+		signupsQuery.isError ||
+		securityQuery.isError ||
+		alertsQuery.isError;
+	const retryDashboard = () => {
+		void Promise.all([
+			overviewQuery.refetch(),
+			signupsQuery.refetch(),
+			securityQuery.refetch(),
+			alertsQuery.refetch(),
+		]);
+	};
 
 	// Derive deltas from the 30d signup series: compare last 7d vs prior 7d.
 	const signups7d = sumLastDays(signupSeries, 7);
@@ -142,8 +160,23 @@ export default function DashboardPage() {
 		<div className="space-y-6">
 			<PageHeader
 				title={t("dashboard.title")}
-				description={`${t("dashboard.subtitle")} · ${todayLabel()}`}
+				description={`${t("dashboard.subtitle")} · ${today}`}
 			/>
+			{hasDataError && (
+				<div
+					role="alert"
+					className="flex flex-col gap-3 rounded-[var(--radius-md)] border border-warning/40 bg-warning-soft px-4 py-3 text-[14px] leading-5 text-body sm:flex-row sm:items-center sm:justify-between"
+				>
+					<span className="flex items-center gap-2">
+						<AlertTriangle size={16} className="shrink-0 text-warning" />
+						{t("dashboard.loadError")}
+					</span>
+					<Button variant="secondary" size="sm" onClick={retryDashboard}>
+						<RefreshCw size={15} />
+						{t("error.retry")}
+					</Button>
+				</div>
+			)}
 
 			{/* Users section */}
 			<Section label={t("dashboard.section.users")}>
@@ -153,7 +186,7 @@ export default function DashboardPage() {
 					) : (
 						<StatCard
 							label={t("dashboard.totalUsers")}
-							value={ov.totalUsers}
+							value={overviewQuery.isError ? "—" : ov.totalUsers}
 							spark={sparkSignups}
 							icon={Users}
 						/>
@@ -163,8 +196,8 @@ export default function DashboardPage() {
 					) : (
 						<StatCard
 							label={t("dashboard.activeUsers")}
-							value={ov.activeSessions}
-							deltaLabel={`on ${todayLabel()}`}
+							value={overviewQuery.isError ? "—" : ov.activeSessions}
+							deltaLabel={today}
 							icon={MonitorSmartphone}
 						/>
 					)}
@@ -173,7 +206,7 @@ export default function DashboardPage() {
 					) : (
 						<StatCard
 							label={t("dashboard.newUsers30d")}
-							value={ov.newUsers30d}
+							value={overviewQuery.isError ? "—" : ov.newUsers30d}
 							delta={signupsDelta ?? undefined}
 							deltaLabel={t("dashboard.vsLastWeek")}
 							spark={sparkSignups}
@@ -186,7 +219,7 @@ export default function DashboardPage() {
 					) : (
 						<StatCard
 							label={t("dashboard.bannedCount")}
-							value={ov.bannedCount}
+							value={overviewQuery.isError ? "—" : ov.bannedCount}
 							icon={UserRoundX}
 							tone="danger"
 						/>
@@ -213,7 +246,7 @@ export default function DashboardPage() {
 								</span>
 							</div>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="pt-0">
 							<CohortBars days={14} />
 						</CardContent>
 					</Card>
@@ -226,7 +259,7 @@ export default function DashboardPage() {
 								{t("dashboard.activeTrend.hint")}
 							</div>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="pt-0">
 							<ActiveUsersChart days={14} />
 						</CardContent>
 				</Card>
@@ -238,25 +271,25 @@ export default function DashboardPage() {
 			<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 				<StatCard
 					label={t("dashboard.orgCount")}
-					value={ov.organizationCount}
+					value={overviewQuery.isError ? "—" : ov.organizationCount}
 					icon={Building2}
 				/>
 				<StatCard
 					label={t("dashboard.no2fa")}
-					value={ov.usersWithout2FA}
+					value={overviewQuery.isError ? "—" : ov.usersWithout2FA}
 					hint={t("dashboard.no2fa.hint")}
 					icon={ShieldCheck}
 					tone="warning"
 				/>
 				<StatCard
 					label={t("dashboard.failedLogins")}
-					value={sec.failedLoginsToday}
+					value={securityQuery.isError ? "—" : sec.failedLoginsToday}
 					icon={ShieldAlert}
 					tone="danger"
 				/>
 				<StatCard
 					label={t("dashboard.otpRequests")}
-					value={sec.otpRequestsToday}
+					value={securityQuery.isError ? "—" : sec.otpRequestsToday}
 					icon={KeyRound}
 					tone="info"
 				/>
@@ -271,7 +304,7 @@ export default function DashboardPage() {
 							{t("dashboard.signupTrend")}
 						</div>
 					</CardHeader>
-					<CardContent>
+					<CardContent className="pt-0">
 						<SignupLine data={signupSeries} />
 					</CardContent>
 				</Card>
@@ -281,7 +314,7 @@ export default function DashboardPage() {
 							{t("dashboard.channelDist")}
 						</div>
 					</CardHeader>
-					<CardContent>
+					<CardContent className="pt-0">
 						<ChannelPie channels={ov.loginChannels} />
 					</CardContent>
 				</Card>

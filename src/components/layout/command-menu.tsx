@@ -60,7 +60,7 @@ export function CommandMenu() {
 			<button
 				type="button"
 				onClick={() => setOpen(true)}
-				className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border border-hairline bg-canvas text-body transition-colors hover:bg-canvas-soft-2 hover:text-ink sm:w-[min(24rem,32vw)] sm:justify-between sm:px-3"
+				className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-sm)] border border-hairline bg-canvas text-body transition-colors hover:bg-canvas-soft-2 hover:text-ink sm:h-9 sm:w-[min(24rem,32vw)] sm:justify-between sm:px-3"
 				aria-label={t("command.open")}
 			>
 				<span className="flex min-w-0 items-center gap-2">

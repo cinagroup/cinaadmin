@@ -12,5 +12,5 @@ export interface AdminSession {
 export interface StandardResponse<T> {
 	ok: boolean;
 	data?: T;
-	error?: { code: string; message: string };
+	error?: { code: string; message: string; status?: number };
 }

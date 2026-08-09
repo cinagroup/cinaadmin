@@ -19,9 +19,5 @@ export async function GET(
 		body: { userId: id },
 		cookie,
 	});
-	// Degrade gracefully — the endpoint may not be available.
-	if (!res.ok) {
-		return NextResponse.json({ ok: true, data: { sessions: [] } });
-	}
-	return NextResponse.json(res, { status: 200 });
+	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }

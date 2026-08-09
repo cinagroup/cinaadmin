@@ -31,9 +31,8 @@ export async function GET(request: NextRequest) {
 			banDuration: "permanent",
 			force2fa: { cinacoin: false, cinatoken: false },
 			trustedOrigins: [
-				"https://auth.cinagroup.com",
+				"https://auth.cinaseek.ai",
 				"https://demo-auth.cinagroup.com",
-				"https://admin.cinagroup.com",
 				"https://admin.cinaseek.ai",
 			],
 		},

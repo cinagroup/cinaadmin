@@ -17,8 +17,5 @@ export async function GET(
 	const { id } = await params;
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch(`/passkey/list-user-passkeys?userId=${encodeURIComponent(id)}`, { cookie });
-	if (!res.ok) {
-		return NextResponse.json({ ok: true, data: { passkeys: [] } });
-	}
-	return NextResponse.json(res, { status: 200 });
+	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }

@@ -4,7 +4,11 @@ import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/layout/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { AdminApiError, fetchAdminJson } from "@/lib/client-api";
+import { mapUserDTO } from "@/lib/cinaauth/mappers";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { UserTabs } from "./user-tabs";
 import { UserActions } from "./user-actions";
 import type { UserDTO } from "@/lib/cinaauth/dto";
@@ -25,29 +29,15 @@ export default function UserDetailPage({
 }) {
 	const { id } = use(params);
 	const { t } = useI18n();
-	const { data: user, isLoading, isError } = useQuery<UserDTO | null>({
+	const { data: user, isLoading, isError, error, refetch } = useQuery<UserDTO | null>({
 		queryKey: ["user", id],
 		queryFn: async () => {
-			const r = await fetch(`/api/admin/users/${id}`);
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok?: boolean;
-				data?: Record<string, unknown>;
-			};
-			if (!d.ok || !d.data) return null;
-			const u = d.data;
-			return {
-				id: String(u.id ?? ""),
-				email: String(u.email ?? ""),
-				name: (u.name as string | null | undefined) ?? null,
-				role: String(u.role ?? "user"),
-				banned: Boolean(u.banned),
-				banReason: (u.banReason as string | null | undefined) ?? null,
-				banExpires: (u.banExpires as string | null | undefined) ?? null,
-				twoFactorEnabled: Boolean(u.twoFactorEnabled),
-				emailVerified: Boolean(u.emailVerified),
-				createdAt: String(u.createdAt ?? new Date().toISOString()),
-				image: (u.image as string | null | undefined) ?? null,
-			} as UserDTO;
+				data?: { user?: Record<string, unknown> };
+			}>(`/api/admin/users/${id}`);
+			if (!d.data?.user) return null;
+			return mapUserDTO(d.data.user);
 		},
 	});
 
@@ -64,15 +54,38 @@ export default function UserDetailPage({
 		);
 	}
 
-	if (isError || !user) {
+	if (isError) {
+		const notFound = error instanceof AdminApiError && error.status === 404;
 		return (
-			<div>
+			<div className="max-w-2xl">
 				<PageHeader
-					title={t("users.notFound")}
+					title={notFound ? t("users.notFound") : t("error.generic.title")}
 					backHref="/users"
 					backLabel={t("users.back")}
 				/>
+				{!notFound && (
+					<div role="alert" className="flex items-center justify-between gap-4 rounded-[var(--radius-md)] border border-error/30 bg-error-soft p-4 text-[14px] text-error">
+						<span className="flex items-center gap-2">
+							<AlertCircle size={16} />
+							{t("error.generic.message")}
+						</span>
+						<Button variant="secondary" size="sm" onClick={() => void refetch()}>
+							<RefreshCw size={15} />
+							{t("error.retry")}
+						</Button>
+					</div>
+				)}
 			</div>
+		);
+	}
+
+	if (!user) {
+		return (
+			<PageHeader
+				title={t("users.notFound")}
+				backHref="/users"
+				backLabel={t("users.back")}
+			/>
 		);
 	}
 

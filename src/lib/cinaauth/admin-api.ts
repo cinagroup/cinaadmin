@@ -9,24 +9,7 @@ import type {
 	UserDTO,
 	WalletDTO,
 } from "./dto";
-
-/** Map a raw cinaauth user record to the console DTO. Defends against missing
- *  fields with defaults so the UI never sees `undefined`. */
-function mapUser(u: Record<string, unknown>): UserDTO {
-	return {
-		id: String(u.id ?? ""),
-		email: String(u.email ?? ""),
-		name: (u.name as string | null | undefined) ?? null,
-		role: String(u.role ?? "user"),
-		banned: Boolean(u.banned),
-		banReason: (u.banReason as string | null | undefined) ?? null,
-		banExpires: (u.banExpires as string | null | undefined) ?? null,
-		twoFactorEnabled: Boolean(u.twoFactorEnabled),
-		emailVerified: Boolean(u.emailVerified),
-		createdAt: String(u.createdAt ?? new Date().toISOString()),
-		image: (u.image as string | null | undefined) ?? null,
-	};
-}
+import { mapUserDTO } from "./mappers";
 
 function mapSession(s: Record<string, unknown>): SessionDTO {
 	return {
@@ -107,7 +90,7 @@ export async function listUsers(
 	if (!res.ok || !res.data) {
 		throw new Error(res.error?.message ?? "listUsers failed");
 	}
-	return { rows: res.data.users.map(mapUser), total: res.data.total };
+	return { rows: res.data.users.map(mapUserDTO), total: res.data.total };
 }
 
 export async function getUser(cookie: string, id: string): Promise<UserDTO> {
@@ -118,7 +101,7 @@ export async function getUser(cookie: string, id: string): Promise<UserDTO> {
 	if (!res.ok || !res.data) {
 		throw new Error(res.error?.message ?? "getUser failed");
 	}
-	return mapUser(res.data.user);
+	return mapUserDTO(res.data.user);
 }
 
 /** ---------- Wallets ---------- */

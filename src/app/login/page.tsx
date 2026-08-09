@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield } from "lucide-react";
+import { AlertCircle, Shield } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -102,8 +102,12 @@ function LoginForm() {
 						</div>
 
 						{error && (
-							<div className="rounded-[var(--radius-sm)] bg-error-soft px-3 py-2 text-[14px] leading-5 text-error">
-								{error}
+							<div
+								role="alert"
+								className="flex items-start gap-2 rounded-[var(--radius-sm)] bg-error-soft px-3 py-2 text-[14px] leading-5 text-error"
+							>
+								<AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden />
+								<span>{error}</span>
 							</div>
 						)}
 

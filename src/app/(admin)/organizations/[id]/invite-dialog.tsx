@@ -24,27 +24,26 @@ export function InviteDialog({ orgId }: { orgId: string }) {
 
 	const invite = async () => {
 		setInviting(true);
-		const r = await fetch(`/api/admin/organizations/${orgId}/invite`, {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ email, role }),
-		});
-		setInviting(false);
-		// A failed invite must not look like a sent one — keep the email and
-		// tell the admin, instead of silently clearing the form.
-		if (r.ok) {
+		try {
+			const r = await fetch(`/api/admin/organizations/${orgId}/invite`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ email, role }),
+			});
+			if (!r.ok) {
+				toast.error(t("toast.actionFailed"));
+				return false;
+			}
 			setEmail("");
 			toast.success(t("toast.inviteSent"));
-		} else {
-			toast.error(t("toast.actionFailed"));
+			await Promise.all([
+				qc.invalidateQueries({ queryKey: ["organization", orgId] }),
+				qc.invalidateQueries({ queryKey: ["organization-members", orgId] }),
+			]);
+			return true;
+		} finally {
+			setInviting(false);
 		}
-		// A new invite lands in the org's pending-invitations list (fed by the
-		// ['organization'] query), not the accepted-members list, so refresh
-		// both — otherwise the invite the admin just sent doesn't appear.
-		await Promise.all([
-			qc.invalidateQueries({ queryKey: ["organization", orgId] }),
-			qc.invalidateQueries({ queryKey: ["organization-members", orgId] }),
-		]);
 	};
 
 	return (
@@ -56,6 +55,7 @@ export function InviteDialog({ orgId }: { orgId: string }) {
 		>
 			<Input
 				type="email"
+				required
 				value={email}
 				onChange={(e) => setEmail(e.target.value)}
 				placeholder="user@example.com"

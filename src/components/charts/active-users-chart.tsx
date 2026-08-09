@@ -11,6 +11,8 @@ import {
 	YAxis,
 } from "recharts";
 import { useThemeTokens } from "@/hooks/use-theme-tokens";
+import { ChartState } from "@/components/charts/chart-state";
+import { fetchAdminJson } from "@/lib/client-api";
 
 interface AuditRow {
 	timestamp: string;
@@ -27,18 +29,17 @@ interface AuditRow {
  * requires a backend cohort endpoint — see the retention placeholder card.
  */
 export function ActiveUsersChart({ days = 14 }: { days?: number }) {
-	const { data, isFetching } = useQuery<AuditRow[]>({
+	const { data, isLoading, isError, refetch } = useQuery<AuditRow[]>({
 		queryKey: ["active-users", days],
 		queryFn: async () => {
 			// Pull a generous window of successful logins.
-			const r = await fetch(
-				`/api/admin/audit?action=user.login&result=success&limit=1000`,
-			);
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok?: boolean;
 				data?: { rows?: AuditRow[] };
-			};
-			return d.ok ? d.data?.rows ?? [] : [];
+			}>(
+				`/api/admin/audit?action=user.login&result=success&limit=1000`,
+			);
+			return d.data?.rows ?? [];
 		},
 	});
 	const { v, themeKey } = useThemeTokens();
@@ -63,13 +64,9 @@ export function ActiveUsersChart({ days = 14 }: { days?: number }) {
 		active: actors.size,
 	}));
 
-	if (!isFetching && chartData.every((d) => d.active === 0)) {
-		return (
-			<div className="flex h-[240px] items-center justify-center text-[14px] leading-5 text-mute">
-				No login data in the last {days} days
-			</div>
-		);
-	}
+	if (isLoading) return <ChartState status="loading" />;
+	if (isError) return <ChartState status="error" onRetry={() => void refetch()} />;
+	if (chartData.every((point) => point.active === 0)) return <ChartState status="empty" />;
 
 	return (
 		<ResponsiveContainer width="100%" height={240}>
@@ -104,7 +101,7 @@ export function ActiveUsersChart({ days = 14 }: { days?: number }) {
 				/>
 				<Bar
 					dataKey="active"
-					fill={v("--chart-1", "#4f39f6")}
+					fill={v("--chart-1", "#0070f3")}
 					radius={[4, 4, 0, 0]}
 				/>
 			</BarChart>

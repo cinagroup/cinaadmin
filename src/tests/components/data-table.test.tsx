@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { vi } from "vitest";
 import {
 	useReactTable,
 	getCoreRowModel,
@@ -12,17 +13,34 @@ function Harness<T,>({
 	data,
 	columns,
 	rowClassName,
+	isLoading,
+	isError,
+	onRetry,
+	onRowClick,
 }: {
 	data: T[];
 	columns: ColumnDef<T>[];
 	rowClassName?: (row: T) => string | undefined;
+	isLoading?: boolean;
+	isError?: boolean;
+	onRetry?: () => void;
+	onRowClick?: (row: T) => void;
 }) {
 	const table = useReactTable({
 		data,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 	});
-	return <DataTable table={table} rowClassName={rowClassName} />;
+	return (
+		<DataTable
+			table={table}
+			rowClassName={rowClassName}
+			isLoading={isLoading}
+			isError={isError}
+			onRetry={onRetry}
+			onRowClick={onRowClick}
+		/>
+	);
 }
 
 describe("DataTable", () => {
@@ -56,6 +74,31 @@ describe("DataTable", () => {
 			/>,
 		);
 		expect(container.querySelector("tbody tr")?.className).toContain("row-danger");
+	});
+
+	it("renders a retryable error without calling it empty data", () => {
+		const retry = vi.fn();
+		const cols: ColumnDef<{ a: string }>[] = [{ accessorKey: "a", header: "A" }];
+		render(<Harness data={[]} columns={cols} isError onRetry={retry} />);
+		expect(screen.queryByText("暂无数据")).toBeNull();
+		fireEvent.click(screen.getByText("重试"));
+		expect(retry).toHaveBeenCalledTimes(1);
+	});
+
+	it("opens a row with Enter but ignores nested action clicks", () => {
+		const onRowClick = vi.fn();
+		const data = [{ a: "x" }];
+		const cols: ColumnDef<{ a: string }>[] = [
+			{ accessorKey: "a", header: "A" },
+			{ id: "action", cell: () => <button type="button">Action</button> },
+		];
+		const { container } = render(
+			<Harness data={data} columns={cols} onRowClick={onRowClick} />,
+		);
+		fireEvent.click(screen.getByText("Action"));
+		expect(onRowClick).not.toHaveBeenCalled();
+		fireEvent.keyDown(container.querySelector("tbody tr")!, { key: "Enter" });
+		expect(onRowClick).toHaveBeenCalledWith(data[0]);
 	});
 });
 

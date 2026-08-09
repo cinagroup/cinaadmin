@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { fetchAdminJson } from "@/lib/client-api";
 
 interface Subscription {
 	id: string;
@@ -30,12 +31,12 @@ interface SubscriptionResponse {
 export default function BillingPage() {
 	const { t } = useI18n();
 	const queryClient = useQueryClient();
-	const { data, isFetching } = useQuery({
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["subscriptions"],
 		queryFn: async () => {
-			const response = await fetch("/api/admin/subscriptions");
-			const payload = (await response.json()) as SubscriptionResponse;
-			if (!response.ok || !payload.ok) return [];
+			const payload = await fetchAdminJson<SubscriptionResponse>(
+				"/api/admin/subscriptions",
+			);
 			return payload.data?.subscriptions ?? [];
 		},
 	});
@@ -51,10 +52,11 @@ export default function BillingPage() {
 		if (response.ok) {
 			toast.success(t("billing.canceled"));
 			await queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
-			return;
+			return true;
 		}
 
 		toast.error(t("toast.actionFailed"));
+		return false;
 	};
 
 	const columns: ColumnDef<Subscription>[] = [
@@ -79,7 +81,7 @@ export default function BillingPage() {
 				row.original.status === "active" ? (
 					<ConfirmDialog
 						trigger={
-							<Button variant="ghost" size="sm" className="text-danger">
+							<Button variant="ghost" size="sm" className="text-error">
 								{t("billing.cancel")}
 							</Button>
 						}
@@ -102,7 +104,10 @@ export default function BillingPage() {
 			<PageHeader title={t("billing.title")} />
 			<DataTable
 				table={table}
-				emptyLabel={isFetching ? t("common.loading") : t("billing.empty")}
+				emptyLabel={t("billing.empty")}
+				isLoading={isFetching && !data}
+				isError={isError}
+				onRetry={() => void refetch()}
 			/>
 		</div>
 	);

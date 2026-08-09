@@ -30,17 +30,27 @@ export async function POST(
 	const cookie = request.headers.get("cookie") ?? "";
 
 	// First get the user's email
-	const userRes = await cinaauthFetch<{ email?: string }>(
+	const userRes = await cinaauthFetch<{
+		user?: { email?: string; phoneNumber?: string };
+	}>(
 		`/admin/get-user?id=${encodeURIComponent(id)}`,
 		{ cookie },
 	);
-	if (!userRes.ok || !userRes.data?.email) {
+	if (!userRes.ok) {
+		const status = userRes.error?.status === 404 ? 404 : 502;
+		return NextResponse.json(
+			{ ok: false, error: userRes.error },
+			{ status },
+		);
+	}
+	const user = userRes.data?.user;
+	if (!user?.email) {
 		return NextResponse.json(
 			{ ok: false, error: { code: "USER_NOT_FOUND" } },
 			{ status: 404 },
 		);
 	}
-	const email = userRes.data.email;
+	const email = user.email;
 
 	let endpoint: string;
 	let reqBody: Record<string, unknown>;
@@ -49,7 +59,7 @@ export async function POST(
 		reqBody = { email };
 	} else if (type === "phone-number") {
 		// phoneNumber plugin requires a phone number; the user record may have one
-		const phoneNumber = (userRes.data as Record<string, unknown>).phoneNumber as string | undefined;
+		const phoneNumber = user.phoneNumber;
 		if (!phoneNumber) {
 			return NextResponse.json(
 				{ ok: false, error: { code: "NO_PHONE", message: "User has no phone number" } },

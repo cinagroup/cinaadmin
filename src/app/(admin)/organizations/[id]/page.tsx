@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import {
 	getCoreRowModel,
 	useReactTable,
@@ -17,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
 	Dialog,
 	DialogContent,
@@ -33,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { fetchAdminJson } from "@/lib/client-api";
 import { InviteDialog } from "./invite-dialog";
 
 interface MemberDTO {
@@ -64,21 +67,33 @@ export default function OrganizationDetailPage() {
 	const [editName, setEditName] = useState("");
 	const [editSlug, setEditSlug] = useState("");
 
-	const { data: org, isFetching } = useQuery({
+	const {
+		data: org,
+		isFetching: orgLoading,
+		isError: orgError,
+		refetch: refetchOrg,
+	} = useQuery({
 		queryKey: ["organization", orgId],
 		queryFn: async () => {
-			const r = await fetch(`/api/admin/organizations/${orgId}`);
-			const d = (await r.json()) as ApiResponse<OrganizationDTO>;
-			return d.ok ? d.data : null;
+			const d = await fetchAdminJson<ApiResponse<OrganizationDTO>>(
+				`/api/admin/organizations/${orgId}`,
+			);
+			return d.data ?? null;
 		},
 	});
 
-	const { data: membersData } = useQuery({
+	const {
+		data: membersData,
+		isFetching: membersLoading,
+		isError: membersError,
+		refetch: refetchMembers,
+	} = useQuery({
 		queryKey: ["organization-members", orgId],
 		queryFn: async () => {
-			const r = await fetch(`/api/admin/organizations/${orgId}/members`);
-			const d = (await r.json()) as ApiResponse<{ members?: MemberDTO[] }>;
-			return d.ok ? (d.data?.members ?? []) : [];
+			const d = await fetchAdminJson<ApiResponse<{ members?: MemberDTO[] }>>(
+				`/api/admin/organizations/${orgId}/members`,
+			);
+			return d.data?.members ?? [];
 		},
 	});
 
@@ -88,8 +103,12 @@ export default function OrganizationDetailPage() {
 		const r = await fetch(`/api/admin/organizations/${orgId}/members/${memberId}`, {
 			method: "DELETE",
 		});
-		if (!r.ok) toast.error(t("toast.deleteFailed"));
+		if (!r.ok) {
+			toast.error(t("toast.deleteFailed"));
+			return false;
+		}
 		await qc.invalidateQueries({ queryKey: ["organization-members", orgId] });
+		return true;
 	};
 
 	const changeRole = async (memberId: string, role: string) => {
@@ -133,8 +152,10 @@ export default function OrganizationDetailPage() {
 			// list for up to the 30s staleTime.
 			await qc.invalidateQueries({ queryKey: ["organizations"] });
 			router.push("/organizations");
+			return true;
 		} else {
 			toast.error(t("toast.deleteFailed"));
+			return false;
 		}
 	};
 
@@ -187,7 +208,7 @@ export default function OrganizationDetailPage() {
 					{row.original.role !== "owner" && (
 						<ConfirmDialog
 							trigger={
-								<Button variant="ghost" size="sm" className="text-danger">
+								<Button variant="ghost" size="sm" className="text-error">
 									{t("common.remove")}
 								</Button>
 							}
@@ -206,9 +227,25 @@ export default function OrganizationDetailPage() {
 		getCoreRowModel: getCoreRowModel(),
 	});
 
+	if (orgError) {
+		return (
+			<div className="max-w-2xl">
+				<PageHeader title={t("error.generic.title")} backHref="/organizations" backLabel={t("nav.organizations")} />
+				<EmptyState>
+					<AlertCircle size={20} className="text-error" aria-hidden />
+					<span>{t("error.generic.message")}</span>
+					<Button variant="secondary" size="sm" onClick={() => void refetchOrg()}>
+						<RefreshCw size={15} />
+						{t("error.retry")}
+					</Button>
+				</EmptyState>
+			</div>
+		);
+	}
+
 	return (
 		<div>
-			<PageHeader title={org?.name ?? t("common.loading")} backHref="/organizations" backLabel={t("nav.organizations")}>
+			<PageHeader title={org?.name ?? (orgLoading ? "…" : t("organizations.title"))} backHref="/organizations" backLabel={t("nav.organizations")}>
 				<RoleGuard allow={["super_admin"]}>
 					<InviteDialog orgId={orgId} />
 					<Button
@@ -232,27 +269,28 @@ export default function OrganizationDetailPage() {
 					/>
 				</RoleGuard>
 			</PageHeader>
-			<div className="mb-4 flex items-center gap-4 text-sm text-ink-light">
+			<div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] leading-5 text-body">
 				<span>{t("organizations.slug")}: {org?.slug ?? "—"}</span>
 				<span>{t("organizations.membersLabel")}: {members.length}</span>
 			</div>
 			<DataTable
 				table={table}
-				emptyLabel={
-					isFetching ? t("common.loading") : t("organizations.noMembers")
-				}
+				emptyLabel={t("organizations.noMembers")}
+				isLoading={membersLoading && !membersData}
+				isError={membersError}
+				onRetry={() => void refetchMembers()}
 			/>
 
 			{/* Pending invitations */}
 			{org?.invitations && org.invitations.length > 0 && (
 				<div className="mt-6">
-					<h3 className="mb-3 font-mono text-[12px] uppercase tracking-wide text-mute">
+					<h3 className="mb-3 font-mono text-[12px] uppercase text-mute">
 						{t("organizations.invitations")} ({org.invitations.length})
 					</h3>
 					<div className="space-y-2">
 						{org.invitations.map((inv: Record<string, unknown>) => (
-							<div key={String(inv.id)} className="flex items-center justify-between rounded-[var(--radius-sm)] border border-hairline bg-canvas px-4 py-2">
-								<div className="flex items-center gap-3 text-[14px]">
+							<div key={String(inv.id)} className="flex flex-col gap-2 rounded-[var(--radius-sm)] border border-hairline bg-canvas px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+								<div className="flex min-w-0 flex-wrap items-center gap-3 text-[14px]">
 									<span className="font-medium text-ink">{String(inv.email ?? "—")}</span>
 									<Badge variant="muted">{String(inv.role ?? "member")}</Badge>
 									<span className="text-mute">{String(inv.status ?? "pending")}</span>
@@ -260,7 +298,7 @@ export default function OrganizationDetailPage() {
 								<RoleGuard allow={["super_admin"]}>
 									<ConfirmDialog
 										trigger={
-											<Button variant="ghost" size="sm" className="text-danger">
+											<Button variant="ghost" size="sm" className="text-error">
 												{t("organizations.cancelInvite")}
 											</Button>
 										}
@@ -272,10 +310,12 @@ export default function OrganizationDetailPage() {
 											// Don't claim the invite was cancelled unless it was.
 											if (r.ok) {
 												toast.success(t("organizations.inviteCanceled"));
+												await qc.invalidateQueries({ queryKey: ["organization", orgId] });
+												return true;
 											} else {
 												toast.error(t("toast.actionFailed"));
+												return false;
 											}
-											await qc.invalidateQueries({ queryKey: ["organization", orgId] });
 										}}
 									/>
 								</RoleGuard>
@@ -332,14 +372,13 @@ function TeamsSection({ orgId }: { orgId: string }) {
 	const qc = useQueryClient();
 	const [newTeamName, setNewTeamName] = useState("");
 
-	const { data: teamsData } = useQuery({
+	const { data: teamsData, isError, refetch } = useQuery({
 		queryKey: ["org-teams", orgId],
 		queryFn: async () => {
-			const r = await fetch(`/api/admin/organizations/${orgId}/teams`);
-			const d = (await r.json()) as ApiResponse<{
+			const d = await fetchAdminJson<ApiResponse<{
 				teams?: Array<{ id: string; name: string }>;
-			}>;
-			return d.ok ? d.data?.teams ?? [] : [];
+			}>>(`/api/admin/organizations/${orgId}/teams`);
+			return d.data?.teams ?? [];
 		},
 	});
 	const teams: Array<{ id: string; name: string }> = teamsData ?? [];
@@ -365,25 +404,36 @@ function TeamsSection({ orgId }: { orgId: string }) {
 		if (r.ok) {
 			toast.success(t("toast.teamDeleted"));
 			await qc.invalidateQueries({ queryKey: ["org-teams", orgId] });
+			return true;
 		} else {
 			toast.error(t("toast.deleteFailed"));
+			return false;
 		}
 	};
 
 	return (
 		<div className="mt-8">
-			<div className="mb-3 flex items-center justify-between">
-				<h3 className="font-mono text-[12px] uppercase tracking-wide text-mute">
+			<div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+				<h3 className="font-mono text-[12px] uppercase text-mute">
 					{t("organizations.teams")} ({teams.length})
 				</h3>
 				<RoleGuard allow={["super_admin"]}>
-					<div className="flex gap-2">
-						<Input value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} placeholder={t("organizations.teamName")} className="h-8 w-[160px]" />
+					<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+						<Input value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} placeholder={t("organizations.teamName")} className="h-8 sm:w-[180px]" />
 						<Button variant="primary" size="sm" onClick={createTeam}>{t("organizations.createTeam")}</Button>
 					</div>
 				</RoleGuard>
 			</div>
-			{teams.length === 0 ? (
+			{isError ? (
+				<EmptyState>
+					<AlertCircle size={20} className="text-error" aria-hidden />
+					<span>{t("error.generic.message")}</span>
+					<Button variant="secondary" size="sm" onClick={() => void refetch()}>
+						<RefreshCw size={15} />
+						{t("error.retry")}
+					</Button>
+				</EmptyState>
+			) : teams.length === 0 ? (
 				<p className="text-[14px] text-mute">{t("organizations.noTeams")}</p>
 			) : (
 				<div className="space-y-3">
@@ -401,18 +451,17 @@ function TeamCard({ orgId, team, onDelete }: { orgId: string; team: { id: string
 	const qc = useQueryClient();
 	const [addUserId, setAddUserId] = useState("");
 
-	const { data: membersData } = useQuery({
+	const { data: membersData, isError, refetch } = useQuery({
 		queryKey: ["team-members", team.id],
 		queryFn: async () => {
-			const r = await fetch(`/api/admin/organizations/${orgId}/teams/${team.id}/members`);
-			const d = (await r.json()) as ApiResponse<{
+			const d = await fetchAdminJson<ApiResponse<{
 				members?: Array<{
 					id: string;
 					userId: string;
 					user?: { email?: string };
 				}>;
-			}>;
-			return d.ok ? d.data?.members ?? [] : [];
+			}>>(`/api/admin/organizations/${orgId}/teams/${team.id}/members`);
+			return d.data?.members ?? [];
 		},
 	});
 	const members: Array<{ id: string; userId: string; user?: { email?: string } }> = membersData ?? [];
@@ -428,29 +477,40 @@ function TeamCard({ orgId, team, onDelete }: { orgId: string; team: { id: string
 	};
 	const removeMember = async (memberId: string) => {
 		const r = await fetch(`/api/admin/organizations/${orgId}/teams/${team.id}/members/${memberId}`, { method: "DELETE" });
-		if (r.ok) { toast.success(t("toast.memberRemoved")); await qc.invalidateQueries({ queryKey: ["team-members", team.id] }); }
-		else { toast.error(t("toast.deleteFailed")); }
+		if (r.ok) {
+			toast.success(t("toast.memberRemoved"));
+			await qc.invalidateQueries({ queryKey: ["team-members", team.id] });
+			return true;
+		}
+		toast.error(t("toast.deleteFailed"));
+		return false;
 	};
 
 	return (
 		<div className="rounded-[var(--radius-md)] border border-hairline bg-canvas p-4">
-			<div className="mb-3 flex items-center justify-between">
+			<div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 				<span className="font-medium text-ink">{team.name}</span>
 				<div className="flex items-center gap-2">
-					<span className="text-[13px] text-mute">{members.length} {t("organizations.teamMembers")}</span>
+					<span className="text-[13px] text-mute">{isError ? "—" : members.length} {t("organizations.teamMembers")}</span>
 					<RoleGuard allow={["super_admin"]}>
-						<ConfirmDialog trigger={<Button variant="ghost" size="sm" className="text-danger">{t("organizations.deleteTeam")}</Button>} title={t("organizations.deleteTeam")} danger confirmText={t("common.delete")} onConfirm={onDelete} />
+						<ConfirmDialog trigger={<Button variant="ghost" size="sm" className="text-error">{t("organizations.deleteTeam")}</Button>} title={t("organizations.deleteTeam")} danger confirmText={t("common.delete")} onConfirm={onDelete} />
 					</RoleGuard>
 				</div>
 			</div>
+			{isError && (
+				<div className="mb-3 flex items-center justify-between gap-3 rounded-[var(--radius-sm)] bg-error-soft px-3 py-2 text-[13px] text-error">
+					<span>{t("error.generic.message")}</span>
+					<Button variant="ghost" size="sm" onClick={() => void refetch()}>{t("error.retry")}</Button>
+				</div>
+			)}
 			{members.map((m) => (
-				<div key={m.id} className="mb-1 flex items-center justify-between rounded-[var(--radius-sm)] bg-canvas-soft px-3 py-1.5 text-[13px]">
-					<span className="text-ink">{m.user?.email ?? m.userId}</span>
-					<RoleGuard allow={["super_admin"]}><Button variant="ghost" size="sm" className="text-danger" onClick={() => removeMember(m.id)}>{t("organizations.removeTeamMember")}</Button></RoleGuard>
+				<div key={m.id} className="mb-1 flex flex-col gap-1 rounded-[var(--radius-sm)] bg-canvas-soft px-3 py-2 text-[13px] sm:flex-row sm:items-center sm:justify-between">
+					<span className="break-all text-ink">{m.user?.email ?? m.userId}</span>
+					<RoleGuard allow={["super_admin"]}><Button variant="ghost" size="sm" className="text-error" onClick={() => removeMember(m.id)}>{t("organizations.removeTeamMember")}</Button></RoleGuard>
 				</div>
 			))}
 			<RoleGuard allow={["super_admin"]}>
-				<div className="mt-2 flex gap-2">
+				<div className="mt-2 flex flex-col gap-2 sm:flex-row">
 					<Input value={addUserId} onChange={(e) => setAddUserId(e.target.value)} placeholder={t("organizations.teamMemberUserId")} className="h-8" />
 					<Button variant="secondary" size="sm" onClick={addMember}>{t("organizations.addMember")}</Button>
 				</div>

@@ -1,10 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import type { AuditLogDTO } from "@/lib/cinaauth/dto";
+import { fetchAdminJson } from "@/lib/client-api";
 
 /**
  * Login history as a vertical timeline. Each event is a node (accent dot for
@@ -13,7 +15,7 @@ import type { AuditLogDTO } from "@/lib/cinaauth/dto";
  */
 export function LoginTrailTab({ userId }: { userId: string }) {
 	const { t } = useI18n();
-	const { data, isFetching } = useQuery({
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["user", userId, "login-trail"],
 		queryFn: async () => {
 			const params = new URLSearchParams({
@@ -21,12 +23,11 @@ export function LoginTrailTab({ userId }: { userId: string }) {
 				action: "user.login",
 				targetId: userId,
 			});
-			const r = await fetch(`/api/admin/audit?${params}`);
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok: boolean;
 				data?: { rows: AuditLogDTO[] };
-			};
-			return d.ok ? d.data?.rows ?? [] : [];
+			}>(`/api/admin/audit?${params}`);
+			return d.data?.rows ?? [];
 		},
 	});
 
@@ -36,6 +37,18 @@ export function LoginTrailTab({ userId }: { userId: string }) {
 		return (
 			<EmptyState>
 				<div className="text-[14px] leading-5 text-mute">{t("common.loading")}</div>
+			</EmptyState>
+		);
+	}
+	if (isError) {
+		return (
+			<EmptyState>
+				<AlertCircle size={20} className="text-error" aria-hidden />
+				<span>{t("error.generic.message")}</span>
+				<Button variant="secondary" size="sm" onClick={() => void refetch()}>
+					<RefreshCw size={15} />
+					{t("error.retry")}
+				</Button>
 			</EmptyState>
 		);
 	}
@@ -68,7 +81,7 @@ export function LoginTrailTab({ userId }: { userId: string }) {
 								failed ? "border-error-soft" : ""
 							}`}
 						>
-							<div className="flex items-center justify-between">
+							<div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
 								<div className="text-[14px] font-medium leading-5 text-ink">
 									{failed ? t("loginTrail.failed") : t("loginTrail.success")}
 								</div>

@@ -9,6 +9,8 @@ import {
 	XAxis,
 } from "recharts";
 import { useThemeTokens } from "@/hooks/use-theme-tokens";
+import { ChartState } from "@/components/charts/chart-state";
+import { fetchAdminJson } from "@/lib/client-api";
 
 interface AuditRow {
 	timestamp: string;
@@ -34,28 +36,26 @@ interface SignupPoint {
  * than exact counts on this overview).
  */
 export function CohortBars({ days = 14 }: { days?: number }) {
-	const { data: logins } = useQuery<AuditRow[]>({
+	const loginsQuery = useQuery<AuditRow[]>({
 		queryKey: ["cohort-logins", days],
 		queryFn: async () => {
-			const r = await fetch(
-				`/api/admin/audit?action=user.login&result=success&limit=1000`,
-			);
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok?: boolean;
 				data?: { rows?: AuditRow[] };
-			};
-			return d.ok ? d.data?.rows ?? [] : [];
+			}>(
+				`/api/admin/audit?action=user.login&result=success&limit=1000`,
+			);
+			return d.data?.rows ?? [];
 		},
 	});
-	const { data: signups } = useQuery<SignupPoint[]>({
+	const signupsQuery = useQuery<SignupPoint[]>({
 		queryKey: ["cohort-signups", days],
 		queryFn: async () => {
-			const r = await fetch(`/api/admin/stats/signups?range=30d`);
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok?: boolean;
 				data?: { data?: SignupPoint[] };
-			};
-			return d.ok ? d.data?.data ?? [] : [];
+			}>("/api/admin/stats/signups?range=30d");
+			return d.data?.data ?? [];
 		},
 	});
 
@@ -68,7 +68,7 @@ export function CohortBars({ days = 14 }: { days?: number }) {
 		byDay.set(d.toISOString().slice(0, 10), { newUsers: 0, returning: 0 });
 	}
 	// New users per day from the signup series.
-	for (const p of signups ?? []) {
+	for (const p of signupsQuery.data ?? []) {
 		const day = (p.date ?? "").slice(0, 10);
 		const b = byDay.get(day);
 		if (b) b.newUsers = p.count;
@@ -77,7 +77,7 @@ export function CohortBars({ days = 14 }: { days?: number }) {
 	// (Approximation: distinct actor per day, minus that day's new signups.)
 	const actorsPerDay = new Map<string, Set<string>>();
 	for (const day of byDay.keys()) actorsPerDay.set(day, new Set<string>());
-	for (const row of logins ?? []) {
+	for (const row of loginsQuery.data ?? []) {
 		const day = (row.timestamp ?? "").slice(0, 10);
 		const set = actorsPerDay.get(day);
 		if (set) set.add(row.actorId ?? "anon");
@@ -95,8 +95,29 @@ export function CohortBars({ days = 14 }: { days?: number }) {
 
 	const { v, themeKey } = useThemeTokens();
 	// Indigo tints for the stacked segments (BAC chart palette).
-	const c1 = v("--chart-1", "#4f39f6");
-	const c2 = v("--chart-2", "#625fff");
+	const c1 = v("--chart-1", "#0070f3");
+	const c2 = v("--chart-2", "#7928ca");
+
+	if (loginsQuery.isLoading || signupsQuery.isLoading) {
+		return <ChartState status="loading" height={200} />;
+	}
+	if (loginsQuery.isError || signupsQuery.isError) {
+		return (
+			<ChartState
+				status="error"
+				height={200}
+				onRetry={() => {
+					void Promise.all([loginsQuery.refetch(), signupsQuery.refetch()]);
+				}}
+			/>
+		);
+	}
+	if (
+		(loginsQuery.data?.length ?? 0) === 0 &&
+		(signupsQuery.data?.length ?? 0) === 0
+	) {
+		return <ChartState status="empty" height={200} />;
+	}
 
 	return (
 		<ResponsiveContainer width="100%" height={200}>

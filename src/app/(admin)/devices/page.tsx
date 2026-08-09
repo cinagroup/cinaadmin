@@ -1,11 +1,15 @@
 "use client";
+
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, Search, Smartphone, X } from "lucide-react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageHeader } from "@/components/layout/page-header";
+import { fetchAdminJson } from "@/lib/client-api";
 import { useI18n } from "@/lib/i18n/i18n-context";
 
 interface DeviceLookupResponse {
@@ -15,40 +19,116 @@ interface DeviceLookupResponse {
 
 export default function DevicesPage() {
 	const { t } = useI18n();
-	const qc = useQueryClient();
 	const [userCode, setUserCode] = useState("");
 	const [device, setDevice] = useState<Record<string, unknown> | null>(null);
-	const lookup = async () => {
-		if (!userCode.trim()) return;
-		const r = await fetch(`/api/admin/device/approve`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ userCode, action: "lookup" }) });
-		const d = (await r.json().catch(() => null)) as DeviceLookupResponse | null;
-		setDevice(d?.ok && d.data ? d.data : null);
-		if (!d?.ok || !d.data) toast.error(t("devices.notFound"));
+	const [lookingUp, setLookingUp] = useState(false);
+	const [actionPending, setActionPending] = useState(false);
+
+	const lookup = async (event: React.FormEvent) => {
+		event.preventDefault();
+		const code = userCode.trim();
+		if (!code) return;
+		setLookingUp(true);
+		try {
+			const payload = await fetchAdminJson<DeviceLookupResponse>(
+				"/api/admin/device/approve",
+				{
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify({ userCode: code, action: "lookup" }),
+				},
+			);
+			if (!payload.data) throw new Error("Device not found");
+			setDevice(payload.data);
+		} catch {
+			setDevice(null);
+			toast.error(t("devices.notFound"));
+		} finally {
+			setLookingUp(false);
+		}
 	};
+
 	const act = async (action: "approve" | "deny") => {
-		const r = await fetch(`/api/admin/device/${action}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ userCode }) });
-		if (r.ok) { toast.success(action === "approve" ? t("devices.approved") : t("devices.denied")); setDevice(null); setUserCode(""); }
-		else { toast.error(t("toast.actionFailed")); }
+		setActionPending(true);
+		try {
+			await fetchAdminJson(`/api/admin/device/${action}`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ userCode: userCode.trim() }),
+			});
+			toast.success(
+				action === "approve" ? t("devices.approved") : t("devices.denied"),
+			);
+			setDevice(null);
+			setUserCode("");
+		} catch {
+			toast.error(t("toast.actionFailed"));
+		} finally {
+			setActionPending(false);
+		}
 	};
+
 	return (
-		<div className="max-w-md">
+		<div className="max-w-2xl">
 			<PageHeader title={t("devices.title")} />
-			<div className="space-y-4">
-				<div className="space-y-1.5">
-					<Label>{t("devices.userCode")}</Label>
-					<div className="flex gap-2"><Input value={userCode} onChange={(e) => setUserCode(e.target.value)} className="font-mono" /><Button variant="secondary" size="sm" onClick={lookup}>{t("devices.lookup")}</Button></div>
-				</div>
-				{device && (
-					<div className="rounded-[var(--radius-md)] border border-hairline bg-canvas p-4">
-						<pre className="mb-3 text-[13px] text-body">{JSON.stringify(device, null, 2)}</pre>
-						<div className="flex gap-2">
-							<Button variant="primary" size="sm" onClick={() => act("approve")}>{t("devices.approve")}</Button>
-							<Button variant="danger" size="sm" onClick={() => act("deny")}>{t("devices.deny")}</Button>
+			<Card>
+				<CardContent className="space-y-4 pt-5">
+					<form onSubmit={lookup} className="space-y-1.5">
+						<Label htmlFor="device-user-code">{t("devices.userCode")}</Label>
+						<div className="flex flex-col gap-2 sm:flex-row">
+							<Input
+								id="device-user-code"
+								required
+								value={userCode}
+								onChange={(event) => setUserCode(event.target.value)}
+								className="font-mono"
+								autoComplete="one-time-code"
+							/>
+							<Button
+								type="submit"
+								variant="secondary"
+								disabled={lookingUp || !userCode.trim()}
+							>
+								<Search size={15} />
+								{t("devices.lookup")}
+							</Button>
 						</div>
-					</div>
-				)}
-				{!device && <p className="text-[14px] text-mute">{t("devices.empty")}</p>}
-			</div>
+					</form>
+
+					{device ? (
+						<div className="rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-4">
+							<pre className="mb-4 max-h-72 overflow-auto whitespace-pre-wrap break-all font-mono text-[12px] leading-5 text-body">
+								{JSON.stringify(device, null, 2)}
+							</pre>
+							<div className="flex flex-col gap-2 sm:flex-row">
+								<Button
+									variant="primary"
+									size="sm"
+									disabled={actionPending}
+									onClick={() => act("approve")}
+								>
+									<Check size={15} />
+									{t("devices.approve")}
+								</Button>
+								<Button
+									variant="danger"
+									size="sm"
+									disabled={actionPending}
+									onClick={() => act("deny")}
+								>
+									<X size={15} />
+									{t("devices.deny")}
+								</Button>
+							</div>
+						</div>
+					) : (
+						<EmptyState className="py-10">
+							<Smartphone size={20} aria-hidden />
+							<span>{t("devices.empty")}</span>
+						</EmptyState>
+					)}
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

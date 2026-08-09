@@ -11,20 +11,21 @@ import { DataTable } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RoleGuard } from "@/components/role-guard";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { fetchAdminJson } from "@/lib/client-api";
 import type { WalletDTO } from "@/lib/cinaauth/dto";
 
 export function WalletsTab({ userId }: { userId: string }) {
 	const { t } = useI18n();
-	const { data, isFetching, refetch } = useQuery({
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["user", userId, "wallets"],
 		queryFn: async () => {
-			const r = await fetch(`/api/admin/users/${userId}/wallets`);
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok: boolean;
 				data?: { wallets: WalletDTO[] };
-			};
-			return d.ok ? d.data?.wallets ?? [] : [];
+			}>(`/api/admin/users/${userId}/wallets`);
+			return d.data?.wallets ?? [];
 		},
 	});
 
@@ -38,10 +39,12 @@ export function WalletsTab({ userId }: { userId: string }) {
 		});
 		if (r.ok) {
 			toast.success(t("toast.walletUnbound"));
+			await refetch();
+			return true;
 		} else {
 			toast.error(t("toast.actionFailed"));
+			return false;
 		}
-		await refetch();
 	};
 
 	const columns: ColumnDef<WalletDTO>[] = [
@@ -72,7 +75,7 @@ export function WalletsTab({ userId }: { userId: string }) {
 				<RoleGuard allow={["super_admin", "security_admin"]}>
 					<ConfirmDialog
 						trigger={
-							<span className="cursor-pointer text-xs text-danger">{t("wallets.unbind")}</span>
+							<Button variant="ghost" size="sm" className="text-error">{t("wallets.unbind")}</Button>
 						}
 						title={t("wallets.unbind.title")}
 						description={`${t("wallets.unbind.hint")} ${row.original.address}`}
@@ -94,7 +97,10 @@ export function WalletsTab({ userId }: { userId: string }) {
 	return (
 		<DataTable
 			table={table}
-			emptyLabel={isFetching ? t("common.loading") : t("wallets.empty")}
+			emptyLabel={t("wallets.empty")}
+			isLoading={isFetching && !data}
+			isError={isError}
+			onRetry={() => void refetch()}
 		/>
 	);
 }

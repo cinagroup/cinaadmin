@@ -25,10 +25,10 @@ export function Toolbar({
 
 /** Left-aligned cluster inside a Toolbar (search + filters). */
 export function ToolbarLeft({ children }: { children: ReactNode }) {
-	return <div className="flex flex-wrap items-center gap-2">{children}</div>;
+	return <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">{children}</div>;
 }
 
 /** Right-aligned cluster inside a Toolbar (action buttons). */
 export function ToolbarRight({ children }: { children: ReactNode }) {
-	return <div className="flex items-center gap-2">{children}</div>;
+	return <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">{children}</div>;
 }

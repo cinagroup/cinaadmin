@@ -49,6 +49,7 @@ export async function cinaauthFetch<T>(
 				error: {
 					code: `CINAUTH_${res.status}`,
 					message: `cinaauth ${path} failed`,
+					status: res.status,
 				},
 			};
 		}

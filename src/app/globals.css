@@ -20,23 +20,23 @@
 	--canvas-soft-2: #f5f5f5; /* hover / dropdown (neutral-100) */
 	--sidebar: #fafafa; /* sidebar surface */
 
-	--ink: #0a0a0a; /* neutral-950 — headings */
-	--body: #404040; /* neutral-700 — body copy */
-	--mute: #737373; /* neutral-500 — captions */
+	--ink: #171717;
+	--body: #4d4d4d;
+	--mute: #888888;
 
-	--hairline: #e5e5e5; /* neutral-200 — borders */
-	--hairline-strong: #d4d4d4; /* neutral-300 */
+	--hairline: #ebebeb;
+	--hairline-strong: #a1a1a1;
 
-	--link: #4f39f6; /* indigo-600 — primary interactive */
-	--link-deep: #4338ca;
+	--link: #0070f3;
+	--link-deep: #0059c7;
 	--accent: #171717; /* neutral-900 — primary button / focus */
 	--accent-soft: #f5f5f5; /* neutral-100 */
 
 	/* Chart palette (BAC --chart-*: indigo→blue→violet family) */
-	--chart-1: #4f39f6; /* indigo-600 */
-	--chart-2: #625fff; /* indigo-500 */
-	--chart-3: #7d87ff; /* indigo-400 */
-	--chart-4: #97a9ff; /* blue-300 */
+	--chart-1: #0070f3;
+	--chart-2: #7928ca;
+	--chart-3: #0a9f77;
+	--chart-4: #e43f8f;
 
 	--error: #dc2626; /* red-600 */
 	--error-soft: #fef2f2; /* red-50 */
@@ -45,13 +45,13 @@
 	--success: #059669; /* emerald-600 */
 	--success-soft: #ecfdf5; /* emerald-50 */
 
-	--violet: #4f39f6;
+	--violet: #7928ca;
 	--cyan: #0891b2;
 
 	/* selection / focus adapt to theme */
 	--selection-bg: #0a0a0a;
 	--selection-fg: #fafafa;
-	--focus-ring: #4f39f6;
+	--focus-ring: #0070f3;
 	--shadow-rgb: 0, 0, 0; /* shadow tint */
 }
 
@@ -69,16 +69,16 @@
 	--hairline: #262626; /* neutral-800 */
 	--hairline-strong: #404040; /* neutral-700 */
 
-	--link: #7d87ff; /* indigo-400 (lighter for dark) */
-	--link-deep: #625fff;
+	--link: #52a8ff;
+	--link-deep: #8bc5ff;
 	--accent: #fafafa; /* neutral-50 — primary button (inverts on dark) */
 	--accent-soft: #1f1f1f;
 
 	/* Chart palette — brighter indigos on dark */
-	--chart-1: #625fff;
-	--chart-2: #7d87ff;
-	--chart-3: #97a9ff;
-	--chart-4: #b4bdff;
+	--chart-1: #52a8ff;
+	--chart-2: #b983ff;
+	--chart-3: #42d3a7;
+	--chart-4: #ff72b6;
 
 	--error: #f87171; /* red-400 */
 	--error-soft: #450a0a; /* red-950 */
@@ -87,12 +87,12 @@
 	--success: #34d399; /* emerald-400 */
 	--success-soft: #022c22; /* emerald-950 */
 
-	--violet: #625fff;
+	--violet: #b983ff;
 	--cyan: #22d3ee;
 
 	--selection-bg: #fafafa;
 	--selection-fg: #0a0a0a;
-	--focus-ring: #7d87ff;
+	--focus-ring: #52a8ff;
 	--shadow-rgb: 0, 0, 0;
 }
 
@@ -135,6 +135,8 @@
 	--font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
 		Monaco, monospace;
 
+	--radius-xs: 4px;
+	--radius: 6px;
 	--radius-sm: 6px;
 	--radius-md: 8px;
 	--radius-lg: 8px;
@@ -150,6 +152,15 @@ body {
 	min-height: 100vh;
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
+	letter-spacing: 0;
+}
+
+html {
+	color-scheme: light;
+}
+
+html.dark {
+	color-scheme: dark;
 }
 
 /* Focus ring — adapts to theme (--focus-ring). */
@@ -172,6 +183,18 @@ textarea:focus-visible,
 
 * {
 	scrollbar-color: var(--hairline-strong) transparent;
+	letter-spacing: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		scroll-behavior: auto !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
 }
 
 /* Stacked-shadow helper used across cards; tint scales with theme.

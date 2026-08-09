@@ -2,7 +2,7 @@
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { useThemeTokens } from "@/hooks/use-theme-tokens";
-import { useI18n } from "@/lib/i18n/i18n-context";
+import { ChartState } from "@/components/charts/chart-state";
 
 /**
  * Login-channel distribution pie (email/password, github, siwe). Colors read
@@ -14,7 +14,6 @@ export function ChannelPie({
 }: {
 	channels: Record<string, number>;
 }) {
-	const { t } = useI18n();
 	const { v, themeKey } = useThemeTokens();
 	const data = [
 		{ name: "Email", value: channels.emailPassword ?? 0 },
@@ -23,13 +22,13 @@ export function ChannelPie({
 	].filter((d) => d.value > 0);
 
 	const COLORS = [
-		v("--chart-1", "#4f39f6"),
-		v("--chart-2", "#625fff"),
-		v("--chart-4", "#97a9ff"),
+		v("--chart-1", "#0070f3"),
+		v("--chart-2", "#7928ca"),
+		v("--chart-4", "#e43f8f"),
 	];
 
 	if (data.length === 0) {
-		return <div className="text-[14px] leading-5 text-mute">{t("common.noData")}</div>;
+		return <ChartState status="empty" />;
 	}
 
 	return (

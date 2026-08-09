@@ -9,8 +9,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 	const { id } = await params;
 	const cookie = request.headers.get("cookie") ?? "";
 	const res = await cinaauthFetch(`/organization/list-teams`, { method: "POST", body: { organizationId: id }, cookie });
-	if (!res.ok) return NextResponse.json({ ok: true, data: { teams: [] } });
-	return NextResponse.json(res, { status: 200 });
+	return NextResponse.json(res, { status: res.ok ? 200 : 502 });
 }
 
 /** POST /api/admin/organizations/[id]/teams — create a team. */

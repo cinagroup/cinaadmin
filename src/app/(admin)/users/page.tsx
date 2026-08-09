@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Download, Plus } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
 	getCoreRowModel,
@@ -18,7 +20,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Pagination } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
+import { RoleGuard } from "@/components/role-guard";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { fetchAdminJson } from "@/lib/client-api";
 import type { UserDTO } from "@/lib/cinaauth/dto";
 
 const PAGE_SIZE = 20;
@@ -30,7 +34,7 @@ export default function UsersPage() {
 	const [offset, setOffset] = useState(0);
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-	const { data, isFetching } = useQuery({
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["users", filter, offset],
 		queryFn: async () => {
 			const params = new URLSearchParams({
@@ -43,11 +47,10 @@ export default function UsersPage() {
 					? { searchValue: filter.searchValue }
 					: {}),
 			});
-			const r = await fetch(`/api/admin/users?${params}`);
-			return (await r.json()) as {
+			return fetchAdminJson<{
 				ok: boolean;
 				data?: { users: UserDTO[]; total: number };
-			};
+			}>(`/api/admin/users?${params}`);
 		},
 		placeholderData: keepPreviousData,
 	});
@@ -130,8 +133,19 @@ export default function UsersPage() {
 		<div>
 			<PageHeader title={t("users.title")}>
 				<Button asChild variant="secondary" size="sm">
-					<a href={exportHref}>{t("common.export")}</a>
+					<a href={exportHref}>
+						<Download size={15} />
+						{t("common.export")}
+					</a>
 				</Button>
+				<RoleGuard allow={["super_admin"]}>
+					<Button asChild variant="primary" size="sm">
+						<Link href="/users/new">
+							<Plus size={15} />
+							{t("users.create")}
+						</Link>
+					</Button>
+				</RoleGuard>
 			</PageHeader>
 			<FilterBar
 				fields={[
@@ -147,7 +161,10 @@ export default function UsersPage() {
 			/>
 			<DataTable
 				table={table}
-				emptyLabel={isFetching ? t("common.loading") : t("users.empty")}
+				emptyLabel={t("users.empty")}
+				isLoading={isFetching && !data}
+				isError={isError}
+				onRetry={() => void refetch()}
 				onRowClick={(user) => router.push(`/users/${user.id}`)}
 			/>
 			{total > 0 && (

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,19 +31,24 @@ export default function NewUserPage() {
 		e.preventDefault();
 		setError(null);
 		setSubmitting(true);
-		const r = await fetch("/api/admin/users/create", {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ email, name, password, role }),
-		});
-		setSubmitting(false);
-		if (r.ok) {
-			router.push("/users");
-		} else {
+		try {
+			const r = await fetch("/api/admin/users/create", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ email, name, password, role }),
+			});
+			if (r.ok) {
+				router.push("/users");
+				return;
+			}
 			const d = (await r.json().catch(() => null)) as {
 				error?: { message?: string };
 			} | null;
 			setError(d?.error?.message ?? t("users.create.failed"));
+		} catch {
+			setError(t("login.networkError"));
+		} finally {
+			setSubmitting(false);
 		}
 	};
 
@@ -98,9 +104,10 @@ export default function NewUserPage() {
 							</Select>
 						</div>
 						{error && (
-							<div className="text-[14px] leading-5 text-error">{error}</div>
+							<div role="alert" className="text-[14px] leading-5 text-error">{error}</div>
 						)}
-						<Button type="submit" disabled={submitting}>
+						<Button type="submit" disabled={submitting} className="w-full sm:w-auto">
+							<Plus size={15} />
 							{submitting ? t("common.creating") : t("users.create")}
 						</Button>
 					</form>

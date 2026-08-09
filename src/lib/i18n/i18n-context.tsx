@@ -49,6 +49,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 		}
 	}, [lang]);
 
+	useEffect(() => {
+		document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+	}, [lang]);
+
 	const setLang = useCallback((l: Lang) => {
 		setLangState(l);
 		try {

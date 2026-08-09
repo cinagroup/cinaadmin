@@ -9,21 +9,22 @@ import {
 import { DataTable } from "@/components/data-table/data-table";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RoleGuard } from "@/components/role-guard";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n/i18n-context";
 import type { SessionDTO } from "@/lib/cinaauth/dto";
+import { fetchAdminJson } from "@/lib/client-api";
 
 export function SessionsTab({ userId }: { userId: string }) {
 	const { t } = useI18n();
-	const { data, isFetching, refetch } = useQuery({
+	const { data, isFetching, isError, refetch } = useQuery({
 		queryKey: ["user", userId, "sessions"],
 		queryFn: async () => {
-			const r = await fetch(`/api/admin/users/${userId}/sessions`);
-			const d = (await r.json()) as {
+			const d = await fetchAdminJson<{
 				ok: boolean;
 				data?: { sessions: SessionDTO[] };
-			};
-			return d.ok ? d.data?.sessions ?? [] : [];
+			}>(`/api/admin/users/${userId}/sessions`);
+			return d.data?.sessions ?? [];
 		},
 	});
 
@@ -39,10 +40,12 @@ export function SessionsTab({ userId }: { userId: string }) {
 		// compromised account must know if the sessions are actually dead.
 		if (r.ok) {
 			toast.success(t("toast.sessionsRevoked"));
+			await refetch();
+			return true;
 		} else {
 			toast.error(t("toast.actionFailed"));
+			return false;
 		}
-		await refetch();
 	};
 
 	const columns: ColumnDef<SessionDTO>[] = [
@@ -72,9 +75,9 @@ export function SessionsTab({ userId }: { userId: string }) {
 				<RoleGuard allow={["super_admin", "security_admin"]}>
 					<ConfirmDialog
 						trigger={
-							<span className="cursor-pointer text-sm text-danger">
+							<Button variant="ghost" size="sm" className="text-error">
 								{t("userSessions.revokeAll")}
-							</span>
+							</Button>
 						}
 						title={t("userSessions.revokeAll")}
 						description={t("userDetail.sessions.revokeConfirm")}
@@ -86,7 +89,10 @@ export function SessionsTab({ userId }: { userId: string }) {
 			</div>
 			<DataTable
 				table={table}
-				emptyLabel={isFetching ? t("common.loading") : t("userSessions.empty")}
+				emptyLabel={t("userSessions.empty")}
+				isLoading={isFetching && !data}
+				isError={isError}
+				onRetry={() => void refetch()}
 			/>
 		</div>
 	);
