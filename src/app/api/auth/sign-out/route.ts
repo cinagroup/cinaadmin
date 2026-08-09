@@ -25,9 +25,11 @@ export async function POST(request: NextRequest) {
 		upstream = await fetch(`${cinaauthConfig.baseUrl}/api/auth/sign-out`, {
 			method: "POST",
 			headers: {
+				"content-type": "application/json",
 				origin: cinaauthConfig.requestOrigin,
 				cookie: request.headers.get("cookie") ?? "",
 			},
+			body: "{}",
 			cache: "no-store",
 		});
 	} catch {

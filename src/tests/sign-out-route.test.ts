@@ -68,9 +68,11 @@ describe("POST /api/auth/sign-out", () => {
 			expect.objectContaining({
 				method: "POST",
 				headers: {
+					"content-type": "application/json",
 					origin: "https://admin.test",
 					cookie: "__Secure-cinaauth.session_token=session-token",
 				},
+				body: "{}",
 			}),
 		);
 		const setCookie = response.headers.get("set-cookie") ?? "";
