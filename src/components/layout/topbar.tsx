@@ -14,6 +14,7 @@ import {
 	User,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { signOutAndRedirect } from "@/lib/cinaauth/sign-out";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import {
 	Select,
@@ -162,12 +163,7 @@ export function Topbar({
 						</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
-							onClick={() => {
-								const authUrl =
-									process.env.NEXT_PUBLIC_CINAUTH_AUTH_URL ??
-									"https://demo-auth.cinagroup.com";
-								window.location.href = `${authUrl}/sign-out`;
-							}}
+							onClick={() => void signOutAndRedirect()}
 							className="text-error"
 						>
 							<LogOut size={14} />

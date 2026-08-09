@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n/i18n-context";
+import { signOutAndRedirect } from "@/lib/cinaauth/sign-out";
 import { LogOut, ShieldX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -19,12 +20,7 @@ export default function ForbiddenPage() {
 				variant="secondary"
 				size="sm"
 				className="mt-2"
-				onClick={() => {
-					const authUrl =
-						process.env.NEXT_PUBLIC_CINAUTH_AUTH_URL ??
-						"https://demo-auth.cinagroup.com";
-					window.location.href = `${authUrl}/sign-out`;
-				}}
+				onClick={() => void signOutAndRedirect()}
 			>
 				<LogOut size={15} />
 				{t("common.signOut")}
